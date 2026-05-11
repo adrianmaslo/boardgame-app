@@ -7,10 +7,13 @@ __pycache__/
 venv/
 .env
 
-# Datenbanken (lokale Daten, die nicht in die Cloud sollen)
-*.db
-backend/games.db
-
 # Betriebssystem-spezifische Dateien
 .DS_Store
 Thumbs.db
+
+# Bilder-Uploads ignorieren
+uploads/
+!uploads/.gitkeep
+
+# Datenbank ignorieren
+backend/*.db

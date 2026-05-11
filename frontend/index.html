@@ -8,72 +8,127 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="container mt-3">
+    <div class="card bg-dark text-white shadow mb-4">
+        <div class="card-body text-center p-3">
+            <div class="d-flex justify-content-around align-items-center">
+                <small>Adrian</small>
+                <div class="display-6 fw-bold" id="winScore">0 : 0</div>
+                <small>Lea</small>
+            </div>
+            <div id="streakInfo" class="mt-2"></div>
+            <div id="achievementList" class="mt-1"></div>
+        </div>
+    </div>
 
-<div class="container mt-4">
-    <header class="text-center mb-4">
-        <h1>🎲 Game-Tracker</h1>
-        <p class="text-muted">Adrian & Lea Edition</p>
-    </header>
-
-    <div class="card shadow-sm mb-4 text-center">
+    <div class="card shadow-sm mb-4 text-center border-0 bg-white">
         <div class="card-body">
-            <h5 class="card-title text-uppercase text-muted">Aktuelle Spielzeit</h5>
             <div id="timer" class="timer-display">00:00:00</div>
-            <div class="mt-3">
-                <button id="startBtn" class="btn btn-success btn-lg px-4" onclick="toggleTimer()">Start</button>
-                <button id="resetBtn" class="btn btn-outline-danger btn-sm ms-2" onclick="resetTimer()">Reset</button>
+            <button id="startBtn" class="btn btn-success btn-lg mt-2 px-4" onclick="toggleTimer()">Start</button>
+            <button class="btn btn-outline-danger btn-sm mt-2 ms-2" onclick="resetTimer()">Reset</button>
+        </div>
+    </div>
+
+    <div id="logSection" class="card shadow-sm mb-4 d-none border-primary">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <span>Runde: <strong id="activeGameName"></strong></span>
+            <button class="btn btn-sm btn-light" onclick="resetPoints()">Reset</button>
+        </div>
+        <div class="card-body">
+            <div class="row mb-2">
+                <div class="col">
+                    <label class="small text-muted d-block text-center">Adrian</label>
+                    <input type="number" id="score_adrian" class="form-control text-center fw-bold form-control-lg" placeholder="Pkt">
+                </div>
+                <div class="col">
+                    <label class="small text-muted d-block text-center">Lea</label>
+                    <input type="number" id="score_lea" class="form-control text-center fw-bold form-control-lg" placeholder="Pkt">
+                </div>
+            </div>
+            <button class="btn btn-outline-primary w-100 mb-3 fw-bold" onclick="nextRound()">➕ Nächste Runde</button>
+            <div id="roundPreview" class="small text-muted mb-3 text-center border-bottom pb-2" style="max-height: 80px; overflow-y: auto;"></div>
+            <div class="d-flex justify-content-around mb-3 p-2 bg-light rounded border">
+                <div class="text-center">Gesamt A: <span id="sum_adrian" class="fw-bold text-primary fs-5">0</span></div>
+                <div class="text-center">Gesamt L: <span id="sum_lea" class="fw-bold text-primary fs-5">0</span></div>
+            </div>
+            <select id="winner_id" class="form-select mb-3">
+                <option value="1">Adrian gewinnt 🏆</option>
+                <option value="2">Lea gewinnt 🏆</option>
+                <option value="0">Unentschieden / Koop</option>
+            </select>
+            <input type="file" id="photo" class="form-control mb-3" accept="image/*" capture="camera">
+            <textarea id="comment" class="form-control mb-3" placeholder="Notizen zum Spiel..."></textarea>
+            <button class="btn btn-primary w-100 btn-lg shadow" onclick="saveSession()">Spiel beenden & speichern</button>
+        </div>
+    </div>
+
+    <h3>Sammlung</h3>
+    <div id="collectionList" class="list-group mb-4 shadow-sm"></div>
+    <button class="btn btn-outline-secondary w-100 mb-4" data-bs-toggle="collapse" data-bs-target="#searchCol">+ Spiel hinzufügen</button>
+    <div class="collapse mb-4" id="searchCol">
+        <div class="input-group"><input type="text" id="searchInput" class="form-control"><button class="btn btn-primary" onclick="searchBGG()">🔍</button></div>
+        <div id="searchResults" class="mt-2"></div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3 mt-5">
+        <h4 class="mb-0">📜 Verlauf</h4>
+        <input type="text" id="historyFilter" class="form-control form-control-sm w-50" placeholder="Suchen..." onkeyup="filterHistory()">
+    </div>
+    <div id="historyList" class="list-group shadow-sm mb-5"></div>
+</div>
+
+<div class="modal fade" id="gameStatsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="statsGameName">Spiel-Statistik</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row text-center mb-4">
+                    <div class="col-6 border-end">
+                        <div class="small text-muted">Adrian : Lea</div>
+                        <h3 id="statsWinScore" class="fw-bold text-primary mb-0">0 : 0</h3>
+                        <small class="text-muted">Siege</small>
+                    </div>
+                    <div class="col-6">
+                        <div class="small text-muted">Partien</div>
+                        <h3 id="statsTotalPlays" class="fw-bold mb-0">0</h3>
+                        <small class="text-muted">Gesamt</small>
+                    </div>
+                </div>
+                <div class="p-2 bg-light rounded mb-3">
+                    <h6 class="fw-bold x-small text-uppercase text-muted mb-2">Highscores</h6>
+                    <div id="statsHighscores" class="d-flex justify-content-between px-2"></div>
+                </div>
+                <h6 class="fw-bold small text-uppercase text-muted mb-2">Letzte Duelle</h6>
+                <div id="statsHistoryList" class="list-group list-group-flush border-top"></div>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-primary w-100 btn-lg shadow" id="startGameBtn">Dieses Spiel spielen</button>
             </div>
         </div>
     </div>
+</div>
 
-    <div id="logSection" class="card shadow-sm mb-4 d-none">
-        <div class="card-header bg-primary text-white">Runde abschließen: <span id="activeGameName"></span></div>
-        <div class="card-body">
-            <form id="sessionForm">
-                <div class="row mb-3">
-                    <div class="col">
-                        <label class="form-label">Punkte Adrian</label>
-                        <input type="number" id="score_adrian" class="form-control form-control-lg player-score" value="0">
-                    </div>
-                    <div class="col">
-                        <label class="form-label">Punkte Lea</label>
-                        <input type="number" id="score_lea" class="form-control form-control-lg player-score" value="0">
-                    </div>
-                </div>
-                
+<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div id="modalImageContainer"></div>
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalGameName">Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
                 <div class="mb-3">
-                    <label class="form-label">Wer hat gewonnen?</label>
-                    <select id="winner_id" class="form-select form-select-lg">
-                        <option value="1">Adrian 🏆</option>
-                        <option value="2">Lea 🏆</option>
-                        <option value="0">Unentschieden / Koop</option>
-                    </select>
+                    <span id="modalDate" class="badge bg-secondary"></span>
+                    <span id="modalStartTime" class="badge bg-dark text-white"></span>
+                    <span id="modalDuration" class="badge bg-primary"></span>
                 </div>
-
-                <div class="mb-3">
-                    <label class="form-label">Beweisfoto (Siegermoment)</label>
-                    <input type="file" id="photo" class="form-control" accept="image/*" capture="camera">
-                </div>
-
-                <div class="mb-3">
-                    <textarea id="comment" class="form-control" placeholder="Besondere Momente?"></textarea>
-                </div>
-
-                <button type="button" class="btn btn-primary w-100 btn-lg" onclick="saveSession()">Sieg & Zeit speichern</button>
-            </form>
+                <div id="modalScores"></div>
+                <p id="modalComment" class="text-muted small p-2 bg-light rounded mt-3"></p>
+            </div>
         </div>
-    </div>
-
-    <h3>Deine Spiele</h3>
-    <div id="collectionList" class="list-group mb-4"></div>
-
-    <button class="btn btn-outline-secondary btn-sm w-100" type="button" data-bs-toggle="collapse" data-bs-target="#searchCollapse">+ Neues Spiel hinzufügen</button>
-    <div class="collapse mt-3" id="searchCollapse">
-        <div class="input-group">
-            <input type="text" id="searchInput" class="form-control" placeholder="BGG Suche...">
-            <button class="btn btn-primary" onclick="searchBGG()">🔍</button>
-        </div>
-        <div id="searchResults" class="mt-2"></div>
     </div>
 </div>
 
