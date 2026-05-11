@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Meine Brettspiel-Sammlung</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.6; }
+        .search-box { display: flex; gap: 10px; margin-bottom: 30px; }
+        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        .game-card { border: 1px solid #eee; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+        .add-btn { background: #28a745; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+    <h1>🎲 My BoardGame Vault</h1>
+    
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Spiel suchen (z.B. Catan)...">
+        <button onclick="searchGames()">Suchen</button>
+    </div>
+
+    <div id="results"></div>
+
+    <hr>
+    <h2>Meine Sammlung</h2>
+    <div id="collection"></div>
+
+    <script>
+        async function searchGames() {
+            const query = document.getElementById('searchInput').value;
+            const res = await fetch(`/search?name=${query}`);
+            const data = await res.json();
+            const container = document.getElementById('results');
+            container.innerHTML = '<h3>Suchergebnisse:</h3>';
+            
+            data.results.forEach(game => {
+                container.innerHTML += `
+                    <div class="game-card">
+                        <div><strong>${game.name}</strong> (${game.year})</div>
+                        <button class="add-btn" onclick="addGame('${game.name}', ${game.id}, ${game.year})">Hinzufügen</button>
+                    </div>`;
+            });
+        }
+
+        async function addGame(name, id, year) {
+            const res = await fetch(`/add?name=${name}&bgg_id=${id}&year=${year}`);
+            const data = await res.json();
+            alert(data.message || data.error);
+            loadCollection();
+        }
+
+        async function loadCollection() {
+            const res = await fetch('/collection');
+            const data = await res.json();
+            const container = document.getElementById('collection');
+            container.innerHTML = '';
+            data.collection.forEach(game => {
+                container.innerHTML += `<div class="game-card"><div><strong>${game.name}</strong> (${game.year})</div></div>`;
+            });
+        }
+
+        loadCollection(); // Sammlung beim Start laden
+    </script>
+</body>
+</html>

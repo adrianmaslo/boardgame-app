@@ -1,0 +1,16 @@
+# Python-Müll (Bytecode, Caches)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtuelle Umgebungen
+venv/
+.env
+
+# Datenbanken (lokale Daten, die nicht in die Cloud sollen)
+*.db
+backend/games.db
+
+# Betriebssystem-spezifische Dateien
+.DS_Store
+Thumbs.db

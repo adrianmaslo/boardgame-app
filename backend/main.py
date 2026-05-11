@@ -1,12 +1,23 @@
-from fastapi import FastAPI, HTTPException
+import os
 import sqlite3
-from typing import List, Optional
+import httpx
+import xmltodict
+from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
+from dotenv import load_dotenv
+from typing import Optional
+
+# 1. Konfiguration laden
+# Lädt Variablen aus der .env Datei (z.B. den BGG_TOKEN)
+load_dotenv()
 
 app = FastAPI()
 
-# 1. Datenbank beim Start initialisieren
+# 2. Datenbank-Bauplan
+# Erstellt die Tabelle 'games', falls sie noch nicht existiert
 def init_db():
-    with sqlite3.connect("games.db") as conn:
+    database_path = "games.db"
+    with sqlite3.connect(database_path) as conn:
         conn.execute("""
             CREATE TABLE IF NOT EXISTS games (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -19,37 +30,59 @@ def init_db():
 
 init_db()
 
-# --- Endpunkte ---
-
-@app.get("/")
-def home():
-    return {
-        "status": "online",
-        "endpoints": {
-            "suche": "/search?name=SPIELNAME",
-            "hinzufügen": "/add?name=NAME&bgg_id=ID&year=JAHR",
-            "sammlung": "/collection"
-        }
-    }
-
-# 2. Suche (Aktuell im Mock-Modus mit Beispieldaten)
+# 3. Such-Logik (Hybrid-Modus)
 @app.get("/search")
 async def search_bgg(name: str):
-    # Sobald dein BGG-Token da ist, ersetzen wir diesen Teil wieder durch die echte API-Anfrage
-    mock_data = [
-        {"id": "13", "name": "Catan", "year": "1995"},
-        {"id": "161936", "name": "Pandemic Legacy: Season 1", "year": "2015"},
-        {"id": "174430", "name": "Gloomhaven", "year": "2017"},
-        {"id": "31260", "name": "Agricola", "year": "2007"},
-        {"id": "224517", "name": "Brass: Birmingham", "year": "2018"}
-    ]
-    
-    results = [g for g in mock_data if name.lower() in g['name'].lower()]
-    
-    # Wenn kein Name gefunden wurde, geben wir eine kleine Auswahl zurück
-    return {"results": results if results else mock_data}
+    token = os.getenv("BGG_TOKEN")
 
-# 3. Ein Spiel zur eigenen Datenbank hinzufügen
+    # MOCK-MODUS: Aktiv, solange kein echter Token in der .env steht
+    if not token or token == "DEIN_TOKEN_KOMMT_HIER_REIN":
+        print(f"DEBUG: Suche nach '{name}' im Mock-Modus")
+        mock_data = [
+            {"id": "13", "name": "Catan (Mock)", "year": "1995"},
+            {"id": "161936", "name": "Pandemic Legacy (Mock)", "year": "2015"},
+            {"id": "174430", "name": "Gloomhaven (Mock)", "year": "2017"},
+            {"id": "31260", "name": "Agricola (Mock)", "year": "2007"}
+        ]
+        results = [g for g in mock_data if name.lower() in g['name'].lower()]
+        return {"results": results if results else mock_data}
+
+    # LIVE-MODUS: Wird automatisch genutzt, wenn der Token da ist
+    url = "https://boardgamegeek.com/xmlapi2/search"
+    headers = {"Authorization": f"Bearer {token}"}
+    params = {"query": name, "type": "boardgame"}
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.get(url, params=params, headers=headers, timeout=10.0)
+            
+            if response.status_code == 401:
+                return {"error": "Token ungültig oder noch nicht aktiv (401)."}
+            
+            data = xmltodict.parse(response.text)
+            
+            if not data.get('items') or 'item' not in data['items']:
+                return {"results": []}
+            
+            items = data['items']['item']
+            if not isinstance(items, list):
+                items = [items]
+
+            results = []
+            for item in items:
+                raw_name = item['name']
+                game_name = raw_name['@value'] if not isinstance(raw_name, list) else raw_name[0]['@value']
+                results.append({
+                    "id": item['@id'],
+                    "name": game_name,
+                    "year": item.get('yearpublished', {}).get('@value', 'n/a')
+                })
+            return {"results": results}
+            
+        except Exception as e:
+            return {"error": "BGG API nicht erreichbar", "detail": str(e)}
+
+# 4. Spiel zur Sammlung hinzufügen
 @app.get("/add")
 def add_game(name: str, bgg_id: int, year: Optional[int] = None):
     try:
@@ -60,22 +93,22 @@ def add_game(name: str, bgg_id: int, year: Optional[int] = None):
                 (name, bgg_id, year)
             )
             conn.commit()
-        return {"message": f"'{name}' wurde erfolgreich zu deiner Sammlung hinzugefügt!"}
+        return {"message": f"'{name}' wurde gespeichert!"}
     except sqlite3.IntegrityError:
-        return {"error": "Dieses Spiel ist bereits in deiner Sammlung."}
+        return {"error": "Spiel ist bereits in der Sammlung."}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# 4. Die eigene Sammlung anzeigen
+# 5. Sammlung abrufen
 @app.get("/collection")
 def get_collection():
     with sqlite3.connect("games.db") as conn:
-        conn.row_factory = sqlite3.Row  # Damit wir Spaltennamen zurückbekommen
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM games ORDER BY name ASC")
         rows = cursor.fetchall()
-        
-        # Umwandlung der Zeilen in eine Liste von Wörterbüchern
-        collection = [dict(row) for row in rows]
-        
-    return {"collection": collection, "count": len(collection)}
+        return {"collection": [dict(row) for row in rows]}
+
+# 6. Frontend ausliefern
+# WICHTIG: Muss ganz unten stehen!
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
