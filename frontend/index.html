@@ -2,110 +2,128 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lea & Adrian Game-Log</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Game-Log</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <meta name="theme-color" content="#ffffff">
 </head>
 <body>
-<div class="container mt-3">
-    <div class="card bg-dark text-white shadow mb-4">
-        <div class="card-body text-center p-3">
-            <div class="d-flex justify-content-around align-items-center">
-                <small>Adrian</small>
-                <div class="display-6 fw-bold" id="winScore">0 : 0</div>
-                <small>Lea</small>
+
+<div class="app-container">
+    <header class="app-header shadow-sm">
+        <div class="container d-flex justify-content-between align-items-center h-100 px-2">
+            <div class="score-pill adrian">Adrian <span id="dashWinsA" class="ms-1">0</span></div>
+            <div class="timer-display-top" id="timer" onclick="confirmResetTimer()">00:00:00</div>
+            <div class="score-pill lea">Lea <span id="dashWinsL" class="ms-1">0</span></div>
+        </div>
+    </header>
+
+    <main class="content-area container pt-3">
+        
+        <section id="tab-home" class="app-tab active">
+            <div id="no-game-placeholder" class="text-center mt-5 pt-5 animate-fade-in">
+                <div class="display-1 text-light mb-3">🎲</div>
+                <h4 class="text-muted fw-bold">Keine aktive Partie</h4>
+                <p class="text-muted px-4">Wähle ein Spiel aus deiner Sammlung, um zu starten.</p>
+                <button class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm" onclick="switchTab('collection')">Zur Sammlung</button>
             </div>
-            <div id="streakInfo" class="mt-2"></div>
-            <div id="achievementList" class="mt-1"></div>
-        </div>
-    </div>
 
-    <div class="card shadow-sm mb-4 text-center border-0 bg-white">
-        <div class="card-body">
-            <div id="timer" class="timer-display">00:00:00</div>
-            <button id="startBtn" class="btn btn-success btn-lg mt-2 px-4" onclick="toggleTimer()">Start</button>
-            <button class="btn btn-outline-danger btn-sm mt-2 ms-2" onclick="resetTimer()">Reset</button>
-        </div>
-    </div>
-
-    <div id="logSection" class="card shadow-sm mb-4 d-none border-primary">
-        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-            <span>Runde: <strong id="activeGameName"></strong></span>
-            <button class="btn btn-sm btn-light" onclick="resetPoints()">Reset</button>
-        </div>
-        <div class="card-body">
-            <div class="row mb-2">
-                <div class="col">
-                    <label class="small text-muted d-block text-center">Adrian</label>
-                    <input type="number" id="score_adrian" class="form-control text-center fw-bold form-control-lg" placeholder="Pkt">
+            <div id="logSection" class="match-center d-none animate-fade-in">
+                <div class="text-center mb-3">
+                    <span class="badge bg-primary-subtle text-primary rounded-pill text-uppercase px-3 py-2" id="activeGameNameDisplay">Spielname</span>
                 </div>
-                <div class="col">
-                    <label class="small text-muted d-block text-center">Lea</label>
-                    <input type="number" id="score_lea" class="form-control text-center fw-bold form-control-lg" placeholder="Pkt">
+
+                <div class="scoreboard-main shadow-sm border-0">
+                    <div class="score-column adrian">
+                        <label>ADRIAN</label>
+                        <div class="big-score" id="sum_adrian">0</div>
+                        <input type="number" id="score_adrian" class="score-input-large" placeholder="+ Pkt" inputmode="numeric">
+                    </div>
+                    <div class="score-vs">VS</div>
+                    <div class="score-column lea">
+                        <label>LEA</label>
+                        <div class="big-score" id="sum_lea">0</div>
+                        <input type="number" id="score_lea" class="score-input-large" placeholder="+ Pkt" inputmode="numeric">
+                    </div>
                 </div>
-            </div>
-            <button class="btn btn-outline-primary w-100 mb-3 fw-bold" onclick="nextRound()">➕ Nächste Runde</button>
-            <div id="roundPreview" class="small text-muted mb-3 text-center border-bottom pb-2" style="max-height: 80px; overflow-y: auto;"></div>
-            <div class="d-flex justify-content-around mb-3 p-2 bg-light rounded border">
-                <div class="text-center">Gesamt A: <span id="sum_adrian" class="fw-bold text-primary fs-5">0</span></div>
-                <div class="text-center">Gesamt L: <span id="sum_lea" class="fw-bold text-primary fs-5">0</span></div>
-            </div>
-            <select id="winner_id" class="form-select mb-3">
-                <option value="1">Adrian gewinnt 🏆</option>
-                <option value="2">Lea gewinnt 🏆</option>
-                <option value="0">Unentschieden / Koop</option>
-            </select>
-            <input type="file" id="photo" class="form-control mb-3" accept="image/*" capture="camera">
-            <textarea id="comment" class="form-control mb-3" placeholder="Notizen zum Spiel..."></textarea>
-            <button class="btn btn-primary w-100 btn-lg shadow" onclick="saveSession()">Spiel beenden & speichern</button>
-        </div>
-    </div>
 
-    <h3>Sammlung</h3>
-    <div id="collectionList" class="list-group mb-4 shadow-sm"></div>
-    <button class="btn btn-outline-secondary w-100 mb-4" data-bs-toggle="collapse" data-bs-target="#searchCol">+ Spiel hinzufügen</button>
-    <div class="collapse mb-4" id="searchCol">
-        <div class="input-group"><input type="text" id="searchInput" class="form-control"><button class="btn btn-primary" onclick="searchBGG()">🔍</button></div>
-        <div id="searchResults" class="mt-2"></div>
-    </div>
+                <button class="btn btn-primary w-100 btn-xl rounded-4 fw-bold shadow-sm mb-3" onclick="nextRound()">RUNDE EINTRAGEN</button>
+                <div id="roundPreview" class="round-history-chips mb-4"></div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3 mt-5">
-        <h4 class="mb-0">📜 Verlauf</h4>
-        <input type="text" id="historyFilter" class="form-control form-control-sm w-50" placeholder="Suchen..." onkeyup="filterHistory()">
-    </div>
-    <div id="historyList" class="list-group shadow-sm mb-5"></div>
+                <div class="action-card shadow-sm p-3 mb-4 border-0 bg-white rounded-4">
+                    <select id="winner_id" class="form-select border-0 fw-bold mb-3 bg-light rounded-3">
+                        <option value="1">🏆 Adrian hat gewonnen</option>
+                        <option value="2">🏆 Lea hat gewonnen</option>
+                        <option value="0">⚪ Unentschieden</option>
+                    </select>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-light flex-grow-1 rounded-3 fw-bold border-0" onclick="document.getElementById('photo').click()">📸 Foto</button>
+                        <button class="btn btn-light flex-grow-1 rounded-3 fw-bold border-0" onclick="toggleComment()">📝 Notiz</button>
+                    </div>
+                    <input type="file" id="photo" class="d-none" accept="image/*" capture="camera">
+                    <textarea id="comment" class="form-control border-0 mt-3 bg-light d-none" rows="2" placeholder="Besonderer Moment?"></textarea>
+                </div>
+
+                <button class="btn btn-success w-100 btn-lg rounded-4 fw-bold shadow mb-5" onclick="saveSession()">PARTIE SPEICHERN</button>
+            </div>
+        </section>
+
+        <section id="tab-collection" class="app-tab">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3 class="fw-bold m-0">Sammlung</h3>
+                <button class="btn btn-primary rounded-pill btn-sm px-3" onclick="toggleSearch()">+ Hinzufügen</button>
+            </div>
+            
+            <div class="collapse mb-4" id="searchCol">
+                <div class="input-group shadow-sm rounded-pill overflow-hidden">
+                    <input type="text" id="searchInput" class="form-control border-0 px-4" placeholder="BGG Suche...">
+                    <button class="btn btn-primary px-3" onclick="searchBGG()">🔍</button>
+                </div>
+                <div id="searchResults" class="mt-2"></div>
+            </div>
+
+            <div id="collectionList" class="list-group list-group-custom"></div>
+        </section>
+
+        <section id="tab-history" class="app-tab">
+            <h3 class="fw-bold mb-4">Verlauf</h3>
+            <div class="search-bar mb-4">
+                <input type="text" id="historyFilter" class="form-control rounded-pill border-0 shadow-sm px-4" placeholder="Nach Spiel filtern..." onkeyup="filterHistory()">
+            </div>
+            <div id="historyList" class="list-group list-group-custom"></div>
+        </section>
+    </main>
+
+    <nav class="bottom-nav">
+        <a href="javascript:void(0)" class="nav-item active" id="nav-home" onclick="switchTab('home')">
+            <span class="icon">🎲</span><span class="label">Spiel</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" id="nav-collection" onclick="switchTab('collection')">
+            <span class="icon">📚</span><span class="label">Sammlung</span>
+        </a>
+        <a href="javascript:void(0)" class="nav-item" id="nav-history" onclick="switchTab('history')">
+            <span class="icon">📜</span><span class="label">Verlauf</span>
+        </a>
+    </nav>
 </div>
 
 <div class="modal fade" id="gameStatsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title" id="statsGameName">Spiel-Statistik</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        <div class="modal-content border-0 rounded-5 shadow-lg">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="statsGameName">Stats</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div class="row text-center mb-4">
-                    <div class="col-6 border-end">
-                        <div class="small text-muted">Adrian : Lea</div>
-                        <h3 id="statsWinScore" class="fw-bold text-primary mb-0">0 : 0</h3>
-                        <small class="text-muted">Siege</small>
-                    </div>
-                    <div class="col-6">
-                        <div class="small text-muted">Partien</div>
-                        <h3 id="statsTotalPlays" class="fw-bold mb-0">0</h3>
-                        <small class="text-muted">Gesamt</small>
-                    </div>
+            <div class="modal-body pb-4">
+                <div class="row text-center mb-4 bg-light mx-1 py-3 rounded-4">
+                    <div class="col"><small class="text-muted d-block x-small">ADRIAN</small><h2 class="fw-bold text-primary mb-0" id="statsWinsA">0</h2></div>
+                    <div class="col-auto d-flex align-items-center text-muted">vs</div>
+                    <div class="col"><small class="text-muted d-block x-small">LEA</small><h2 class="fw-bold text-danger mb-0" id="statsWinsL">0</h2></div>
                 </div>
-                <div class="p-2 bg-light rounded mb-3">
-                    <h6 class="fw-bold x-small text-uppercase text-muted mb-2">Highscores</h6>
-                    <div id="statsHighscores" class="d-flex justify-content-between px-2"></div>
-                </div>
-                <h6 class="fw-bold small text-uppercase text-muted mb-2">Letzte Duelle</h6>
-                <div id="statsHistoryList" class="list-group list-group-flush border-top"></div>
-            </div>
-            <div class="modal-footer border-0">
-                <button class="btn btn-primary w-100 btn-lg shadow" id="startGameBtn">Dieses Spiel spielen</button>
+                <h6 class="fw-bold small text-muted text-uppercase mb-2 px-1">Head-to-Head</h6>
+                <div id="statsHistoryList" class="list-group list-group-flush mb-4"></div>
+                <button class="btn btn-primary w-100 btn-xl rounded-4 fw-bold shadow" id="startGameBtn">PARTIE STARTEN</button>
             </div>
         </div>
     </div>
@@ -113,20 +131,25 @@
 
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div id="modalImageContainer"></div>
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold" id="modalGameName">Details</h5>
+        <div class="modal-content border-0 rounded-5 shadow-lg overflow-hidden">
+            <div id="modalImageContainer" class="bg-light"></div>
+            <div class="modal-header border-0">
+                <div>
+                    <h5 class="modal-title fw-bold mb-0" id="modalGameName">Details</h5>
+                    <small id="modalFullDate" class="text-muted small"></small>
+                </div>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <span id="modalDate" class="badge bg-secondary"></span>
-                    <span id="modalStartTime" class="badge bg-dark text-white"></span>
-                    <span id="modalDuration" class="badge bg-primary"></span>
+            <div class="modal-body pt-0">
+                <div class="d-flex gap-2 mb-3">
+                    <span id="modalDuration" class="badge rounded-pill bg-primary-subtle text-primary"></span>
+                    <span id="modalStartTime" class="badge rounded-pill bg-light text-dark border"></span>
                 </div>
                 <div id="modalScores"></div>
-                <p id="modalComment" class="text-muted small p-2 bg-light rounded mt-3"></p>
+                <div id="modalCommentBox" class="p-3 bg-light rounded-4 mt-3 d-none">
+                    <small class="text-muted d-block mb-1 text-uppercase fw-bold x-small">Notiz</small>
+                    <div id="modalComment" class="italic small"></div>
+                </div>
             </div>
         </div>
     </div>

@@ -1,36 +1,119 @@
-body { background-color: #f4f7f6; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+:root {
+    --primary: #007AFF;
+    --danger: #FF3B30;
+    --bg: #F2F2F7;
+    --card: #FFFFFF;
+}
 
-.timer-display { 
-    font-size: 3.5rem; 
+body {
+    background-color: var(--bg);
+    font-family: -apple-system, system-ui, sans-serif;
+    color: #1C1C1E;
+    padding-bottom: 90px;
+    overflow-x: hidden;
+}
+
+/* HEADER & NAV */
+.app-header { 
+    background: rgba(255, 255, 255, 0.8); 
+    backdrop-filter: blur(10px); 
+    height: 60px; 
+    position: sticky; 
+    top: 0; 
+    z-index: 1000; 
+}
+
+.score-pill { 
+    padding: 6px 14px; 
+    border-radius: 20px; 
+    color: white; 
+    font-weight: 700; 
+    font-size: 0.75rem; /* Etwas kleiner für volle Namen */
+    white-space: nowrap;
+}
+.score-pill.adrian { background: var(--primary); }
+.score-pill.lea { background: var(--danger); }
+
+.timer-display-top { 
     font-weight: 800; 
-    color: #0d6efd; 
-    font-family: 'Courier New', Courier, monospace;
-    letter-spacing: -2px;
+    font-size: 1.1rem; 
+    font-family: monospace;
+    flex-grow: 1;
+    text-align: center;
 }
 
-.player-score { font-size: 1.2rem; text-align: center; font-weight: bold; border-radius: 8px; }
-
-/* Chronik Liste */
-.list-group-item-action {
-    transition: all 0.2s;
-    border-left: 5px solid transparent;
+.bottom-nav { 
+    position: fixed; 
+    bottom: 0; 
+    left: 0; 
+    right: 0; 
+    height: 80px; 
+    background: rgba(255, 255, 255, 0.9); 
+    backdrop-filter: blur(20px); 
+    display: flex; 
+    justify-content: space-around; 
+    border-top: 1px solid #D1D1D6; 
+    z-index: 2000; 
+    padding-bottom: env(safe-area-inset-bottom);
 }
 
-.list-group-item-action:active { background-color: #e9ecef; }
-
-.list-group-item-action:hover {
-    border-left: 5px solid #0d6efd;
-    background-color: #ffffff;
+.nav-item { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: center; 
+    text-decoration: none; 
+    color: #8E8E93; 
+    width: 33%;
 }
+.nav-item.active { color: var(--primary); }
+.nav-item .icon { font-size: 1.5rem; }
+.nav-item .label { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; }
 
-/* Modal Foto */
-#modalImageContainer img {
-    border-top-left-radius: 0.3rem;
-    border-top-right-radius: 0.3rem;
-    width: 100%;
-    max-height: 250px;
-    object-fit: cover;
-    display: block;
+/* TABS & ANIMATION */
+.app-tab { display: none; }
+.app-tab.active { display: block; animation: slideUp 0.3s ease-out; }
+@keyframes slideUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+/* SCOREBOARD */
+.scoreboard-main { 
+    background: var(--card); 
+    border-radius: 24px; 
+    display: flex; 
+    padding: 24px; 
+    margin-bottom: 20px; 
+    align-items: center; 
 }
+.score-column { flex: 1; text-align: center; }
+.score-column label { font-size: 0.6rem; font-weight: 800; color: #8E8E93; letter-spacing: 1px; margin-bottom: 5px; display: block; }
+.big-score { font-size: 3.2rem; font-weight: 900; line-height: 1; margin-bottom: 10px; }
+.score-column.adrian .big-score { color: var(--primary); }
+.score-column.lea .big-score { color: var(--danger); }
 
-.badge { font-weight: 500; }
+.score-input-large { 
+    width: 100%; 
+    border: none; 
+    background: #F2F2F7; 
+    border-radius: 12px; 
+    padding: 12px; 
+    text-align: center; 
+    font-weight: 700; 
+    font-size: 1.1rem; 
+}
+.score-vs { font-weight: 800; color: #D1D1D6; margin: 0 5px; padding-top: 15px; }
+
+/* LISTS & MODALS */
+.list-group-custom .list-group-item { 
+    background: var(--card); 
+    border: none; 
+    margin-bottom: 12px; 
+    border-radius: 18px !important; 
+    padding: 16px; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03); 
+}
+.rounded-5 { border-radius: 30px !important; }
+.x-small { font-size: 0.65rem; }
+.italic { font-style: italic; }
+
+.btn-xl { padding: 16px; font-size: 1.1rem; }
+.rounded-4 { border-radius: 20px !important; }
