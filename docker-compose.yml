@@ -3,7 +3,8 @@ services:
     image: python:3.11-slim
     volumes:
       - ./backend:/app
-      - ./frontend:/app/static  # NEU: Das Frontend-Verzeichnis spiegeln
+      - ./frontend:/app/static
+      - ./uploads:/app/uploads  # WICHTIG: Hier landen eure Fotos
     working_dir: /app
     command: sh -c "pip install -r requirements.txt && uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
     ports:

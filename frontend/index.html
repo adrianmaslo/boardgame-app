@@ -2,65 +2,82 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <title>Meine Brettspiel-Sammlung</title>
-    <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 40px auto; padding: 20px; line-height: 1.6; }
-        .search-box { display: flex; gap: 10px; margin-bottom: 30px; }
-        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .game-card { border: 1px solid #eee; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
-        .add-btn { background: #28a745; font-size: 0.8em; }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lea & Adrian Game-Log</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h1>🎲 My BoardGame Vault</h1>
-    
-    <div class="search-box">
-        <input type="text" id="searchInput" placeholder="Spiel suchen (z.B. Catan)...">
-        <button onclick="searchGames()">Suchen</button>
+
+<div class="container mt-4">
+    <header class="text-center mb-4">
+        <h1>🎲 Game-Tracker</h1>
+        <p class="text-muted">Adrian & Lea Edition</p>
+    </header>
+
+    <div class="card shadow-sm mb-4 text-center">
+        <div class="card-body">
+            <h5 class="card-title text-uppercase text-muted">Aktuelle Spielzeit</h5>
+            <div id="timer" class="timer-display">00:00:00</div>
+            <div class="mt-3">
+                <button id="startBtn" class="btn btn-success btn-lg px-4" onclick="toggleTimer()">Start</button>
+                <button id="resetBtn" class="btn btn-outline-danger btn-sm ms-2" onclick="resetTimer()">Reset</button>
+            </div>
+        </div>
     </div>
 
-    <div id="results"></div>
+    <div id="logSection" class="card shadow-sm mb-4 d-none">
+        <div class="card-header bg-primary text-white">Runde abschließen: <span id="activeGameName"></span></div>
+        <div class="card-body">
+            <form id="sessionForm">
+                <div class="row mb-3">
+                    <div class="col">
+                        <label class="form-label">Punkte Adrian</label>
+                        <input type="number" id="score_adrian" class="form-control form-control-lg player-score" value="0">
+                    </div>
+                    <div class="col">
+                        <label class="form-label">Punkte Lea</label>
+                        <input type="number" id="score_lea" class="form-control form-control-lg player-score" value="0">
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label class="form-label">Wer hat gewonnen?</label>
+                    <select id="winner_id" class="form-select form-select-lg">
+                        <option value="1">Adrian 🏆</option>
+                        <option value="2">Lea 🏆</option>
+                        <option value="0">Unentschieden / Koop</option>
+                    </select>
+                </div>
 
-    <hr>
-    <h2>Meine Sammlung</h2>
-    <div id="collection"></div>
+                <div class="mb-3">
+                    <label class="form-label">Beweisfoto (Siegermoment)</label>
+                    <input type="file" id="photo" class="form-control" accept="image/*" capture="camera">
+                </div>
 
-    <script>
-        async function searchGames() {
-            const query = document.getElementById('searchInput').value;
-            const res = await fetch(`/search?name=${query}`);
-            const data = await res.json();
-            const container = document.getElementById('results');
-            container.innerHTML = '<h3>Suchergebnisse:</h3>';
-            
-            data.results.forEach(game => {
-                container.innerHTML += `
-                    <div class="game-card">
-                        <div><strong>${game.name}</strong> (${game.year})</div>
-                        <button class="add-btn" onclick="addGame('${game.name}', ${game.id}, ${game.year})">Hinzufügen</button>
-                    </div>`;
-            });
-        }
+                <div class="mb-3">
+                    <textarea id="comment" class="form-control" placeholder="Besondere Momente?"></textarea>
+                </div>
 
-        async function addGame(name, id, year) {
-            const res = await fetch(`/add?name=${name}&bgg_id=${id}&year=${year}`);
-            const data = await res.json();
-            alert(data.message || data.error);
-            loadCollection();
-        }
+                <button type="button" class="btn btn-primary w-100 btn-lg" onclick="saveSession()">Sieg & Zeit speichern</button>
+            </form>
+        </div>
+    </div>
 
-        async function loadCollection() {
-            const res = await fetch('/collection');
-            const data = await res.json();
-            const container = document.getElementById('collection');
-            container.innerHTML = '';
-            data.collection.forEach(game => {
-                container.innerHTML += `<div class="game-card"><div><strong>${game.name}</strong> (${game.year})</div></div>`;
-            });
-        }
+    <h3>Deine Spiele</h3>
+    <div id="collectionList" class="list-group mb-4"></div>
 
-        loadCollection(); // Sammlung beim Start laden
-    </script>
+    <button class="btn btn-outline-secondary btn-sm w-100" type="button" data-bs-toggle="collapse" data-bs-target="#searchCollapse">+ Neues Spiel hinzufügen</button>
+    <div class="collapse mt-3" id="searchCollapse">
+        <div class="input-group">
+            <input type="text" id="searchInput" class="form-control" placeholder="BGG Suche...">
+            <button class="btn btn-primary" onclick="searchBGG()">🔍</button>
+        </div>
+        <div id="searchResults" class="mt-2"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="app.js"></script>
 </body>
 </html>

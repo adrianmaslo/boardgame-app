@@ -3,3 +3,4 @@ uvicorn
 httpx
 xmltodict
 python-dotenv
+python-multipart
