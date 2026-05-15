@@ -1,4 +1,5 @@
 {
+  "id": "/",
   "name": "Game-Log Pro",
   "short_name": "Game-Log",
   "description": "Der ultimative Boardgame Tracker",
@@ -8,13 +9,13 @@
   "theme_color": "#0f172a",
   "icons": [
     {
-      "src": "/icons/icon.png?v=1",
+      "src": "icons/icon.png?v=1",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon.png?v=1",
+      "src": "icons/icon.png?v=1",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
