@@ -2,8 +2,6 @@
 
 **Game-Log Pro** is a modern, responsive, and fully-featured board game tracker built for board game enthusiasts to easily log their sessions, track their collection, and view advanced competitive statistics.
 
-![Game-Log Pro](https://via.placeholder.com/800x400.png?text=Game-Log+Pro)
-
 ## ✨ Features
 
 - **📊 Advanced Dashboard & Stats**: Keep track of the "Ewiges Duell" (Eternal Duel) between players. Earn virtual achievements and streaks based on your play history!
