@@ -113,6 +113,18 @@ def delete_game(game_id: int):
         conn.commit()
         return {"status": "Erfolg"}
 
+@router.patch("/toggle_win_condition/{game_id}")
+def toggle_win_condition(game_id: int):
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        current = c.execute("SELECT win_condition FROM games WHERE id = ?", (game_id,)).fetchone()
+        if not current:
+            raise HTTPException(status_code=404, detail="Spiel nicht gefunden")
+        new_cond = 1 if current["win_condition"] == 0 else 0
+        c.execute("UPDATE games SET win_condition = ? WHERE id = ?", (new_cond, game_id))
+        conn.commit()
+        return {"status": "Erfolg", "new_win_condition": new_cond}
+
 @router.get("/collection")
 def get_collection():
     with get_db_connection() as conn:

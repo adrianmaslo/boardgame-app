@@ -70,28 +70,20 @@ def get_history():
             res.append({**dict(s), "scores": [dict(sc) for sc in scores], "rounds": [dict(r) for r in rounds]})
         return {"history": res}
 
-# --- NEU: Ganze Partie löschen (inkl. Foto) ---
 @router.delete("/session/{session_id}")
 def delete_session(session_id: int):
     with get_db_connection() as conn:
         c = conn.cursor()
         try:
-            # 1. Prüfen, ob es ein Foto gibt, und dieses von der Festplatte löschen
             photo_row = c.execute("SELECT photo_path FROM sessions WHERE id = ?", (session_id,)).fetchone()
             if photo_row and photo_row["photo_path"]:
                 full_path = photo_row["photo_path"]
                 if os.path.exists(full_path):
                     os.remove(full_path)
 
-            # 2. Verknüpfte Runden löschen
             c.execute("DELETE FROM round_scores WHERE session_id = ?", (session_id,))
-            
-            # 3. Verknüpfte Spieler-Endstände löschen
             c.execute("DELETE FROM scores WHERE session_id = ?", (session_id,))
-            
-            # 4. Die eigentliche Partie aus der Datenbank löschen
             c.execute("DELETE FROM sessions WHERE id = ?", (session_id,))
-            
             conn.commit()
             return {"status": "Erfolg"}
         except Exception as e:

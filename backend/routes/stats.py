@@ -1,4 +1,5 @@
-from fastapi import APIRouter
+import os
+from fastapi import APIRouter, HTTPException
 from database import get_db_connection
 
 router = APIRouter(prefix="/stats", tags=["stats"])
@@ -9,17 +10,46 @@ def get_dashboard_stats():
         c = conn.cursor()
         
         # 1. Gesamtsiege pro Spieler
-        wins = c.execute("""
+        wins_rows = c.execute("""
             SELECT p.name, COUNT(sc.id) as win_count 
             FROM players p
             LEFT JOIN scores sc ON p.id = sc.player_id AND sc.is_winner = 1
             GROUP BY p.name
         """).fetchall()
+        wins = {"Adrian": 0, "Lea": 0}
+        for row in wins_rows:
+            wins[row["name"]] = row["win_count"]
+            
+        # 2. Meistgespieltes Spiel (Dauerbrenner)
+        most_played = c.execute("""
+            SELECT g.name, g.image_url, COUNT(s.id) as count FROM sessions s 
+            JOIN games g ON s.game_id = g.id 
+            GROUP BY s.game_id ORDER BY count DESC LIMIT 1
+        """).fetchone()
         
-        # 2. Dynamische Streak-Berechnung (zählt alle Niederlagen bis zum letzten Sieg)
+        # 3. Adrians Festung (Das Spiel mit seinen meisten Siegen)
+        best_adrian = c.execute("""
+            SELECT g.name, g.image_url, COUNT(*) as wins FROM scores sc
+            JOIN sessions s ON sc.session_id = s.id
+            JOIN games g ON s.game_id = g.id
+            JOIN players p ON sc.player_id = p.id
+            WHERE p.name = 'Adrian' AND sc.is_winner = 1
+            GROUP BY s.game_id ORDER BY wins DESC LIMIT 1
+        """).fetchone()
+
+        # 4. Leas Imperium (Das Spiel mit ihren meisten Siegen)
+        best_lea = c.execute("""
+            SELECT g.name, g.image_url, COUNT(*) as wins FROM scores sc
+            JOIN sessions s ON sc.session_id = s.id
+            JOIN games g ON s.game_id = g.id
+            JOIN players p ON sc.player_id = p.id
+            WHERE p.name = 'Lea' AND sc.is_winner = 1
+            GROUP BY s.game_id ORDER BY wins DESC LIMIT 1
+        """).fetchone()
+        
+        # 5. Dynamische Streak-Berechnung (Deine Pechsträhnen-Logik behalten!)
         streaks = {}
         for p_name in ["Adrian", "Lea"]:
-            # Alle Ergebnisse des Spielers holen (von neu nach alt)
             results = c.execute("""
                 SELECT sc.is_winner 
                 FROM scores sc
@@ -34,13 +64,16 @@ def get_dashboard_stats():
                 if r["is_winner"] == 0:
                     count += 1
                 else:
-                    break # Serie gerissen durch einen Sieg
+                    break
             
             if count >= 3:
                 streaks[p_name] = f"Pechsträhne! {count} Niederlagen in Folge."
 
         return {
-            "wins": {row["name"]: row["win_count"] for row in wins},
+            "wins": wins,
+            "most_played": dict(most_played) if most_played else None,
+            "best_adrian": dict(best_adrian) if best_adrian else None,
+            "best_lea": dict(best_lea) if best_lea else None,
             "streaks": streaks,
             "achievements": ["🔥 Serie läuft!"] if any(s for s in streaks) else []
         }
@@ -50,12 +83,12 @@ def get_game_specific_stats(game_id: int):
     with get_db_connection() as conn:
         c = conn.cursor()
         
-        # 1. Grundinfos zum Spiel
-        game = c.execute("SELECT name FROM games WHERE id = ?", (game_id,)).fetchone()
+        game = c.execute("SELECT name, win_condition FROM games WHERE id = ?", (game_id,)).fetchone()
         if not game:
             return {"error": "Spiel nicht gefunden"}
             
-        # 2. Siege Adrian vs. Lea für dieses Spiel
+        win_condition = game["win_condition"]
+            
         wins_query = c.execute("""
             SELECT p.name, COUNT(sc.id) as win_count 
             FROM players p
@@ -65,17 +98,25 @@ def get_game_specific_stats(game_id: int):
             GROUP BY p.name
         """, (game_id,)).fetchall()
 
-        # 3. Highscores für dieses Spiel
-        highscores_query = c.execute("""
-            SELECT p.name, MAX(sc.score_value) as max_score
-            FROM scores sc
-            JOIN players p ON p.id = sc.player_id
-            JOIN sessions s ON s.id = sc.session_id
-            WHERE s.game_id = ?
-            GROUP BY p.name
-        """, (game_id,)).fetchall()
+        if win_condition == 1:
+            highscores_query = c.execute("""
+                SELECT p.name, MIN(sc.score_value) as max_score
+                FROM scores sc
+                JOIN players p ON p.id = sc.player_id
+                JOIN sessions s ON s.id = sc.session_id
+                WHERE s.game_id = ?
+                GROUP BY p.name
+            """, (game_id,)).fetchall()
+        else:
+            highscores_query = c.execute("""
+                SELECT p.name, MAX(sc.score_value) as max_score
+                FROM scores sc
+                JOIN players p ON p.id = sc.player_id
+                JOIN sessions s ON s.id = sc.session_id
+                WHERE s.game_id = ?
+                GROUP BY p.name
+            """, (game_id,)).fetchall()
 
-        # 4. Historie nur für dieses Spiel laden
         history_query = c.execute("""
             SELECT s.* FROM sessions s 
             WHERE s.game_id = ? 
@@ -84,7 +125,6 @@ def get_game_specific_stats(game_id: int):
         
         full_history = []
         for s in history_query:
-            # Endergebnisse der Session
             scs = c.execute("""
                 SELECT p.name, sc.score_value, sc.is_winner 
                 FROM scores sc 
@@ -92,7 +132,6 @@ def get_game_specific_stats(game_id: int):
                 WHERE session_id = ?
             """, (s["id"],)).fetchall()
             
-            # Runden der Session
             rds = c.execute("""
                 SELECT round_number, p.name, points 
                 FROM round_scores rs
@@ -109,8 +148,76 @@ def get_game_specific_stats(game_id: int):
 
         return {
             "game_name": game["name"],
+            "win_condition": win_condition,
             "wins": {row["name"]: row["win_count"] for row in wins_query},
             "highscores": {row["name"]: row["max_score"] for row in highscores_query},
             "total_plays": len(full_history),
             "history": full_history
+        }
+
+# --- HIER SIND JETZT DIE COOLEST ADVANCED STATS SAUBER EINGEBAUT ---
+@router.get("/game/{game_id}/advanced")
+def get_advanced_game_stats(game_id: int):
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        
+        total_games = c.execute("SELECT COUNT(*) FROM sessions WHERE game_id = ?", (game_id,)).fetchone()[0]
+        if total_games == 0:
+            return {"total_games": 0}
+            
+        avg_time = c.execute("SELECT AVG(duration_seconds) FROM sessions WHERE game_id = ?", (game_id,)).fetchone()[0]
+        max_time = c.execute("SELECT MAX(duration_seconds) FROM sessions WHERE game_id = ?", (game_id,)).fetchone()[0]
+        
+        win_cond_row = c.execute("SELECT win_condition FROM games WHERE id = ?", (game_id,)).fetchone()
+        win_condition = win_cond_row[0] if win_cond_row else 0
+        
+        if win_condition == 1:
+            avg_scores_rows = c.execute("""
+                SELECT p.name, AVG(sc.score_value) as avg_score, MIN(sc.score_value) as max_score
+                FROM scores sc
+                JOIN players p ON sc.player_id = p.id
+                JOIN sessions s ON sc.session_id = s.id
+                WHERE s.game_id = ?
+                GROUP BY p.name
+            """, (game_id,)).fetchall()
+            
+            all_time_high = c.execute("""
+                SELECT p.name, sc.score_value FROM scores sc
+                JOIN players p ON sc.player_id = p.id
+                JOIN sessions s ON sc.session_id = s.id
+                WHERE s.game_id = ?
+                ORDER BY sc.score_value ASC LIMIT 1
+            """, (game_id,)).fetchone()
+        else:
+            avg_scores_rows = c.execute("""
+                SELECT p.name, AVG(sc.score_value) as avg_score, MAX(sc.score_value) as max_score
+                FROM scores sc
+                JOIN players p ON sc.player_id = p.id
+                JOIN sessions s ON sc.session_id = s.id
+                WHERE s.game_id = ?
+                GROUP BY p.name
+            """, (game_id,)).fetchall()
+            
+            all_time_high = c.execute("""
+                SELECT p.name, sc.score_value FROM scores sc
+                JOIN players p ON sc.player_id = p.id
+                JOIN sessions s ON sc.session_id = s.id
+                WHERE s.game_id = ?
+                ORDER BY sc.score_value DESC LIMIT 1
+            """, (game_id,)).fetchone()
+
+        player_stats = {}
+        for row in avg_scores_rows:
+            player_stats[row["name"]] = {
+                "avg": round(row["avg_score"], 1),
+                "max": row["max_score"]
+            }
+
+        return {
+            "total_games": total_games,
+            "win_condition": win_condition,
+            "avg_time_mins": round(avg_time / 60) if avg_time else 0,
+            "max_time_mins": round(max_time / 60) if max_time else 0,
+            "player_stats": player_stats,
+            "all_time_high": dict(all_time_high) if all_time_high else None
         }
