@@ -25,6 +25,7 @@ The easiest way to run Game-Log Pro is via Docker.
 ### Prerequisites
 - [Docker](https://docs.docker.com/get-docker/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
+- **BoardGameGeek API Token**: As of 2025, BGG requires an API token for requests. You can obtain one by registering your application on the [BGG Applications page](https://boardgamegeek.com/applications).
 
 ### Installation & Setup
 
@@ -34,12 +35,18 @@ The easiest way to run Game-Log Pro is via Docker.
    cd boardgame-app
    ```
 
-2. **Start the application:**
+2. **Configure Environment Variables:**
+   Create a `.env` file in the `backend` directory (if it doesn't exist) and add your BoardGameGeek API token:
+   ```env
+   BGG_TOKEN=your_token_here
+   ```
+
+3. **Start the application:**
    ```bash
    docker-compose up -d
    ```
 
-3. **Access the App:**
+4. **Access the App:**
    Open your browser and navigate to:
    ```
    http://localhost:8000
