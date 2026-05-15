@@ -1,4 +1,5 @@
 import sqlite3
+import os
 
 DATABASE_NAME = "games.db"
 
@@ -64,6 +65,8 @@ def init_db():
             points INTEGER,
             FOREIGN KEY (session_id) REFERENCES sessions (id)
         )""")
-        c.execute("INSERT OR IGNORE INTO players (name) VALUES (?)", ("Adrian",))
-        c.execute("INSERT OR IGNORE INTO players (name) VALUES (?)", ("Lea",))
+        p1 = os.getenv("PLAYER_1_NAME", "Adrian")
+        p2 = os.getenv("PLAYER_2_NAME", "Lea")
+        c.execute("INSERT OR IGNORE INTO players (name) VALUES (?)", (p1,))
+        c.execute("INSERT OR IGNORE INTO players (name) VALUES (?)", (p2,))
         conn.commit()

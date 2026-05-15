@@ -36,9 +36,11 @@ The easiest way to run Game-Log Pro is via Docker.
    ```
 
 2. **Configure Environment Variables:**
-   Create a `.env` file in the `backend` directory (if it doesn't exist) and add your BoardGameGeek API token:
+   Create a `.env` file in the `backend` directory (if it doesn't exist) and add your BoardGameGeek API token and player names:
    ```env
    BGG_TOKEN=your_token_here
+   PLAYER_1_NAME=Adrian
+   PLAYER_2_NAME=Lea
    ```
 
 3. **Start the application:**
@@ -57,16 +59,26 @@ The easiest way to run Game-Log Pro is via Docker.
 - `/backend`: Contains the FastAPI application, database logic, and API routes (`/routes`).
   - `database.py`: SQLite schema and connection handling.
   - `main.py`: Application entry point.
-- `/frontend`: Contains all static files (HTML, CSS, JS) and PWA configurations (`manifest.json`, `sw.js`).
+- `/frontend`: Contains all static files (HTML, CSS), the modular JavaScript files (`/js`), and PWA configurations (`manifest.json`, `sw.js`).
+- `/uploads`: Root directory where all user-uploaded session photos are securely stored and mounted into the container.
 - `docker-compose.yml`: Configuration for running the app inside a container.
 
-## 🎨 Customization
+## 🎨 Customization (Player Names)
 
-Currently, the player names ("Adrian" and "Lea") are hard-coded in several places across the frontend and backend (including database initialization and specific stats calculations). 
+The player names can be configured via environment variables in the `.env` file. By default, they are set to "Adrian" and "Lea".
 
-If you want to use this app with different names, the easiest way is to use the **Search and Replace** feature of your code editor to replace:
-- `Adrian` -> Your Name
-- `Lea` -> Partner's Name
+To use different names:
+1. Open the `backend/.env` file.
+2. Add or update the following variables:
+   ```env
+   PLAYER_1_NAME=YourName
+   PLAYER_2_NAME=PartnerName
+   ```
+
+> [!IMPORTANT]
+> **Existing Database**: If you change the names in the `.env` file after the database has already been initialized, the existing players in the database will not be automatically renamed. You will need to either:
+> 1. Manually update the `players` table in `backend/games.db`.
+> 2. Delete the `backend/games.db` file to recreate it with the new names (Note: This will delete all your logged sessions!).
 
 ## 📝 License
 

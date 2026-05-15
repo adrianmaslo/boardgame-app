@@ -6,6 +6,9 @@ router = APIRouter(prefix="/stats", tags=["stats"])
 
 @router.get("/dashboard")
 def get_dashboard_stats():
+    p1 = os.getenv("PLAYER_1_NAME", "Adrian")
+    p2 = os.getenv("PLAYER_2_NAME", "Lea")
+    
     with get_db_connection() as conn:
         c = conn.cursor()
         
@@ -16,7 +19,7 @@ def get_dashboard_stats():
             LEFT JOIN scores sc ON p.id = sc.player_id AND sc.is_winner = 1
             GROUP BY p.name
         """).fetchall()
-        wins = {"Adrian": 0, "Lea": 0}
+        wins = {p1: 0, p2: 0}
         for row in wins_rows:
             wins[row["name"]] = row["win_count"]
             
@@ -27,29 +30,29 @@ def get_dashboard_stats():
             GROUP BY s.game_id ORDER BY count DESC LIMIT 1
         """).fetchone()
         
-        # 3. Adrians Festung (Das Spiel mit seinen meisten Siegen)
-        best_adrian = c.execute("""
+        # 3. Player 1's Fortress
+        best_p1 = c.execute("""
             SELECT g.name, g.image_url, COUNT(*) as wins FROM scores sc
             JOIN sessions s ON sc.session_id = s.id
             JOIN games g ON s.game_id = g.id
             JOIN players p ON sc.player_id = p.id
-            WHERE p.name = 'Adrian' AND sc.is_winner = 1
+            WHERE p.name = ? AND sc.is_winner = 1
             GROUP BY s.game_id ORDER BY wins DESC LIMIT 1
-        """).fetchone()
+        """, (p1,)).fetchone()
 
-        # 4. Leas Imperium (Das Spiel mit ihren meisten Siegen)
-        best_lea = c.execute("""
+        # 4. Player 2's Empire
+        best_p2 = c.execute("""
             SELECT g.name, g.image_url, COUNT(*) as wins FROM scores sc
             JOIN sessions s ON sc.session_id = s.id
             JOIN games g ON s.game_id = g.id
             JOIN players p ON sc.player_id = p.id
-            WHERE p.name = 'Lea' AND sc.is_winner = 1
+            WHERE p.name = ? AND sc.is_winner = 1
             GROUP BY s.game_id ORDER BY wins DESC LIMIT 1
-        """).fetchone()
+        """, (p2,)).fetchone()
         
-        # 5. Dynamische Streak-Berechnung (Deine Pechsträhnen-Logik behalten!)
+        # 5. Dynamische Streak-Berechnung
         streaks = {}
-        for p_name in ["Adrian", "Lea"]:
+        for p_name in [p1, p2]:
             results = c.execute("""
                 SELECT sc.is_winner 
                 FROM scores sc
@@ -70,7 +73,7 @@ def get_dashboard_stats():
                 streaks[p_name] = f"💔 {count} Niederlagen in Folge"
 
         # 6. Echte Achievements (Badges)
-        achievements = {"Adrian": [], "Lea": []}
+        achievements = {p1: [], p2: []}
         
         night_owls = c.execute("""
             SELECT p.name FROM sessions s
@@ -79,8 +82,9 @@ def get_dashboard_stats():
             WHERE strftime('%H', datetime(play_date, 'localtime')) IN ('00', '01', '02', '03', '04', '05') AND sc.is_winner = 1
         """).fetchall()
         for no in night_owls:
-            if "🦇 Nachtschwärmer" not in achievements[no["name"]]:
-                achievements[no["name"]].append("🦇 Nachtschwärmer")
+            if no["name"] in achievements:
+                if "🦇 Nachtschwärmer" not in achievements[no["name"]]:
+                    achievements[no["name"]].append("🦇 Nachtschwärmer")
             
         marathons = c.execute("""
             SELECT p.name FROM sessions s
@@ -89,10 +93,11 @@ def get_dashboard_stats():
             WHERE duration_seconds >= 10800 AND sc.is_winner = 1
         """).fetchall()
         for m in marathons:
-            if "🏃‍♂️ Marathon-Gamer" not in achievements[m["name"]]:
-                achievements[m["name"]].append("🏃‍♂️ Marathon-Gamer")
+            if m["name"] in achievements:
+                if "🏃‍♂️ Marathon-Gamer" not in achievements[m["name"]]:
+                    achievements[m["name"]].append("🏃‍♂️ Marathon-Gamer")
             
-        for p_name in ["Adrian", "Lea"]:
+        for p_name in [p1, p2]:
             asc_results = c.execute("""
                 SELECT sc.is_winner 
                 FROM scores sc
@@ -116,10 +121,12 @@ def get_dashboard_stats():
         return {
             "wins": wins,
             "most_played": dict(most_played) if most_played else None,
-            "best_adrian": dict(best_adrian) if best_adrian else None,
-            "best_lea": dict(best_lea) if best_lea else None,
+            "best_player1": dict(best_p1) if best_p1 else None,
+            "best_player2": dict(best_p2) if best_p2 else None,
             "streaks": streaks,
-            "achievements": achievements
+            "achievements": achievements,
+            "player1_name": p1,
+            "player2_name": p2
         }
 
 @router.get("/game/{game_id}")

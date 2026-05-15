@@ -34,18 +34,20 @@ async def record_session(
         s_id = c.lastrowid
         
         p_ids = {row["name"]: row["id"] for row in c.execute("SELECT * FROM players").fetchall()}
+        p1 = os.getenv("PLAYER_1_NAME", "Adrian")
+        p2 = os.getenv("PLAYER_2_NAME", "Lea")
         
         c.execute("INSERT INTO scores (session_id, player_id, score_value, is_winner) VALUES (?, ?, ?, ?)",
-                  (s_id, p_ids["Adrian"], score_adrian, 1 if int(winner_id) == 1 else 0))
+                  (s_id, p_ids[p1], score_adrian, 1 if int(winner_id) == 1 else 0))
         c.execute("INSERT INTO scores (session_id, player_id, score_value, is_winner) VALUES (?, ?, ?, ?)",
-                  (s_id, p_ids["Lea"], score_lea, 1 if int(winner_id) == 2 else 0))
+                  (s_id, p_ids[p2], score_lea, 1 if int(winner_id) == 2 else 0))
         
         rounds_data = json.loads(rounds_json)
         for r in rounds_data:
             c.execute("INSERT INTO round_scores (session_id, round_number, player_id, points) VALUES (?, ?, ?, ?)",
-                      (s_id, r['round'], p_ids["Adrian"], r['adrian']))
+                      (s_id, r['round'], p_ids[p1], r.get('p1', r.get('adrian', 0))))
             c.execute("INSERT INTO round_scores (session_id, round_number, player_id, points) VALUES (?, ?, ?, ?)",
-                      (s_id, r['round'], p_ids["Lea"], r['lea']))
+                      (s_id, r['round'], p_ids[p2], r.get('p2', r.get('lea', 0))))
         conn.commit()
     return {"status": "Erfolg"}
 
@@ -121,14 +123,16 @@ def edit_session(session_id: int, data: EditSession):
             c.execute(f"UPDATE sessions SET {', '.join(updates)} WHERE id = ?", params)
             
         p_ids = {row["name"]: row["id"] for row in c.execute("SELECT * FROM players").fetchall()}
+        p1 = os.getenv("PLAYER_1_NAME", "Adrian")
+        p2 = os.getenv("PLAYER_2_NAME", "Lea")
         
         if data.score_adrian is not None and data.winner_id is not None:
             c.execute("UPDATE scores SET score_value = ?, is_winner = ? WHERE session_id = ? AND player_id = ?",
-                      (data.score_adrian, 1 if data.winner_id == 1 else 0, session_id, p_ids["Adrian"]))
+                      (data.score_adrian, 1 if data.winner_id == 1 else 0, session_id, p_ids[p1]))
         
         if data.score_lea is not None and data.winner_id is not None:
             c.execute("UPDATE scores SET score_value = ?, is_winner = ? WHERE session_id = ? AND player_id = ?",
-                      (data.score_lea, 1 if data.winner_id == 2 else 0, session_id, p_ids["Lea"]))
+                      (data.score_lea, 1 if data.winner_id == 2 else 0, session_id, p_ids[p2]))
                       
         conn.commit()
     return {"status": "Erfolg"}
