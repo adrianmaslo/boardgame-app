@@ -10,12 +10,29 @@ def get_db_connection():
 def init_db():
     with get_db_connection() as conn:
         c = conn.cursor()
+        # Grundtabelle
         c.execute("""CREATE TABLE IF NOT EXISTS games (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             bgg_id INTEGER UNIQUE,
-            is_coop INTEGER DEFAULT 0
+            is_coop INTEGER DEFAULT 0,
+            win_condition INTEGER DEFAULT 0
         )""")
+        
+        # Neue Spalten nachträglich hinzufügen (ohne alte Daten zu löschen)
+        new_columns = [
+            "image_url TEXT",
+            "min_players INTEGER",
+            "max_players INTEGER",
+            "playing_time INTEGER",
+            "weight REAL"
+        ]
+        for col in new_columns:
+            try:
+                c.execute(f"ALTER TABLE games ADD COLUMN {col}")
+            except sqlite3.OperationalError:
+                pass # Spalte existiert bereits, alles gut!
+
         c.execute("CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL)")
         c.execute("""CREATE TABLE IF NOT EXISTS sessions (
             id INTEGER PRIMARY KEY AUTOINCREMENT,

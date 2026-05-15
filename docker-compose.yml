@@ -1,6 +1,9 @@
 services:
   backend:
     image: python:3.11-slim
+    # WICHTIG: Diese beiden Zeilen laden den BGG Token in den Container
+    env_file:
+      - ./backend/.env
     volumes:
       - ./backend:/app
       - ./frontend:/app/static
