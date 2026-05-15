@@ -4,10 +4,11 @@
 
 ## ✨ Features
 
-- **📊 Advanced Dashboard & Stats**: Keep track of the "Ewiges Duell" (Eternal Duel) between players. Earn virtual achievements and streaks based on your play history!
+- **📊 Advanced Dashboard & Charts**: Keep track of the "Ewiges Duell" (Eternal Duel) between players with a dynamic, interactive Chart.js line graph! Earn virtual achievements and streaks based on your play history.
 - **📸 Photo of the Day**: A randomly selected photo from past sessions greets you every day on the dashboard.
-- **📚 Smart Collection Management**: Organize your games with custom categories.
-- **🔍 BGG Integration**: Can't find a game locally? Search the BoardGameGeek API and add it directly to your collection or your wishlist with a single click.
+- **🔍 Advanced BGG Integration**: Search the BoardGameGeek API and import cover images, player count, playing time, and complexity weight directly to your collection.
+- **📚 Smart Collection Management**: Organize your games with custom categories. Filter your collection by name.
+- **⏱️ Smart Session Tracker**: Minimize the tracker to the edge of the screen while using other app features. Supports round-by-round scoring. Includes a **Pause feature** for rules explanations or breaks!
 - **📝 Detailed Session Logging**: Record scores, winners, play times, add personal notes, and even upload a photo for every session.
 - **⏱️ Retroactive Editing**: Forgot to stop the timer? Easily edit the duration, scores, and dates of your past sessions.
 - **📱 Mobile-Optimized (PWA)**: Designed primarily for mobile usage with touch-friendly UI, glassmorphism design, and a neon-dark aesthetic.

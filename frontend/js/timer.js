@@ -1,17 +1,44 @@
 function startInternalTimer() {
     clearInterval(timerInterval);
+    if (typeof updatePauseUI === 'function') updatePauseUI();
     timerInterval = setInterval(() => { 
-        seconds++; 
-        const timeStr = formatSeconds(seconds);
-        document.getElementById('activeGameTimerDisplay').innerText = timeStr;
-        document.getElementById('miniPlayerTimer').innerText = timeStr;
-        if (seconds % 5 === 0) saveTimerState();
+        if (!isPaused) {
+            seconds++; 
+            const timeStr = formatSeconds(seconds);
+            document.getElementById('activeGameTimerDisplay').innerText = timeStr;
+            document.getElementById('miniPlayerTimer').innerText = timeStr;
+            if (seconds % 5 === 0) saveTimerState();
+        }
     }, 1000);
 }
 
+window.togglePauseTimer = function(e) {
+    if (e) { e.stopPropagation(); e.preventDefault(); }
+    isPaused = !isPaused;
+    saveTimerState();
+    updatePauseUI();
+};
+
+window.updatePauseUI = function() {
+    const btnModal = document.getElementById('btnPauseModal');
+    const btnMini = document.getElementById('btnPauseMini');
+    
+    if (isPaused) {
+        if(btnModal) btnModal.innerHTML = '▶️ WEITER';
+        if(btnMini) btnMini.innerHTML = '▶️';
+        document.getElementById('activeGameTimerDisplay').classList.add('text-warning');
+        document.getElementById('miniPlayerTimer').classList.add('text-warning');
+    } else {
+        if(btnModal) btnModal.innerHTML = '⏸ PAUSE';
+        if(btnMini) btnMini.innerHTML = '⏸';
+        document.getElementById('activeGameTimerDisplay').classList.remove('text-warning');
+        document.getElementById('miniPlayerTimer').classList.remove('text-warning');
+    }
+};
+
 window.confirmResetTimer = function() {
     if (activeGameId && confirm("Partie wirklich abbrechen?")) {
-        clearInterval(timerInterval); timerInterval = null; seconds = 0; activeGameId = null; activeGameImg = '';
+        clearInterval(timerInterval); timerInterval = null; seconds = 0; activeGameId = null; activeGameImg = ''; isPaused = false;
         document.getElementById('miniPlayer').classList.add('d-none');
         bootstrap.Modal.getInstance(document.getElementById('activeGameModal')).hide();
         localStorage.removeItem('activeTimer');
@@ -19,7 +46,7 @@ window.confirmResetTimer = function() {
 };
 
 window.selectGame = function(id, name, imageUrl) {
-    activeGameId = id; activeGameImg = imageUrl || ''; seconds = 0; roundHistory = []; startTime = new Date().toISOString();
+    activeGameId = id; activeGameImg = imageUrl || ''; seconds = 0; roundHistory = []; startTime = new Date().toISOString(); isPaused = false;
     document.getElementById('activeGameNameDisplay').innerText = name;
     document.getElementById('miniPlayerGameName').innerText = name;
     document.getElementById('miniPlayerImg').src = imageUrl || 'https://via.placeholder.com/42?text=🎲';

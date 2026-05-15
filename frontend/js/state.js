@@ -1,4 +1,5 @@
 let seconds = 0, timerInterval = null, activeGameId = null, activeGameImg = '';
+let isPaused = false;
 let allSessions = []; 
 let roundHistory = []; 
 let startTime = null;
@@ -8,7 +9,7 @@ let player2Name = "Lea";
 function saveTimerState() {
     if (!activeGameId) return;
     localStorage.setItem('activeTimer', JSON.stringify({
-        seconds, startTime, activeGameId, activeGameImg,
+        seconds, startTime, activeGameId, activeGameImg, isPaused,
         name: document.getElementById('miniPlayerGameName').innerText, rounds: roundHistory, last: Date.now()
     }));
 }
@@ -17,7 +18,10 @@ function restoreTimerState() {
     const saved = localStorage.getItem('activeTimer'); if (!saved) return;
     const s = JSON.parse(saved);
     activeGameId = s.activeGameId; activeGameImg = s.activeGameImg || ''; seconds = s.seconds; startTime = s.startTime; roundHistory = s.rounds || [];
-    seconds += Math.floor((Date.now() - s.last) / 1000);
+    isPaused = s.isPaused || false;
+    if (!isPaused) {
+        seconds += Math.floor((Date.now() - s.last) / 1000);
+    }
     
     document.getElementById('activeGameNameDisplay').innerText = s.name;
     document.getElementById('miniPlayerGameName').innerText = s.name;

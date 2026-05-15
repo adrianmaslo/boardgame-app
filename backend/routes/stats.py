@@ -299,3 +299,46 @@ def get_daily_photo():
                 "game": selected["game_name"]
             }
         }
+
+@router.get("/chart_data")
+def get_chart_data():
+    p1 = os.getenv("PLAYER_1_NAME", "Adrian")
+    p2 = os.getenv("PLAYER_2_NAME", "Lea")
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        sessions = c.execute("""
+            SELECT s.play_date, sc.is_winner, p.name 
+            FROM sessions s
+            JOIN scores sc ON sc.session_id = s.id
+            JOIN players p ON p.id = sc.player_id
+            WHERE sc.is_winner = 1
+            ORDER BY s.play_date ASC
+        """).fetchall()
+        
+        labels = []
+        p1_data = []
+        p2_data = []
+        p1_cum = 0
+        p2_cum = 0
+        
+        for idx, row in enumerate(sessions):
+            # Parse date format to show day/month
+            try:
+                dt = datetime.datetime.fromisoformat(row["play_date"].replace('Z', '+00:00'))
+                labels.append(dt.strftime("%d.%m."))
+            except:
+                labels.append(f"#{idx+1}")
+                
+            if row["name"] == p1: p1_cum += 1
+            elif row["name"] == p2: p2_cum += 1
+                
+            p1_data.append(p1_cum)
+            p2_data.append(p2_cum)
+            
+        return {
+            "labels": labels,
+            "datasets": [
+                {"label": p1, "data": p1_data, "borderColor": "#00f0ff", "tension": 0.3, "backgroundColor": "rgba(0, 240, 255, 0.1)", "fill": True},
+                {"label": p2, "data": p2_data, "borderColor": "#ff00e5", "tension": 0.3, "backgroundColor": "rgba(255, 0, 229, 0.1)", "fill": True}
+            ]
+        }

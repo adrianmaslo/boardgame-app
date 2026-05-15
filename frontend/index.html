@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Game-Log</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css?v=20">
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icons/icon.svg">
@@ -38,6 +39,10 @@
                             <h1 class="display-2 fw-bold mb-0 text-shadow" id="dashWinsL">0</h1>
                             <div id="dashboardAchievementsLea" class="mt-2 d-flex flex-column gap-1 align-items-center w-100"></div>
                         </div>
+                    </div>
+                    
+                    <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 w-100">
+                        <canvas id="ewigesDuellChart" style="max-height: 150px; width: 100%;"></canvas>
                     </div>
                 </div>
 
@@ -132,6 +137,7 @@
                 <span class="fw-bold small d-block" id="miniPlayerGameName">-</span>
                 <span class="text-info x-small fw-bold" id="miniPlayerTimer" style="font-family: monospace; font-size: 0.75rem;">00:00:00</span>
             </div>
+            <button class="btn btn-sm btn-outline-warning rounded-pill ms-3 fw-bold px-2 py-0" id="btnPauseMini" onclick="togglePauseTimer(event)">⏸</button>
         </div>
         <span class="badge bg-primary rounded-pill px-3 py-2 small shadow-sm">ÖFFNEN</span>
     </div>
@@ -216,7 +222,8 @@
             <div class="modal-header border-0 pb-0 mt-2 position-relative">
                 <div class="w-100 text-center">
                     <span class="badge bg-primary bg-opacity-25 text-primary rounded-pill text-uppercase px-3 py-2 mb-1 border border-primary border-opacity-50" id="activeGameNameDisplay">Spielname</span>
-                    <h3 class="fw-bold text-white mt-2" id="activeGameTimerDisplay" style="font-family: monospace; font-size: 2.5rem; text-shadow: 0 0 20px var(--primary-glow);">00:00:00</h3>
+                    <h3 class="fw-bold text-white mt-2 mb-0" id="activeGameTimerDisplay" style="font-family: monospace; font-size: 2.5rem; text-shadow: 0 0 20px var(--primary-glow);">00:00:00</h3>
+                    <button class="btn btn-sm btn-outline-warning rounded-pill mt-2 fw-bold px-4" id="btnPauseModal" onclick="togglePauseTimer()">⏸ PAUSE</button>
                 </div>
                 <button type="button" class="btn position-absolute top-0 end-0 m-3 rounded-circle d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); color: white;" data-bs-dismiss="modal" title="Minimieren">
                     <span style="font-size: 1.2rem; line-height: 1;">👇</span>

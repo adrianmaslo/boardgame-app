@@ -107,4 +107,32 @@ window.loadDashboard = async function() {
     } else {
          document.getElementById('dashboardHighlights').innerHTML = highlightsHtml;
     }
+
+    // Load Chart Data
+    fetch('/stats/chart_data').then(r => r.json()).then(chartData => {
+        const ctx = document.getElementById('ewigesDuellChart');
+        if (ctx && window.Chart) {
+            if (window.duellChart) window.duellChart.destroy();
+            Chart.defaults.color = 'rgba(255, 255, 255, 0.5)';
+            Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+            
+            window.duellChart = new Chart(ctx, {
+                type: 'line',
+                data: chartData,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { family: 'Inter', size: 10 } } },
+                        tooltip: { mode: 'index', intersect: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, border: { dash: [4, 4] }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { stepSize: 1 } },
+                        x: { grid: { display: false } }
+                    },
+                    interaction: { mode: 'nearest', axis: 'x', intersect: false }
+                }
+            });
+        }
+    }).catch(e => console.error("Chart fetch error:", e));
 };
