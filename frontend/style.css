@@ -152,6 +152,10 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; }
 }
 
 /* BUTTONS & INPUTS */
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
 .btn-primary {
     background: linear-gradient(135deg, var(--primary) 0%, #0284c7 100%);
     border: none;

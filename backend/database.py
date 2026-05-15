@@ -25,7 +25,9 @@ def init_db():
             "min_players INTEGER",
             "max_players INTEGER",
             "playing_time INTEGER",
-            "weight REAL"
+            "weight REAL",
+            "category TEXT DEFAULT 'Standard'",
+            "is_wishlist INTEGER DEFAULT 0"
         ]
         for col in new_columns:
             try:

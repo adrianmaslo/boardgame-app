@@ -1,4 +1,4 @@
-import os
+import os, datetime, random
 from fastapi import APIRouter, HTTPException
 from database import get_db_connection
 
@@ -67,7 +67,51 @@ def get_dashboard_stats():
                     break
             
             if count >= 3:
-                streaks[p_name] = f"Pechsträhne! {count} Niederlagen in Folge."
+                streaks[p_name] = f"💔 {count} Niederlagen in Folge"
+
+        # 6. Echte Achievements (Badges)
+        achievements = {"Adrian": [], "Lea": []}
+        
+        night_owls = c.execute("""
+            SELECT p.name FROM sessions s
+            JOIN scores sc ON s.id = sc.session_id
+            JOIN players p ON sc.player_id = p.id
+            WHERE strftime('%H', datetime(play_date, 'localtime')) IN ('00', '01', '02', '03', '04', '05') AND sc.is_winner = 1
+        """).fetchall()
+        for no in night_owls:
+            if "🦇 Nachtschwärmer" not in achievements[no["name"]]:
+                achievements[no["name"]].append("🦇 Nachtschwärmer")
+            
+        marathons = c.execute("""
+            SELECT p.name FROM sessions s
+            JOIN scores sc ON s.id = sc.session_id
+            JOIN players p ON sc.player_id = p.id
+            WHERE duration_seconds >= 10800 AND sc.is_winner = 1
+        """).fetchall()
+        for m in marathons:
+            if "🏃‍♂️ Marathon-Gamer" not in achievements[m["name"]]:
+                achievements[m["name"]].append("🏃‍♂️ Marathon-Gamer")
+            
+        for p_name in ["Adrian", "Lea"]:
+            asc_results = c.execute("""
+                SELECT sc.is_winner 
+                FROM scores sc
+                JOIN players p ON p.id = sc.player_id
+                JOIN sessions s ON s.id = sc.session_id
+                WHERE p.name = ?
+                ORDER BY s.play_date ASC
+            """, (p_name,)).fetchall()
+            
+            loss_streak = 0
+            for r in asc_results:
+                if r["is_winner"] == 0:
+                    loss_streak += 1
+                else:
+                    if loss_streak >= 3:
+                        if "👑 Comeback-König" not in achievements[p_name]:
+                            achievements[p_name].append("👑 Comeback-König")
+                        break
+                    loss_streak = 0
 
         return {
             "wins": wins,
@@ -75,7 +119,7 @@ def get_dashboard_stats():
             "best_adrian": dict(best_adrian) if best_adrian else None,
             "best_lea": dict(best_lea) if best_lea else None,
             "streaks": streaks,
-            "achievements": ["🔥 Serie läuft!"] if any(s for s in streaks) else []
+            "achievements": achievements
         }
 
 @router.get("/game/{game_id}")
@@ -220,4 +264,31 @@ def get_advanced_game_stats(game_id: int):
             "max_time_mins": round(max_time / 60) if max_time else 0,
             "player_stats": player_stats,
             "all_time_high": dict(all_time_high) if all_time_high else None
+        }
+
+@router.get("/daily_photo")
+def get_daily_photo():
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        photos = c.execute("""
+            SELECT s.photo_path, s.play_date, g.name as game_name 
+            FROM sessions s
+            JOIN games g ON s.game_id = g.id
+            WHERE s.photo_path IS NOT NULL AND s.photo_path != ''
+        """).fetchall()
+        
+        if not photos:
+            return {"photo": None}
+            
+        seed = datetime.date.today().toordinal()
+        random.seed(seed)
+        selected = random.choice(photos)
+        random.seed()
+        
+        return {
+            "photo": {
+                "path": "/" + selected["photo_path"].replace("uploads/", "photos/"),
+                "date": selected["play_date"],
+                "game": selected["game_name"]
+            }
         }

@@ -110,20 +110,93 @@ window.saveSession = async function() {
 };
 
 // --- DATA LOADING & RENDERING ---
+window.allCollectionGames = [];
+
 window.loadCollection = async function() {
     const res = await fetch('/collection'); const data = await res.json();
-    document.getElementById('collectionList').innerHTML = data.collection.map(g => {
-        const imgSrc = g.image_url ? g.image_url : 'https://via.placeholder.com/50?text=🎲';
-        return `
-        <div class="list-group-item d-flex align-items-center" onclick="showGameProfile(${g.id}, ${g.bgg_id || 'null'}, '${g.image_url || ''}', ${g.min_players || 'null'}, ${g.max_players || 'null'}, ${g.playing_time || 'null'}, ${g.weight || 'null'})">
-            <img src="${imgSrc}" class="rounded-3 me-3" style="width: 55px; height: 55px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
-            <div class="flex-grow-1"><span class="fw-bold d-block text-white">${g.name}</span><span class="text-muted x-small">${g.playing_time ? '⏱ ' + g.playing_time + ' Min.' : ''}</span></div>
-            <span class="text-primary small fw-bold pe-2">PROFIL</span>
-        </div>`;
-    }).join('');
+    window.allCollectionGames = data.collection;
+    
+    // Render Collection
+    if (data.collection.length === 0) {
+        document.getElementById('collectionList').innerHTML = '<div class="text-center text-muted p-4">Keine Spiele in der Sammlung.</div>';
+    } else {
+        const grouped = {};
+        data.collection.forEach(g => {
+            const cat = g.category && g.category !== 'Standard' ? g.category : 'Alle Spiele';
+            if (!grouped[cat]) grouped[cat] = [];
+            grouped[cat].push(g);
+        });
+        
+        const sortedCats = Object.keys(grouped).sort((a,b) => a==='Alle Spiele' ? -1 : (b==='Alle Spiele' ? 1 : a.localeCompare(b)));
+        let html = '';
+        let index = 0;
+        sortedCats.forEach(cat => {
+            index++;
+            const catId = 'cat' + index;
+            html += `
+            <div class="accordion-item border-0 mb-3 rounded-4 shadow-sm" style="background: rgba(255,255,255,0.03); overflow:hidden;">
+                <h2 class="accordion-header">
+                    <button class="accordion-button ${index===1 ? '' : 'collapsed'} bg-transparent fw-bold text-white tracking-wider text-uppercase small px-4 py-3" type="button" data-bs-toggle="collapse" data-bs-target="#${catId}">
+                        📁 ${cat} <span class="badge bg-secondary ms-2">${grouped[cat].length}</span>
+                    </button>
+                </h2>
+                <div id="${catId}" class="accordion-collapse collapse ${index===1 ? 'show' : ''}">
+                    <div class="accordion-body p-2 pt-0">
+                        <div class="list-group list-group-flush">
+                            ${grouped[cat].map(g => {
+                                const imgSrc = g.image_url ? g.image_url : 'https://via.placeholder.com/50?text=🎲';
+                                return `<div class="list-group-item d-flex align-items-center mb-1 rounded-3" onclick="showGameProfile(${g.id}, ${g.bgg_id || 'null'}, '${g.image_url || ''}', ${g.min_players || 'null'}, ${g.max_players || 'null'}, ${g.playing_time || 'null'}, ${g.weight || 'null'}, '${g.category || 'Alle Spiele'}')" style="cursor:pointer; background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border);">
+                                    <img src="${imgSrc}" class="rounded-3 me-3" style="width: 48px; height: 48px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
+                                    <div class="flex-grow-1"><span class="fw-bold d-block text-white">${g.name}</span>${g.playing_time ? '<span class="text-muted x-small">⏱ ' + g.playing_time + ' Min.</span>' : ''}</div>
+                                    <span class="text-primary small fw-bold pe-2">PROFIL</span>
+                                </div>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+        });
+        document.getElementById('collectionList').innerHTML = html;
+    }
+    
+    // Render Wishlist
+    if (!data.wishlist || data.wishlist.length === 0) {
+        document.getElementById('wishlistList').innerHTML = '<div class="text-center text-muted p-4">Deine Wunschliste ist leer.</div>';
+    } else {
+        document.getElementById('wishlistList').innerHTML = data.wishlist.map(g => {
+            const imgSrc = g.image_url ? g.image_url : 'https://via.placeholder.com/50?text=🎲';
+            return `<div class="list-group-item d-flex align-items-center justify-content-between mb-2 rounded-3 p-3" style="background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border);">
+                <div class="d-flex align-items-center">
+                    <img src="${imgSrc}" class="rounded-3 me-3" style="width: 48px; height: 48px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
+                    <div class="fw-bold text-white">${g.name}</div>
+                </div>
+                <button class="btn btn-sm btn-outline-success rounded-pill fw-bold" onclick="moveToCollection(${g.id})">Kaufen ➡️</button>
+            </div>`;
+        }).join('');
+    }
 };
 
-window.showGameProfile = async function(gameId, bggId, imageUrl, minP, maxP, time, weight) {
+window.moveToCollection = async function(gameId) {
+    try {
+        const res = await fetch(`/game/${gameId}/wishlist`, { method: 'PATCH' });
+        if (!res.ok) throw new Error();
+        loadCollection();
+        switchCollectionTab('games');
+        document.getElementById('btn-col-games').checked = true;
+    } catch(e) { alert("Fehler beim Verschieben."); }
+};
+
+window.switchCollectionTab = function(tabName) {
+    if (tabName === 'wishlist') {
+        document.getElementById('collectionMainContainer').classList.add('d-none');
+        document.getElementById('wishlistMainContainer').classList.remove('d-none');
+    } else {
+        document.getElementById('wishlistMainContainer').classList.add('d-none');
+        document.getElementById('collectionMainContainer').classList.remove('d-none');
+    }
+};
+
+window.showGameProfile = async function(gameId, bggId, imageUrl, minP, maxP, time, weight, currentCat) {
     // Kombinierter Fetch: Basis-Stats und Advanced-Stats laden
     const [resBasic, resAdv] = await Promise.all([
         fetch(`/stats/game/${gameId}`),
@@ -165,11 +238,24 @@ window.showGameProfile = async function(gameId, bggId, imageUrl, minP, maxP, tim
         toggleBtn.innerText = "🔄 Regel: Höchste Punkte gewinnen";
     }
     toggleBtn.onclick = async () => {
-        toggleBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Lade...';
-        await fetch(`/toggle_win_condition/${gameId}`, { method: 'PATCH' });
-        modal.hide();
-        setTimeout(() => showGameProfile(gameId, bggId, imageUrl, minP, maxP, time, weight), 350);
+        try {
+            const res = await fetch(`/toggle_win_condition/${gameId}`, { method: 'PATCH' });
+            if (!res.ok) throw new Error();
+            modal.hide(); setTimeout(() => showGameProfile(gameId, bggId, imageUrl, minP, maxP, time, weight, currentCat), 350);
+        } catch (e) { alert("Fehler beim Umstellen der Wertungsregel."); }
     };
+    
+    // Category Dropdown
+    const select = document.getElementById('profileCategorySelect');
+    const categories = new Set(window.allCollectionGames.map(g => (g.category && g.category !== 'Standard') ? g.category : 'Alle Spiele'));
+    categories.add('Archiv'); // Default offer
+    
+    if(!currentCat || currentCat === 'Standard') currentCat = 'Alle Spiele';
+    let opts = Array.from(categories).sort().map(c => `<option value="${c}" ${c === currentCat ? 'selected' : ''}>${c}</option>`);
+    opts.push('<option value="__NEW__">+ Neue Kategorie...</option>');
+    select.innerHTML = opts.join('');
+    
+    document.getElementById('changeCategoryBtn').onclick = () => changeGameCategory(gameId);
 
     // History Liste (Letzte 3)
     document.getElementById('profileHistoryList').innerHTML = basicData.history.slice(0, 3).map(s => {
@@ -225,6 +311,25 @@ window.showGameProfile = async function(gameId, bggId, imageUrl, minP, maxP, tim
     document.getElementById('deleteGameBtn').onclick = () => deleteGame(gameId);
     
     modal.show();
+};
+
+window.changeGameCategory = async function(gameId) {
+    const select = document.getElementById('profileCategorySelect');
+    let newCat = select.value;
+    if (newCat === '__NEW__') {
+        newCat = prompt("Name der neuen Kategorie (z.B. Exit Games, Party):");
+        if (!newCat || newCat.trim() === '') return;
+        newCat = newCat.trim();
+    }
+    
+    try {
+        const res = await fetch(`/game/${gameId}/category?category=${encodeURIComponent(newCat)}`, { method: 'PATCH' });
+        if (!res.ok) throw new Error();
+        loadCollection();
+        bootstrap.Modal.getInstance(document.getElementById('gameProfileModal')).hide();
+    } catch (e) {
+        alert("Fehler beim Verschieben.");
+    }
 };
 
 window.deleteGame = async function(gameId) {
@@ -294,6 +399,62 @@ window.showDetails = function(sessionId) {
     }
     document.getElementById('modalScores').innerHTML = scoreHtml;
     document.getElementById('deleteSessionBtn').onclick = () => deleteSession(sessionId);
+    
+    // Edit Session Logic
+    window.currentEditSessionData = {
+        id: s.id,
+        duration: s.duration_seconds ? Math.floor(s.duration_seconds / 60) : 0,
+        date: s.play_date ? s.play_date.split(' ')[0] : '',
+        comment: s.comment || '',
+        score_adrian: null,
+        score_lea: null,
+        winner_id: 0
+    };
+    const sA = s.scores.find(sc => sc.name === 'Adrian');
+    const sL = s.scores.find(sc => sc.name === 'Lea');
+    if (sA) window.currentEditSessionData.score_adrian = sA.score_value;
+    if (sL) window.currentEditSessionData.score_lea = sL.score_value;
+    if (sA && sA.is_winner === 1) window.currentEditSessionData.winner_id = 1;
+    if (sL && sL.is_winner === 1) window.currentEditSessionData.winner_id = 2;
+
+    document.getElementById('editSessionBtn').onclick = () => {
+        modal.hide();
+        document.getElementById('editSessionDate').value = currentEditSessionData.date;
+        document.getElementById('editSessionDuration').value = currentEditSessionData.duration;
+        document.getElementById('editScoreA').value = currentEditSessionData.score_adrian !== null ? currentEditSessionData.score_adrian : '';
+        document.getElementById('editScoreL').value = currentEditSessionData.score_lea !== null ? currentEditSessionData.score_lea : '';
+        document.getElementById('editWinner').value = currentEditSessionData.winner_id;
+        document.getElementById('editSessionComment').value = currentEditSessionData.comment;
+        
+        const editModal = new bootstrap.Modal(document.getElementById('editSessionModal'));
+        editModal.show();
+        
+        document.getElementById('saveEditSessionBtn').onclick = async () => {
+            const payload = {
+                play_date: document.getElementById('editSessionDate').value + " 12:00:00",
+                duration_minutes: parseInt(document.getElementById('editSessionDuration').value) || 0,
+                score_adrian: parseInt(document.getElementById('editScoreA').value) || 0,
+                score_lea: parseInt(document.getElementById('editScoreL').value) || 0,
+                winner_id: parseInt(document.getElementById('editWinner').value),
+                comment: document.getElementById('editSessionComment').value
+            };
+            
+            try {
+                const res = await fetch(`/session/${currentEditSessionData.id}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok) throw new Error();
+                editModal.hide();
+                loadHistory();
+                loadDashboard();
+            } catch (e) {
+                alert("Fehler beim Speichern der Änderungen.");
+            }
+        };
+    };
+
     modal.show();
 };
 
@@ -309,7 +470,75 @@ window.deleteSession = async function(sessionId) {
 
 window.filterHistory = function() {
     const term = document.getElementById('historyFilter').value.toLowerCase();
-    renderHistory(allSessions.filter(s => s.game_name.toLowerCase().includes(term)));
+    const dateFromStr = document.getElementById('historyDateFrom').value;
+    const dateToStr = document.getElementById('historyDateTo').value;
+    
+    let dateFrom = dateFromStr ? new Date(dateFromStr) : null;
+    let dateTo = dateToStr ? new Date(dateToStr) : null;
+    
+    if (dateFrom) dateFrom.setHours(0,0,0,0);
+    if (dateTo) dateTo.setHours(23,59,59,999);
+
+    renderHistory(allSessions.filter(s => {
+        const gameMatch = s.game_name.toLowerCase().includes(term);
+        const playerMatch = s.scores.some(sc => sc.name.toLowerCase().includes(term));
+        const dateMatch = new Date(s.play_date).toLocaleDateString('de-DE').includes(term);
+        const textMatch = term === '' || gameMatch || playerMatch || dateMatch;
+        
+        let sessionDate = new Date(s.play_date);
+        let rangeMatch = true;
+        if (dateFrom && sessionDate < dateFrom) rangeMatch = false;
+        if (dateTo && sessionDate > dateTo) rangeMatch = false;
+        
+        return textMatch && rangeMatch;
+    }));
+};
+
+window.filterCollection = function() {
+    const q = document.getElementById('collectionFilter').value.toLowerCase();
+    let hasVisible = false;
+    
+    document.querySelectorAll('#collectionList .list-group-item').forEach(el => {
+        const title = el.querySelector('.fw-bold').innerText.toLowerCase();
+        if (title.includes(q)) {
+            el.classList.remove('d-none');
+            el.classList.add('d-flex');
+            hasVisible = true;
+        } else {
+            el.classList.remove('d-flex');
+            el.classList.add('d-none');
+        }
+    });
+
+    document.querySelectorAll('#collectionList .accordion-item').forEach(acc => {
+        const visibleItems = acc.querySelectorAll('.list-group-item.d-flex');
+        if (visibleItems.length > 0) {
+            acc.style.display = 'block';
+        } else {
+            acc.style.display = 'none';
+        }
+    });
+
+    const notFound = document.getElementById('collectionNotFound');
+    if (!hasVisible && q.length > 0) {
+        notFound.classList.remove('d-none');
+    } else {
+        notFound.classList.add('d-none');
+    }
+};
+
+window.searchMissingGame = function() {
+    const q = document.getElementById('collectionFilter').value;
+    document.getElementById('collectionFilter').value = '';
+    filterCollection();
+    
+    const searchCol = document.getElementById('searchCol');
+    if (!searchCol.classList.contains('show')) {
+        new bootstrap.Collapse(searchCol, {toggle: true});
+    }
+    document.getElementById('searchInput').value = q;
+    searchBGG();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 // --- BGG SEARCH ---
@@ -339,14 +568,23 @@ window.previewGame = async function(bggId, tempName) {
         if (data.playing_time) badgesHtml += `<span class="badge bg-info bg-opacity-25 text-info border border-info border-opacity-50 rounded-pill px-2 py-1">⏱ ${data.playing_time} Min</span>`;
         if (data.weight) badgesHtml += `<span class="badge bg-secondary bg-opacity-50 text-light border border-secondary rounded-pill px-2 py-1">🧠 Weight: ${data.weight}</span>`;
         document.getElementById('previewBadges').innerHTML = badgesHtml;
-        document.getElementById('confirmAddBtn').onclick = () => { modal.hide(); addGame(data.name || tempName, bggId); };
+        document.getElementById('confirmAddBtn').onclick = () => { modal.hide(); addGame(data.name || tempName, bggId, false); };
+        document.getElementById('confirmWishlistBtn').onclick = () => { modal.hide(); addGame(data.name || tempName, bggId, true); };
     } catch (e) { document.getElementById('previewCoverImage').innerHTML = '<div class="p-4 text-center text-danger bg-dark">Fehler</div>'; }
 };
 
-window.addGame = async function(name, id) {
-    await fetch(`/add?name=${encodeURIComponent(name)}&bgg_id=${id}`);
+window.addGame = async function(name, id, isWishlist = false) {
+    await fetch(`/add?name=${encodeURIComponent(name)}&bgg_id=${id}&is_wishlist=${isWishlist ? 1 : 0}`);
     bootstrap.Collapse.getInstance(document.getElementById('searchCol')).hide();
-    loadCollection(); loadDashboard();
+    loadCollection(); 
+    if (isWishlist) {
+        switchCollectionTab('wishlist');
+        document.getElementById('btn-col-wish').checked = true;
+    } else {
+        switchCollectionTab('games');
+        document.getElementById('btn-col-games').checked = true;
+        loadDashboard();
+    }
 };
 
 // --- STATE MANAGEMENT ---
@@ -374,9 +612,47 @@ function restoreTimerState() {
 
 // --- DASHBOARD LOAD ---
 window.loadDashboard = async function() {
+    // Fetch Daily Photo
+    fetch('/stats/daily_photo').then(r => r.json()).then(photoData => {
+        if (photoData.photo) {
+            document.getElementById('dailyPhotoImg').src = photoData.photo.path;
+            document.getElementById('dailyPhotoGame').innerText = photoData.photo.game;
+            document.getElementById('dailyPhotoDate').innerText = new Date(photoData.photo.date).toLocaleDateString('de-DE');
+            document.getElementById('dailyPhotoContainer').classList.remove('d-none');
+        } else {
+            document.getElementById('dailyPhotoContainer').classList.add('d-none');
+        }
+    }).catch(()=>{});
+
     const res = await fetch('/stats/dashboard'); const data = await res.json();
     document.getElementById('dashWinsA').innerText = data.wins["Adrian"] || 0; 
     document.getElementById('dashWinsL').innerText = data.wins["Lea"] || 0;
+    
+    // Render Achievements for Adrian
+    const achContA = document.getElementById('dashboardAchievementsAdrian');
+    if (achContA) {
+        let htmlA = '';
+        if (data.achievements && data.achievements["Adrian"]) {
+            htmlA += data.achievements["Adrian"].map(a => `<span class="badge rounded-pill bg-dark text-warning border border-warning border-opacity-50 px-2 py-1 shadow-sm mt-1 mx-1">${a}</span>`).join('');
+        }
+        if (data.streaks && data.streaks["Adrian"]) {
+            htmlA += `<span class="badge rounded-pill bg-dark text-danger border border-danger border-opacity-50 px-2 py-1 shadow-sm mt-1 mx-1">${data.streaks["Adrian"]}</span>`;
+        }
+        achContA.innerHTML = htmlA;
+    }
+
+    // Render Achievements for Lea
+    const achContL = document.getElementById('dashboardAchievementsLea');
+    if (achContL) {
+        let htmlL = '';
+        if (data.achievements && data.achievements["Lea"]) {
+            htmlL += data.achievements["Lea"].map(a => `<span class="badge rounded-pill bg-dark text-warning border border-warning border-opacity-50 px-2 py-1 shadow-sm mt-1 mx-1">${a}</span>`).join('');
+        }
+        if (data.streaks && data.streaks["Lea"]) {
+            htmlL += `<span class="badge rounded-pill bg-dark text-danger border border-danger border-opacity-50 px-2 py-1 shadow-sm mt-1 mx-1">${data.streaks["Lea"]}</span>`;
+        }
+        achContL.innerHTML = htmlL;
+    }
     
     let highlightsHtml = '';
     
@@ -427,4 +703,7 @@ window.loadDashboard = async function() {
 };
 
 // --- INIT ---
-window.onload = () => { loadDashboard(); loadCollection(); loadHistory(); restoreTimerState(); };
+window.onload = () => { 
+    loadDashboard(); loadCollection(); loadHistory(); restoreTimerState(); 
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+};

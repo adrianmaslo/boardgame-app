@@ -6,6 +6,8 @@
     <title>Game-Log</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css?v=20">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon.svg">
     <meta name="theme-color" content="#0f172a">
 </head>
 <body>
@@ -24,15 +26,17 @@
 
                 <div class="premium-scoreboard text-center mb-4">
                     <small class="text-uppercase tracking-widest text-white-50 x-small d-block mb-3 fw-bold">Ewiges Duell</small>
-                    <div class="d-flex justify-content-center align-items-center gap-4">
-                        <div>
+                    <div class="d-flex justify-content-center align-items-start w-100">
+                        <div class="d-flex flex-column align-items-center" style="flex: 1; max-width: 45%;">
                             <span class="score-name adrian-color d-block">ADRIAN</span>
                             <h1 class="display-2 fw-bold mb-0 text-shadow" id="dashWinsA">0</h1>
+                            <div id="dashboardAchievementsAdrian" class="mt-2 d-flex flex-column gap-1 align-items-center w-100"></div>
                         </div>
-                        <div class="fs-2 text-white-50 fw-light">⚡</div>
-                        <div>
+                        <div class="fs-2 text-white-50 fw-light px-2" style="margin-top: 1.5rem;">⚡</div>
+                        <div class="d-flex flex-column align-items-center" style="flex: 1; max-width: 45%;">
                             <span class="score-name lea-color d-block">LEA</span>
                             <h1 class="display-2 fw-bold mb-0 text-shadow" id="dashWinsL">0</h1>
+                            <div id="dashboardAchievementsLea" class="mt-2 d-flex flex-column gap-1 align-items-center w-100"></div>
                         </div>
                     </div>
                 </div>
@@ -40,6 +44,17 @@
                 <button class="btn btn-primary w-100 btn-xl rounded-4 fw-bold shadow-lg mb-5" onclick="switchTab('collection')">
                     🕹️ SPIEL AUSWÄHLEN & STARTEN
                 </button>
+
+                <div id="dailyPhotoContainer" class="mb-5 d-none animate-fade-in">
+                    <h5 class="fw-bold mb-3">Bild des Tages 📸</h5>
+                    <div class="rounded-4 overflow-hidden position-relative shadow" style="border: 1px solid var(--surface-border);">
+                        <img id="dailyPhotoImg" src="" class="w-100" style="height: 250px; object-fit: cover;">
+                        <div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
+                            <span id="dailyPhotoGame" class="fw-bold text-white d-block"></span>
+                            <small id="dailyPhotoDate" class="text-white-50 x-small"></small>
+                        </div>
+                    </div>
+                </div>
 
                 <h5 class="fw-bold mb-3">Eure Highlights 🏆</h5>
                 <div id="dashboardHighlights">
@@ -55,7 +70,34 @@
                 <h3 class="fw-bold m-0">Sammlung</h3>
                 <button class="btn btn-primary rounded-pill btn-sm px-3 fw-bold shadow-sm" onclick="toggleSearch()">+ Hinzufügen</button>
             </div>
-            <p class="text-light small mb-4 animate-fade-in">Tippe auf ein Spiel in deiner Sammlung, um dessen Profil zu öffnen und eine neue Partie zu starten.</p>
+            
+            <div class="btn-group w-100 mb-4 animate-fade-in shadow-sm" role="group">
+                <input type="radio" class="btn-check" name="collectionTab" id="btn-col-games" autocomplete="off" checked onclick="switchCollectionTab('games')">
+                <label class="btn btn-outline-secondary text-white border-secondary border-opacity-50" for="btn-col-games">Meine Spiele</label>
+
+                <input type="radio" class="btn-check" name="collectionTab" id="btn-col-wish" autocomplete="off" onclick="switchCollectionTab('wishlist')">
+                <label class="btn btn-outline-secondary text-white border-secondary border-opacity-50" for="btn-col-wish">Wunschliste</label>
+            </div>
+
+            <div id="collectionMainContainer">
+                <div class="search-bar mb-3 animate-fade-in">
+                    <input type="text" id="collectionFilter" class="form-control bg-dark text-white rounded-pill border-secondary border-opacity-50 shadow-sm px-4 py-3" placeholder="In deiner Sammlung suchen..." onkeyup="filterCollection()">
+                </div>
+                <div id="collectionNotFound" class="d-none text-center p-3 mb-4 rounded-4" style="background: rgba(255,255,255,0.05); border: 1px dashed var(--surface-border);">
+                    <p class="text-muted mb-3 small">Dieses Spiel ist noch nicht in deiner Sammlung.</p>
+                    <button class="btn btn-outline-primary rounded-pill btn-sm fw-bold" onclick="searchMissingGame()">Auf BGG suchen</button>
+                </div>
+                <div id="collectionList" class="accordion accordion-flush mb-5 animate-fade-in" style="--bs-accordion-bg: transparent; --bs-accordion-color: white; --bs-accordion-btn-color: white;"></div>
+            </div>
+
+            <div id="wishlistMainContainer" class="d-none animate-fade-in">
+                <p class="text-white-50 small mb-3">Spiele, die du auf dem Radar hast. Klicke auf ein Spiel, um es in deine Sammlung zu übernehmen!</p>
+                <div id="wishlistList" class="list-group list-group-custom mb-5"></div>
+            </div>
+            <div id="collectionNotFound" class="d-none text-center p-3 mb-4 rounded-4" style="background: rgba(255,255,255,0.05); border: 1px dashed var(--surface-border);">
+                <p class="text-muted mb-3 small">Dieses Spiel ist noch nicht in deiner Sammlung.</p>
+                <button class="btn btn-outline-primary rounded-pill btn-sm fw-bold" onclick="searchMissingGame()">Auf BGG suchen</button>
+            </div>
             <div class="collapse mb-4" id="searchCol">
                 <div class="input-group shadow-sm rounded-4 overflow-hidden">
                     <input type="text" id="searchInput" class="form-control border-0 px-4 py-3" placeholder="Auf BGG suchen...">
@@ -63,14 +105,20 @@
                 </div>
                 <div id="searchResults" class="mt-3"></div>
             </div>
-            <div id="collectionList" class="list-group list-group-custom mb-5 animate-fade-in"></div>
+            <div id="collectionList" class="accordion accordion-flush mb-5 animate-fade-in" style="--bs-accordion-bg: transparent; --bs-accordion-color: white; --bs-accordion-btn-color: white;"></div>
         </section>
 
         <!-- HISTORY TAB -->
         <section id="tab-history" class="app-tab">
             <h3 class="fw-bold mb-4 animate-fade-in">Verlauf</h3>
             <div class="search-bar mb-4 animate-fade-in">
-                <input type="text" id="historyFilter" class="form-control rounded-pill border-0 shadow-sm px-4 py-3" placeholder="Nach Spiel filtern..." onkeyup="filterHistory()">
+                <input type="text" id="historyFilter" class="form-control bg-dark text-white rounded-pill border-secondary border-opacity-50 shadow-sm px-4 py-3 mb-3" placeholder="Nach Spiel oder Spieler filtern..." onkeyup="filterHistory()">
+                <div class="d-flex justify-content-between align-items-center gap-2 px-1">
+                    <small class="text-white-50 fw-bold tracking-wider x-small text-uppercase">Von:</small>
+                    <input type="date" id="historyDateFrom" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50 rounded-pill" style="color-scheme: dark;" onchange="filterHistory()">
+                    <small class="text-white-50 fw-bold tracking-wider x-small text-uppercase">Bis:</small>
+                    <input type="date" id="historyDateTo" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50 rounded-pill" style="color-scheme: dark;" onchange="filterHistory()">
+                </div>
             </div>
             <div id="historyList" class="list-group list-group-custom mb-5 animate-fade-in"></div>
         </section>
@@ -109,7 +157,10 @@
             </div>
             <div class="modal-body pt-2 pb-4 text-center">
                 <div id="previewBadges" class="d-flex justify-content-center flex-wrap gap-2 mb-4"></div>
-                <button class="btn btn-success w-100 btn-xl rounded-4 fw-bold shadow" id="confirmAddBtn">ZUR SAMMLUNG HINZUFÜGEN</button>
+                <div class="d-flex flex-column gap-2">
+                    <button class="btn btn-success w-100 btn-xl rounded-4 fw-bold shadow" id="confirmAddBtn">ZUR SAMMLUNG HINZUFÜGEN</button>
+                    <button class="btn btn-outline-light w-100 btn-xl rounded-4 fw-bold" id="confirmWishlistBtn" style="border-color: var(--surface-border); background: rgba(255,255,255,0.05);">AUF DIE WUNSCHLISTE</button>
+                </div>
             </div>
         </div>
     </div>
@@ -143,6 +194,14 @@
 
                 <h6 class="fw-bold small text-light text-uppercase mb-2 px-1 tracking-wider">Letzte Duelle</h6>
                 <div id="profileHistoryList" class="list-group list-group-flush mb-4 small"></div>
+                
+                <div class="mb-4">
+                    <label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold px-1">Ordner / Kategorie</label>
+                    <div class="input-group input-group-sm">
+                        <select class="form-select bg-dark text-white border-secondary border-opacity-50" id="profileCategorySelect"></select>
+                        <button class="btn btn-outline-light bg-dark bg-opacity-50" type="button" id="changeCategoryBtn">Verschieben</button>
+                    </div>
+                </div>
                 
                 <button class="btn btn-outline-danger w-100 rounded-pill fw-bold" id="deleteGameBtn">🗑️ Spiel löschen</button>
             </div>
@@ -214,7 +273,10 @@
                     <h5 class="modal-title fw-bold mb-0" id="modalGameName">Details</h5>
                     <small id="modalFullDate" class="text-muted small"></small>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="d-flex gap-2 align-items-center">
+                    <button type="button" class="btn btn-sm btn-outline-light rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" id="editSessionBtn" title="Bearbeiten">✏️</button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
             </div>
             <div class="modal-body pt-0 pb-4">
                 <div class="d-flex gap-2 mb-4">
@@ -228,14 +290,62 @@
                     <small class="text-muted d-block mb-1 text-uppercase fw-bold x-small tracking-wider">Notiz</small>
                     <div id="modalComment" class="fst-italic small text-light"></div>
                 </div>
+                <div id="modalPhotoContainer" class="mt-3 d-none">
+                    <img id="modalPhoto" src="" class="img-fluid rounded-4 shadow-sm w-100">
+                </div>
+                <button class="btn btn-outline-danger w-100 mt-4 rounded-pill fw-bold btn-sm border-opacity-50" id="deleteSessionBtn">🗑️ Partie aus Verlauf löschen</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT SESSION MODAL -->
+<div class="modal fade" id="editSessionModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0 mt-2">
+                <h5 class="modal-title fw-bold fs-4">Partie bearbeiten</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-3 pb-4">
+                <div class="mb-3">
+                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Datum</label>
+                    <input type="date" class="form-control bg-dark text-white border-secondary border-opacity-50" id="editSessionDate" style="color-scheme: dark;">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Dauer (in Minuten)</label>
+                    <input type="number" class="form-control bg-dark text-white border-secondary border-opacity-50" id="editSessionDuration" inputmode="numeric">
+                </div>
+                <div class="mb-3 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);">
+                    <label class="form-label text-white-50 x-small fw-bold text-uppercase d-block mb-3">Punkte & Gewinner</label>
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="adrian-color fw-bold">Adrian</span>
+                        <input type="number" id="editScoreA" class="form-control bg-dark text-white border-secondary border-opacity-50 w-50 text-end" inputmode="numeric">
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="lea-color fw-bold">Lea</span>
+                        <input type="number" id="editScoreL" class="form-control bg-dark text-white border-secondary border-opacity-50 w-50 text-end" inputmode="numeric">
+                    </div>
+                    
+                    <select id="editWinner" class="form-select bg-dark text-white border-secondary border-opacity-50 mt-3">
+                        <option value="1">🏆 Adrian</option>
+                        <option value="2">🏆 Lea</option>
+                        <option value="0">⚪ Unentschieden</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Notiz</label>
+                    <textarea id="editSessionComment" class="form-control bg-dark text-white border-secondary border-opacity-50" rows="2"></textarea>
+                </div>
                 
-                <button class="btn btn-outline-danger w-100 rounded-pill fw-bold mt-4" id="deleteSessionBtn">🗑️ Partie aus Verlauf löschen</button>
+                <button class="btn btn-primary w-100 btn-xl rounded-4 fw-bold shadow" id="saveEditSessionBtn">ÄNDERUNGEN SPEICHERN</button>
             </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="app.js?v=20"></script>
+<script src="app.js?v=11"></script>
 </body>
 </html>

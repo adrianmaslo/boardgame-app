@@ -85,7 +85,7 @@ def preview_game(bgg_id: int):
     return get_bgg_details(bgg_id)
 
 @router.get("/add")
-def add_game(name: str, bgg_id: int):
+def add_game(name: str, bgg_id: int, is_wishlist: int = 0):
     details = get_bgg_details(bgg_id)
     final_name = details["name"] if details["name"] else name
     
@@ -93,9 +93,9 @@ def add_game(name: str, bgg_id: int):
         c = conn.cursor()
         try:
             c.execute("""
-                INSERT INTO games (name, bgg_id, image_url, min_players, max_players, playing_time, weight) 
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-            """, (final_name, bgg_id, details["image_url"], details["min_players"], details["max_players"], details["playing_time"], details["weight"]))
+                INSERT INTO games (name, bgg_id, image_url, min_players, max_players, playing_time, weight, is_wishlist) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (final_name, bgg_id, details["image_url"], details["min_players"], details["max_players"], details["playing_time"], details["weight"], is_wishlist))
             conn.commit()
             return {"status": "Erfolg"}
         except sqlite3.IntegrityError:
@@ -125,8 +125,34 @@ def toggle_win_condition(game_id: int):
         conn.commit()
         return {"status": "Erfolg", "new_win_condition": new_cond}
 
+@router.patch("/game/{game_id}/category")
+def change_game_category(game_id: int, category: str):
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        if not category:
+            category = "Standard"
+        c.execute("UPDATE games SET category = ? WHERE id = ?", (category, game_id))
+        conn.commit()
+        return {"status": "Erfolg", "category": category}
+
 @router.get("/collection")
 def get_collection():
     with get_db_connection() as conn:
-        collection = conn.execute("SELECT * FROM games ORDER BY name ASC").fetchall()
-        return {"collection": [dict(g) for g in collection]}
+        collection = conn.execute("SELECT * FROM games WHERE is_wishlist = 0 ORDER BY name ASC").fetchall()
+        wishlist = conn.execute("SELECT * FROM games WHERE is_wishlist = 1 ORDER BY name ASC").fetchall()
+        return {
+            "collection": [dict(g) for g in collection],
+            "wishlist": [dict(g) for g in wishlist]
+        }
+
+@router.patch("/game/{game_id}/wishlist")
+def toggle_wishlist(game_id: int):
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        current = c.execute("SELECT is_wishlist FROM games WHERE id = ?", (game_id,)).fetchone()
+        if not current:
+            raise HTTPException(status_code=404, detail="Spiel nicht gefunden")
+        new_val = 0 if current["is_wishlist"] == 1 else 1
+        c.execute("UPDATE games SET is_wishlist = ? WHERE id = ?", (new_val, game_id))
+        conn.commit()
+        return {"status": "Erfolg", "is_wishlist": new_val}

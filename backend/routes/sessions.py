@@ -1,5 +1,6 @@
 import os, uuid, shutil, json
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException
+from pydantic import BaseModel
 from database import get_db_connection
 
 router = APIRouter()
@@ -89,3 +90,45 @@ def delete_session(session_id: int):
         except Exception as e:
             print(f"Fehler beim Löschen der Session: {e}")
             raise HTTPException(status_code=500, detail="Partie konnte nicht gelöscht werden.")
+
+class EditSession(BaseModel):
+    duration_minutes: int = None
+    play_date: str = None
+    score_adrian: int = None
+    score_lea: int = None
+    winner_id: int = None
+    comment: str = None
+
+@router.patch("/session/{session_id}")
+def edit_session(session_id: int, data: EditSession):
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        
+        updates = []
+        params = []
+        if data.duration_minutes is not None:
+            updates.append("duration_seconds = ?")
+            params.append(data.duration_minutes * 60)
+        if data.play_date is not None:
+            updates.append("play_date = ?")
+            params.append(data.play_date)
+        if data.comment is not None:
+            updates.append("comment = ?")
+            params.append(data.comment)
+            
+        if updates:
+            params.append(session_id)
+            c.execute(f"UPDATE sessions SET {', '.join(updates)} WHERE id = ?", params)
+            
+        p_ids = {row["name"]: row["id"] for row in c.execute("SELECT * FROM players").fetchall()}
+        
+        if data.score_adrian is not None and data.winner_id is not None:
+            c.execute("UPDATE scores SET score_value = ?, is_winner = ? WHERE session_id = ? AND player_id = ?",
+                      (data.score_adrian, 1 if data.winner_id == 1 else 0, session_id, p_ids["Adrian"]))
+        
+        if data.score_lea is not None and data.winner_id is not None:
+            c.execute("UPDATE scores SET score_value = ?, is_winner = ? WHERE session_id = ? AND player_id = ?",
+                      (data.score_lea, 1 if data.winner_id == 2 else 0, session_id, p_ids["Lea"]))
+                      
+        conn.commit()
+    return {"status": "Erfolg"}
