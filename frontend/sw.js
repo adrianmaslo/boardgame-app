@@ -1,10 +1,19 @@
-const CACHE_NAME = 'gamelog-pwa-v1';
+const CACHE_NAME = 'gamelog-pwa-v2';
 const STATIC_ASSETS = [
     '/',
     '/index.html',
     '/style.css',
-    '/app.js',
-    '/manifest.json'
+    '/js/state.js',
+    '/js/utils.js',
+    '/js/api.js',
+    '/js/timer.js',
+    '/js/ui-dashboard.js',
+    '/js/ui-collection.js',
+    '/js/ui-history.js',
+    '/js/ui-profile.js',
+    '/js/main.js',
+    '/manifest.json?v=1',
+    '/icons/icon.png?v=1'
 ];
 
 // Install Event: Cache static assets
