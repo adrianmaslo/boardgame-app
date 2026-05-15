@@ -60,6 +60,14 @@ The easiest way to run Game-Log Pro is via Docker.
 - `/frontend`: Contains all static files (HTML, CSS, JS) and PWA configurations (`manifest.json`, `sw.js`).
 - `docker-compose.yml`: Configuration for running the app inside a container.
 
+## 🎨 Customization
+
+Currently, the player names ("Adrian" and "Lea") are hard-coded in several places across the frontend and backend (including database initialization and specific stats calculations). 
+
+If you want to use this app with different names, the easiest way is to use the **Search and Replace** feature of your code editor to replace:
+- `Adrian` -> Your Name
+- `Lea` -> Partner's Name
+
 ## 📝 License
 
 This project is created for personal use.
