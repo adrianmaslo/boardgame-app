@@ -1,5 +1,5 @@
 window.loadHistory = async function() {
-    const res = await fetch('/history'); const data = await res.json();
+    const res = await authFetch('/history'); if (!res) return; const data = await res.json();
     allSessions = data.history; renderHistory(allSessions);
 };
 
@@ -45,12 +45,12 @@ window.showDetails = function(sessionId) {
         scoreHtml += `<div class="table-responsive rounded-3 overflow-hidden" style="border: 1px solid var(--surface-border);">
             <table class="table table-dark table-striped table-sm mb-0 text-center">
             <thead><tr><th class="text-muted fw-normal">Runde</th><th class="adrian-color fw-normal">${player1Name}</th><th class="lea-color fw-normal">${player2Name}</th></tr></thead><tbody>`;
-        const count = s.rounds.length / 2;
-        for (let i = 1; i <= count; i++) {
+        const roundNumbers = [...new Set(s.rounds.map(r => r.round_number))].sort((a,b) => a - b);
+        roundNumbers.forEach(i => {
             const rA = s.rounds.find(r => r.round_number === i && r.name === player1Name);
             const rL = s.rounds.find(r => r.round_number === i && r.name === player2Name);
             scoreHtml += `<tr><td class="text-white-50">${i}</td><td>${rA ? rA.points : 0}</td><td>${rL ? rL.points : 0}</td></tr>`;
-        }
+        });
         scoreHtml += '</tbody></table></div>';
     }
     document.getElementById('modalScores').innerHTML = scoreHtml;
@@ -66,8 +66,8 @@ window.showDetails = function(sessionId) {
         score_lea: null,
         winner_id: 0
     };
-    const sA = s.scores.find(sc => sc.name === 'Adrian');
-    const sL = s.scores.find(sc => sc.name === 'Lea');
+    const sA = s.scores.find(sc => sc.name === player1Name);
+    const sL = s.scores.find(sc => sc.name === player2Name);
     if (sA) window.currentEditSessionData.score_adrian = sA.score_value;
     if (sL) window.currentEditSessionData.score_lea = sL.score_value;
     if (sA && sA.is_winner === 1) window.currentEditSessionData.winner_id = 1;
@@ -86,22 +86,34 @@ window.showDetails = function(sessionId) {
         editModal.show();
         
         document.getElementById('saveEditSessionBtn').onclick = async () => {
+            const p1 = allPlayers[0];
+            const p2 = allPlayers[1];
+            const scA = parseInt(document.getElementById('editScoreA').value) || 0;
+            const scL = parseInt(document.getElementById('editScoreL').value) || 0;
+            const winVal = parseInt(document.getElementById('editWinner').value);
+
+            const scores = [];
+            if (p1) {
+                scores.push({ player_id: p1.id, score: scA, is_winner: winVal === 1 });
+            }
+            if (p2) {
+                scores.push({ player_id: p2.id, score: scL, is_winner: winVal === 2 });
+            }
+
             const payload = {
                 play_date: document.getElementById('editSessionDate').value + " 12:00:00",
                 duration_minutes: parseInt(document.getElementById('editSessionDuration').value) || 0,
-                score_adrian: parseInt(document.getElementById('editScoreA').value) || 0,
-                score_lea: parseInt(document.getElementById('editScoreL').value) || 0,
-                winner_id: parseInt(document.getElementById('editWinner').value),
+                scores_json: JSON.stringify(scores),
                 comment: document.getElementById('editSessionComment').value
             };
             
             try {
-                const res = await fetch(`/session/${currentEditSessionData.id}`, {
+                const res = await authFetch(`/session/${currentEditSessionData.id}`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
-                if (!res.ok) throw new Error();
+                if (!res || !res.ok) throw new Error();
                 editModal.hide();
                 loadHistory();
                 if (typeof loadDashboard === 'function') loadDashboard();
@@ -117,8 +129,8 @@ window.showDetails = function(sessionId) {
 window.deleteSession = async function(sessionId) {
     if(!confirm("Willst du diese Partie wirklich aus dem Verlauf löschen?")) return;
     try {
-        const res = await fetch(`/session/${sessionId}`, { method: 'DELETE' });
-        if (!res.ok) throw new Error();
+        const res = await authFetch(`/session/${sessionId}`, { method: 'DELETE' });
+        if (!res || !res.ok) throw new Error();
         bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
         loadHistory(); 
         if (typeof loadDashboard === 'function') loadDashboard(); 

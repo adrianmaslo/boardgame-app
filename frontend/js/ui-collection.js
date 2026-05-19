@@ -1,7 +1,7 @@
 window.allCollectionGames = [];
 
 window.loadCollection = async function() {
-    const res = await fetch('/collection'); const data = await res.json();
+    const res = await authFetch('/collection'); const data = await res.json();
     window.allCollectionGames = data.collection;
     
     // Render Collection
@@ -66,7 +66,7 @@ window.loadCollection = async function() {
 
 window.moveToCollection = async function(gameId) {
     try {
-        const res = await fetch(`/game/${gameId}/wishlist`, { method: 'PATCH' });
+        const res = await authFetch(`/game/${gameId}/wishlist`, { method: 'PATCH' });
         if (!res.ok) throw new Error();
         loadCollection();
         switchCollectionTab('games');

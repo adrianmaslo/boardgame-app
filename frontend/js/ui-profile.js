@@ -1,8 +1,8 @@
 window.showGameProfile = async function(gameId, bggId, imageUrl, minP, maxP, time, weight, currentCat) {
     // Kombinierter Fetch: Basis-Stats und Advanced-Stats laden
     const [resBasic, resAdv] = await Promise.all([
-        fetch(`/stats/game/${gameId}`),
-        fetch(`/stats/game/${gameId}/advanced`)
+        authFetch(`/stats/game/${gameId}`),
+        authFetch(`/stats/game/${gameId}/advanced`)
     ]);
     const basicData = await resBasic.json();
     const advData = await resAdv.json();
@@ -41,8 +41,8 @@ window.showGameProfile = async function(gameId, bggId, imageUrl, minP, maxP, tim
     }
     toggleBtn.onclick = async () => {
         try {
-            const res = await fetch(`/toggle_win_condition/${gameId}`, { method: 'PATCH' });
-            if (!res.ok) throw new Error();
+            const res = await authFetch(`/toggle_win_condition/${gameId}`, { method: 'PATCH' });
+            if (!res || !res.ok) throw new Error();
             modal.hide(); setTimeout(() => showGameProfile(gameId, bggId, imageUrl, minP, maxP, time, weight, currentCat), 350);
         } catch (e) { alert("Fehler beim Umstellen der Wertungsregel."); }
     };
@@ -123,8 +123,8 @@ window.changeGameCategory = async function(gameId) {
     }
     
     try {
-        const res = await fetch(`/game/${gameId}/category?category=${encodeURIComponent(newCat)}`, { method: 'PATCH' });
-        if (!res.ok) throw new Error();
+        const res = await authFetch(`/game/${gameId}/category?category=${encodeURIComponent(newCat)}`, { method: 'PATCH' });
+        if (!res || !res.ok) throw new Error();
         if (typeof loadCollection === 'function') loadCollection();
         bootstrap.Modal.getInstance(document.getElementById('gameProfileModal')).hide();
     } catch (e) {
@@ -135,8 +135,8 @@ window.changeGameCategory = async function(gameId) {
 window.deleteGame = async function(gameId) {
     if(!confirm("Willst du dieses Spiel wirklich aus der Sammlung löschen?")) return;
     try {
-        const res = await fetch(`/delete/${gameId}`, { method: 'DELETE' });
-        if (!res.ok) { const data = await res.json(); alert(data.detail || "Konnte nicht gelöscht werden."); return; }
+        const res = await authFetch(`/delete/${gameId}`, { method: 'DELETE' });
+        if (!res || !res.ok) { const data = await res.json(); alert(data.detail || "Konnte nicht gelöscht werden."); return; }
         bootstrap.Modal.getInstance(document.getElementById('gameProfileModal')).hide();
         if (typeof loadCollection === 'function') loadCollection(); 
     } catch (e) { alert("Fehler beim Löschen."); }

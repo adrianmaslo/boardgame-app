@@ -97,16 +97,50 @@ window.saveSession = async function() {
     const a = document.getElementById('score_adrian').value, l = document.getElementById('score_lea').value;
     if (a !== "" || l !== "") roundHistory.push({ round: roundHistory.length + 1, adrian: parseInt(a) || 0, lea: parseInt(l) || 0 });
     
+    const p1 = allPlayers[0];
+    const p2 = allPlayers[1];
+    const sum1 = roundHistory.reduce((s, r) => s + r.adrian, 0);
+    const sum2 = roundHistory.reduce((s, r) => s + r.lea, 0);
+    const winnerVal = parseInt(document.getElementById('winner_id').value);
+
+    const scores = [];
+    if (p1) {
+        scores.push({ player_id: p1.id, score: sum1, is_winner: winnerVal === 1 });
+    }
+    if (p2) {
+        scores.push({ player_id: p2.id, score: sum2, is_winner: winnerVal === 2 });
+    }
+
+    const backendRounds = roundHistory.map(r => {
+        const roundScores = {};
+        if (p1) roundScores[p1.id] = r.adrian;
+        if (p2) roundScores[p2.id] = r.lea;
+        return { round: r.round, scores: roundScores };
+    });
+
     const formData = new FormData();
-    formData.append('game_id', activeGameId); formData.append('duration', seconds); formData.append('start_time', startTime);
-    formData.append('score_adrian', roundHistory.reduce((s, r) => s + r.adrian, 0));
-    formData.append('score_lea', roundHistory.reduce((s, r) => s + r.lea, 0));
-    formData.append('winner_id', document.getElementById('winner_id').value);
+    formData.append('game_id', activeGameId);
+    formData.append('duration', seconds);
+    formData.append('start_time', startTime);
+    formData.append('scores_json', JSON.stringify(scores));
+    formData.append('rounds_json', JSON.stringify(backendRounds));
+    formData.append('winner_id', winnerVal);
     formData.append('comment', document.getElementById('comment').value);
-    formData.append('rounds_json', JSON.stringify(roundHistory));
+    
+    const activeGroup = Auth.getActiveGroup();
+    if (activeGroup) {
+        formData.append('group_id', activeGroup.id);
+    }
+    
     const photo = document.getElementById('photo').files[0];
     if (photo) formData.append('photo', photo);
 
-    await fetch('/record_session', { method: 'POST', body: formData });
-    localStorage.removeItem('activeTimer'); location.reload();
+    const res = await authFetch('/record_session', { method: 'POST', body: formData });
+    if (res && res.ok) {
+        localStorage.removeItem('activeTimer');
+        location.reload();
+    } else {
+        alert('Fehler beim Speichern der Partie.');
+    }
 };
+

@@ -1,6 +1,6 @@
 window.loadDashboard = async function() {
     // Fetch Daily Photo
-    fetch('/stats/daily_photo').then(r => r.json()).then(photoData => {
+    authFetch('/stats/daily_photo').then(r => r.json()).then(photoData => {
         if (photoData.photo) {
             document.getElementById('dailyPhotoImg').src = photoData.photo.path;
             document.getElementById('dailyPhotoGame').innerText = photoData.photo.game;
@@ -11,11 +11,11 @@ window.loadDashboard = async function() {
         }
     }).catch(()=>{});
 
-    const res = await fetch('/stats/dashboard'); const data = await res.json();
+    const res = await authFetch('/stats/dashboard'); const data = await res.json();
     player1Name = data.player1_name || "Adrian";
     player2Name = data.player2_name || "Lea";
-
-    // Update names in UI
+    
+    // Fallback: If only 1 player exists in group
     document.querySelectorAll('.player1-name').forEach(el => el.innerText = player1Name);
     document.querySelectorAll('.player2-name').forEach(el => el.innerText = player2Name);
     
@@ -109,7 +109,7 @@ window.loadDashboard = async function() {
     }
 
     // Load Chart Data
-    fetch('/stats/chart_data').then(r => r.json()).then(chartData => {
+    authFetch('/stats/chart_data').then(r => r.json()).then(chartData => {
         const ctx = document.getElementById('ewigesDuellChart');
         if (ctx && window.Chart) {
             if (window.duellChart) window.duellChart.destroy();

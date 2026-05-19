@@ -3,40 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Game-Log</title>
+    <title>Game-Log Pro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css?v=20">
+    <link rel="stylesheet" href="style.css?v=21">
     <link rel="manifest" href="manifest.json" crossorigin="use-credentials">
     <link rel="icon" type="image/png" href="icons/icon.png?v=1">
     <link rel="apple-touch-icon" href="icons/icon.png?v=1">
     <meta name="theme-color" content="#0f172a">
+    <style>
+        .avatar-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+    </style>
 </head>
 <body>
 
-<div class="app-container">
-    <header class="app-header shadow-sm d-flex justify-content-center align-items-center">
-        <span class="fw-bold tracking-widest text-white small" style="letter-spacing: 3px;">✨ GAMELOG PRO</span>
+<!-- ─── AUTHENTIFIZIERUNGS-VIEW (LOGIN/REGISTRIERUNG) ────────────────────────── -->
+<div id="authView" class="container pt-5 animate-fade-in" style="max-width: 480px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
+    <div class="text-center mb-5">
+        <h1 class="fw-extrabold tracking-widest text-white mb-2" style="font-size: 2.2rem; letter-spacing: 4px;">🎲 GAME-LOG PRO</h1>
+        <p class="text-muted small">Dein ultimativer Brettspiel Tracker</p>
+    </div>
+    
+    <div class="premium-scoreboard p-4">
+        <div class="btn-group w-100 mb-4" role="group">
+            <button type="button" class="btn btn-outline-secondary text-white active" id="authTabLogin" onclick="showLoginTab()">Login</button>
+            <button type="button" class="btn btn-outline-secondary text-white" id="authTabRegister" onclick="showRegisterTab()">Registrieren</button>
+        </div>
+
+        <!-- Login Form -->
+        <div id="loginTab">
+            <div class="mb-3">
+                <label class="form-label text-white-50 x-small fw-bold text-uppercase">Username</label>
+                <input type="text" id="loginUsername" class="form-control rounded-3 py-2 px-3" placeholder="z.B. adrian">
+            </div>
+            <div class="mb-4">
+                <label class="form-label text-white-50 x-small fw-bold text-uppercase">Passwort</label>
+                <input type="password" id="loginPassword" class="form-control rounded-3 py-2 px-3" placeholder="••••••">
+            </div>
+            <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="loginError"></div>
+            <button class="btn btn-primary w-100 py-3 rounded-3 fw-bold" id="loginBtn" onclick="doLogin()">Einloggen</button>
+        </div>
+
+        <!-- Register Form -->
+        <div id="registerTab" class="d-none">
+            <div class="mb-3">
+                <label class="form-label text-white-50 x-small fw-bold text-uppercase">Username</label>
+                <input type="text" id="regUsername" class="form-control rounded-3 py-2 px-3" placeholder="z.B. lea">
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-white-50 x-small fw-bold text-uppercase">E-Mail (Optional)</label>
+                <input type="email" id="regEmail" class="form-control rounded-3 py-2 px-3" placeholder="name@beispiel.de">
+            </div>
+            <div class="mb-3">
+                <label class="form-label text-white-50 x-small fw-bold text-uppercase">Passwort (min. 6 Zeichen)</label>
+                <input type="password" id="regPassword" class="form-control rounded-3 py-2 px-3" placeholder="••••••">
+            </div>
+            <div class="mb-4">
+                <label class="form-label text-white-50 x-small fw-bold text-uppercase">Passwort bestätigen</label>
+                <input type="password" id="regPassword2" class="form-control rounded-3 py-2 px-3" placeholder="••••••">
+            </div>
+            <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="registerError"></div>
+            <button class="btn btn-primary w-100 py-3 rounded-3 fw-bold" id="registerBtn" onclick="doRegister()">Konto erstellen</button>
+        </div>
+    </div>
+</div>
+
+<!-- ─── GRUPPEN-SETUP-WIZARD ────────────────────────────────────────────────── -->
+<div id="groupWizard" class="container pt-5 d-none animate-fade-in" style="max-width: 480px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
+    <div class="text-center mb-4">
+        <h2 class="fw-bold text-white mb-2" id="wizardTitle">Willkommen! 👋</h2>
+        <p class="text-muted small">Lass uns zuerst deine Spielgruppe einrichten.</p>
+    </div>
+
+    <!-- Step 1: Create or Join -->
+    <div id="wizardStep1" class="premium-scoreboard p-4">
+        <h5 class="fw-bold text-white mb-3">Option A: Neue Gruppe erstellen</h5>
+        <div class="mb-3">
+            <label class="form-label text-white-50 x-small fw-bold text-uppercase">Name deiner Spielgruppe</label>
+            <input type="text" id="wizardGroupName" class="form-control rounded-3 py-2 px-3" placeholder="z.B. Die Brettspiel-Runde">
+        </div>
+        <div class="mb-4">
+            <label class="form-label text-white-50 x-small fw-bold text-uppercase">Dein Anzeigename in der Gruppe</label>
+            <input type="text" id="wizardDisplayName" class="form-control rounded-3 py-2 px-3" placeholder="Dein Name">
+        </div>
+        <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="wizardError"></div>
+        <button class="btn btn-primary w-100 py-3 rounded-3 fw-bold mb-4" id="wizardCreateBtn" onclick="wizardCreateGroup()">Gruppe erstellen</button>
+
+        <hr class="my-4" style="border-color: rgba(255,255,255,0.1)">
+
+        <h5 class="fw-bold text-white mb-3">Option B: Einer Gruppe beitreten</h5>
+        <div class="mb-3">
+            <label class="form-label text-white-50 x-small fw-bold text-uppercase">6-stelliger Einladungs-Code</label>
+            <input type="text" id="wizardJoinCode" class="form-control rounded-3 py-2 px-3 text-center tracking-widest fw-bold" placeholder="z.B. AB12CD">
+        </div>
+        <div class="mb-4">
+            <label class="form-label text-white-50 x-small fw-bold text-uppercase">Dein Anzeigename in der Gruppe</label>
+            <input type="text" id="wizardJoinDisplayName" class="form-control rounded-3 py-2 px-3" placeholder="Dein Name">
+        </div>
+        <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="wizardJoinError"></div>
+        <button class="btn btn-outline-light w-100 py-3 rounded-3 fw-bold" id="wizardJoinBtn" onclick="wizardJoinGroup()">Gruppe beitreten</button>
+    </div>
+
+    <!-- Step 2: Invite Members -->
+    <div id="wizardStep2" class="premium-scoreboard p-4 d-none">
+        <h5 class="fw-bold text-white mb-1">Deine Gruppe steht! 🎉</h5>
+        <p class="text-muted small mb-4">Gruppe: <strong id="wizardGroupNameDisplay" class="text-white"></strong></p>
+        
+        <div class="text-center p-3 mb-4 rounded-4" style="background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border);">
+            <small class="text-white-50 x-small fw-bold text-uppercase tracking-wider d-block mb-2">Einladungs-Code für deine Freunde</small>
+            <h1 class="display-4 fw-bold text-primary tracking-wider mb-2" id="wizardInviteCode">------</h1>
+            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="copyInviteCode()">📋 Code kopieren</button>
+        </div>
+
+        <h6 class="fw-bold text-white small text-uppercase mb-2">Aktuelle Mitglieder (Max. 4)</h6>
+        <div id="wizardMemberList" class="mb-4"></div>
+
+        <button class="btn btn-success w-100 py-3 rounded-3 fw-bold" onclick="wizardDone()">Fertig & App starten 🚀</button>
+    </div>
+</div>
+
+<!-- ─── HAUPT-APP CONTAINER ─────────────────────────────────────────────────── -->
+<div id="mainApp" class="app-container d-none">
+    <header class="app-header shadow-sm d-flex justify-content-between align-items-center px-3">
+        <!-- Group Switcher -->
+        <div class="dropdown">
+            <button class="btn btn-sm btn-outline-light dropdown-toggle rounded-pill px-3 py-1" type="button" id="activeGroupLabel" data-bs-toggle="dropdown" aria-expanded="false">
+                Lade Gruppe...
+            </button>
+            <ul class="dropdown-menu dropdown-menu-dark shadow-lg border-0 rounded-3 mt-2" id="groupSwitcherItems" style="background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px);">
+                <!-- Injected via JS -->
+            </ul>
+        </div>
+        
+        <span class="fw-bold tracking-widest text-white small d-none d-sm-inline" style="letter-spacing: 3px; font-size: 0.8rem;">✨ GAMELOG PRO</span>
+        
+        <!-- User Dropdown / Logout -->
+        <div class="dropdown">
+            <button class="btn btn-sm btn-link text-white text-decoration-none dropdown-toggle px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                👤 <span id="headerUsername" class="small fw-bold">User</span>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark border-0 rounded-3 mt-2" style="background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px);">
+                <li><a class="dropdown-item text-danger small fw-bold" href="#" onclick="Auth.logout(); return false;">🚪 Ausloggen</a></li>
+            </ul>
+        </div>
     </header>
 
     <main class="content-area container pt-4">
         <!-- DASHBOARD TAB -->
         <section id="tab-home" class="app-tab active">
             <div class="animate-fade-in">
-                <h3 class="fw-bold mb-1">Hey ihr zwei! 👋</h3>
+                <h3 class="fw-bold mb-1">Hey ihr! 👋</h3>
                 <p class="text-muted small mb-4">Bereit für das nächste Duell?</p>
 
                 <div class="premium-scoreboard text-center mb-4">
                     <small class="text-uppercase tracking-widest text-white-50 x-small d-block mb-3 fw-bold">Ewiges Duell</small>
                     <div class="d-flex justify-content-center align-items-start w-100">
                         <div class="d-flex flex-column align-items-center" style="flex: 1; max-width: 45%;">
-                            <span class="score-name adrian-color d-block player1-name">ADRIAN</span>
+                            <span class="score-name adrian-color d-block player1-name">Spieler 1</span>
                             <h1 class="display-2 fw-bold mb-0 text-shadow" id="dashWinsA">0</h1>
                             <div id="dashboardAchievementsAdrian" class="mt-2 d-flex flex-column gap-1 align-items-center w-100"></div>
                         </div>
                         <div class="fs-2 text-white-50 fw-light px-2" style="margin-top: 1.5rem;">⚡</div>
                         <div class="d-flex flex-column align-items-center" style="flex: 1; max-width: 45%;">
-                            <span class="score-name lea-color d-block player2-name">LEA</span>
+                            <span class="score-name lea-color d-block player2-name">Spieler 2</span>
                             <h1 class="display-2 fw-bold mb-0 text-shadow" id="dashWinsL">0</h1>
                             <div id="dashboardAchievementsLea" class="mt-2 d-flex flex-column gap-1 align-items-center w-100"></div>
                         </div>
@@ -62,7 +196,7 @@
                     </div>
                 </div>
 
-                <h5 class="fw-bold mb-3">Eure Highlights 🏆</h5>
+                <h5 class="fw-bold mb-3">Highlights 🏆</h5>
                 <div id="dashboardHighlights">
                     <!-- Highlights rendered via JS -->
                 </div>
@@ -100,10 +234,7 @@
                 <p class="text-white-50 small mb-3">Spiele, die du auf dem Radar hast. Klicke auf ein Spiel, um es in deine Sammlung zu übernehmen!</p>
                 <div id="wishlistList" class="list-group list-group-custom mb-5"></div>
             </div>
-            <div id="collectionNotFound" class="d-none text-center p-3 mb-4 rounded-4" style="background: rgba(255,255,255,0.05); border: 1px dashed var(--surface-border);">
-                <p class="text-muted mb-3 small">Dieses Spiel ist noch nicht in deiner Sammlung.</p>
-                <button class="btn btn-outline-primary rounded-pill btn-sm fw-bold" onclick="searchMissingGame()">Auf BGG suchen</button>
-            </div>
+            
             <div class="collapse mb-4" id="searchCol">
                 <div class="input-group shadow-sm rounded-4 overflow-hidden">
                     <input type="text" id="searchInput" class="form-control border-0 px-4 py-3" placeholder="Auf BGG suchen...">
@@ -111,7 +242,6 @@
                 </div>
                 <div id="searchResults" class="mt-3"></div>
             </div>
-            <div id="collectionList" class="accordion accordion-flush mb-5 animate-fade-in" style="--bs-accordion-bg: transparent; --bs-accordion-color: white; --bs-accordion-btn-color: white;"></div>
         </section>
 
         <!-- HISTORY TAB -->
@@ -151,7 +281,68 @@
     </nav>
 </div>
 
+<!-- ─── TOAST NOTIFICATION ──────────────────────────────────────────────────── -->
+<div class="position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index: 1060; bottom: 90px !important;">
+    <div id="appToast" class="toast align-items-center text-white bg-dark border-0 rounded-3 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body fw-bold" id="appToastMsg">Aktion erfolgreich!</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
 <!-- ================= MODALS ================= -->
+
+<!-- GROUP MANAGE MODAL -->
+<div class="modal fade" id="groupManageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-1 mt-2">
+                <h5 class="modal-title fw-bold fs-4 text-white">Gruppe verwalten</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-0 pb-4">
+                <h3 class="fw-bold text-primary mb-3" id="manageGroupName">-</h3>
+                
+                <div class="text-center p-3 mb-4 rounded-4" style="background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border);">
+                    <small class="text-white-50 x-small fw-bold text-uppercase tracking-wider d-block mb-1">Einladungs-Code</small>
+                    <h2 class="fw-bold text-white tracking-widest mb-2" id="groupInviteCode">------</h2>
+                    <div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="copyInviteCode()">📋 Kopieren</button>
+                        <button class="btn btn-sm btn-outline-warning rounded-pill px-3 d-none" id="manageIsAdmin" onclick="regenerateCode()">🔄 Neuer Code</button>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold small text-light text-uppercase mb-2 px-1 tracking-wider">Mitglieder (Max. 4)</h6>
+                <div id="manageMemberList" class="mb-4"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CREATE GROUP MODAL (from dropdown switcher) -->
+<div class="modal fade" id="createGroupModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-1 mt-2">
+                <h5 class="modal-title fw-bold fs-4 text-white">Neue Gruppe erstellen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-0 pb-4">
+                <div class="mb-3">
+                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Gruppenname</label>
+                    <input type="text" id="newGroupName" class="form-control rounded-3 py-2 px-3" placeholder="z.B. Mittwochsrunde">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Dein Anzeigename in der Gruppe</label>
+                    <input type="text" id="newGroupDisplayName" class="form-control rounded-3 py-2 px-3" placeholder="Dein Name">
+                </div>
+                <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="createGroupError"></div>
+                <button class="btn btn-primary w-100 py-3 rounded-3 fw-bold" onclick="createNewGroupFromModal()">Gruppe erstellen</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- BGG PREVIEW MODAL -->
 <div class="modal fade" id="bggPreviewModal" tabindex="-1" aria-hidden="true">
@@ -173,7 +364,7 @@
     </div>
 </div>
 
-<!-- GAME PROFILE MODAL (Combined Stats & Advanced Stats) -->
+<!-- GAME PROFILE MODAL -->
 <div class="modal fade" id="gameProfileModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
@@ -186,9 +377,9 @@
                 <div id="profileBggInfo" class="mb-3"></div>
                 
                 <div class="row text-center mb-4 mx-0 py-3 rounded-4 shadow-sm" style="background: rgba(0,0,0,0.4); border: 1px solid var(--surface-border);">
-                    <div class="col"><small class="adrian-color d-block x-small fw-bold tracking-wider">ADRIAN</small><h2 class="fw-bold mb-0 text-white" id="profileWinsA">0</h2></div>
+                    <div class="col"><small class="adrian-color d-block x-small fw-bold tracking-wider player1-name">Spieler 1</small><h2 class="fw-bold mb-0 text-white" id="profileWinsA">0</h2></div>
                     <div class="col-auto d-flex align-items-center text-light small fw-bold">VS</div>
-                    <div class="col"><small class="lea-color d-block x-small fw-bold tracking-wider">LEA</small><h2 class="fw-bold mb-0 text-white" id="profileWinsL">0</h2></div>
+                    <div class="col"><small class="lea-color d-block x-small fw-bold tracking-wider player2-name">Spieler 2</small><h2 class="fw-bold mb-0 text-white" id="profileWinsL">0</h2></div>
                 </div>
 
                 <button class="btn btn-primary w-100 btn-xl rounded-4 fw-bold shadow-lg mb-3" id="startGameBtn">🚀 PARTIE STARTEN</button>
@@ -233,13 +424,13 @@
             <div class="modal-body pt-3 pb-4">
                 <div class="active-scoreboard mb-4 d-flex align-items-center">
                     <div class="flex-grow-1 text-center">
-                        <label class="adrian-color small fw-bold tracking-widest d-block mb-1">ADRIAN</label>
+                        <label class="adrian-color small fw-bold tracking-widest d-block mb-1 player1-name" id="scoreLabel1">Spieler 1</label>
                         <div class="big-score adrian-color" id="sum_adrian">0</div>
                         <input type="number" id="score_adrian" class="score-input-large" placeholder="+ Pkt" inputmode="numeric">
                     </div>
                     <div class="fw-bold text-light px-3">VS</div>
                     <div class="flex-grow-1 text-center">
-                        <label class="lea-color small fw-bold tracking-widest d-block mb-1">LEA</label>
+                        <label class="lea-color small fw-bold tracking-widest d-block mb-1 player2-name" id="scoreLabel2">Spieler 2</label>
                         <div class="big-score lea-color" id="sum_lea">0</div>
                         <input type="number" id="score_lea" class="score-input-large" placeholder="+ Pkt" inputmode="numeric">
                     </div>
@@ -250,8 +441,8 @@
 
                 <div class="p-3 mb-4 rounded-4" style="background: rgba(0,0,0,0.4); border: 1px solid var(--surface-border);">
                     <select id="winner_id" class="form-select border-0 fw-bold mb-3 rounded-3 py-3">
-                        <option value="1" id="editWinnerP1">🏆 Adrian hat gewonnen</option>
-                        <option value="2" id="editWinnerP2">🏆 Lea hat gewonnen</option>
+                        <option value="1" id="editWinnerP1">🏆 Spieler 1 hat gewonnen</option>
+                        <option value="2" id="editWinnerP2">🏆 Spieler 2 hat gewonnen</option>
                         <option value="0">⚪ Unentschieden</option>
                     </select>
                     <div class="d-flex gap-2">
@@ -312,7 +503,7 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header border-0 pb-0 mt-2">
-                <h5 class="modal-title fw-bold fs-4">Partie bearbeiten</h5>
+                <h5 class="modal-title fw-bold fs-4 text-white">Partie bearbeiten</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body pt-3 pb-4">
@@ -328,17 +519,17 @@
                     <label class="form-label text-white-50 x-small fw-bold text-uppercase d-block mb-3">Punkte & Gewinner</label>
                     
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="adrian-color fw-bold player1-name">Adrian</span>
+                        <span class="adrian-color fw-bold player1-name">Spieler 1</span>
                         <input type="number" id="editScoreA" class="form-control bg-dark text-white border-secondary border-opacity-50 w-50 text-end" inputmode="numeric">
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="lea-color fw-bold player2-name">Lea</span>
+                        <span class="lea-color fw-bold player2-name">Spieler 2</span>
                         <input type="number" id="editScoreL" class="form-control bg-dark text-white border-secondary border-opacity-50 w-50 text-end" inputmode="numeric">
                     </div>
                     
                     <select id="editWinner" class="form-select bg-dark text-white border-secondary border-opacity-50 mt-3">
-                        <option value="1" id="selectP1">🏆 Adrian</option>
-                        <option value="2" id="selectP2">🏆 Lea</option>
+                        <option value="1" id="selectP1">🏆 Spieler 1</option>
+                        <option value="2" id="selectP2">🏆 Spieler 2</option>
                         <option value="0">⚪ Unentschieden</option>
                     </select>
                 </div>
@@ -354,6 +545,8 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/ui-groups.js"></script>
 <script src="js/state.js"></script>
 <script src="js/utils.js"></script>
 <script src="js/api.js"></script>

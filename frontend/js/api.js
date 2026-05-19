@@ -1,7 +1,9 @@
 window.searchBGG = async function() {
     const q = document.getElementById('searchInput').value; if (!q) return;
     document.getElementById('searchResults').innerHTML = '<div class="text-center text-primary small p-3 spinner-border spinner-border-sm" role="status"></div><span class="small text-muted ms-2">Suche...</span>';
-    const res = await fetch(`/search?name=${q}`); const data = await res.json();
+    const res = await authFetch(`/search?name=${q}`); 
+    if (!res) return;
+    const data = await res.json();
     if(data.results.length === 0) { document.getElementById('searchResults').innerHTML = '<div class="text-center text-muted small p-3">Nichts gefunden.</div>'; return; }
     document.getElementById('searchResults').innerHTML = data.results.map(g => `
         <div class="list-group-item d-flex justify-content-between align-items-center animate-fade-in rounded-3 mb-2" onclick="previewGame(${g.id}, '${g.name.replace(/'/g, "\\'")}')" style="cursor:pointer; background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border);">
@@ -15,7 +17,9 @@ window.previewGame = async function(bggId, tempName) {
     document.getElementById('previewBadges').innerHTML = '';
     const modal = new bootstrap.Modal(document.getElementById('bggPreviewModal')); modal.show();
     try {
-        const res = await fetch(`/preview?bgg_id=${bggId}`); const data = await res.json();
+        const res = await authFetch(`/preview?bgg_id=${bggId}`); 
+        if (!res) return;
+        const data = await res.json();
         document.getElementById('previewGameName').innerText = data.name || tempName;
         if (data.image_url) { document.getElementById('previewCoverImage').innerHTML = `<img src="${data.image_url}" class="w-100" style="height: 220px; object-fit: cover; opacity: 0.9; mask-image: linear-gradient(to bottom, black 50%, transparent 100%); -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);">`; } 
         else { document.getElementById('previewCoverImage').innerHTML = '<div class="p-4 text-center text-muted bg-dark">Kein Cover</div>'; }
@@ -30,8 +34,8 @@ window.previewGame = async function(bggId, tempName) {
 };
 
 window.addGame = async function(name, id, isWishlist = false) {
-    await fetch(`/add?name=${encodeURIComponent(name)}&bgg_id=${id}&is_wishlist=${isWishlist ? 1 : 0}`);
-    bootstrap.Collapse.getInstance(document.getElementById('searchCol')).hide();
+    await authFetch(`/add?name=${encodeURIComponent(name)}&bgg_id=${id}&is_wishlist=${isWishlist ? 1 : 0}`);
+    bootstrap.Collapse.getInstance(document.getElementById('searchCol'))?.hide();
     if (typeof loadCollection === 'function') loadCollection(); 
     if (isWishlist) {
         if (typeof switchCollectionTab === 'function') switchCollectionTab('wishlist');
