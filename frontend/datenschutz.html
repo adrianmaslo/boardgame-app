@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Datenschutzerklärung — Game-Log Pro</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #0f172a;
+            color: #e2e8f0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 720px;
+        }
+
+        h1 {
+            color: #fff;
+            font-size: 1.8rem;
+        }
+
+        h2 {
+            color: #94a3b8;
+            font-size: 1.15rem;
+            margin-top: 2rem;
+        }
+
+        a {
+            color: #818cf8;
+        }
+
+        .back-link {
+            color: #818cf8;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        hr {
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← Zurück zur App</a>
+        <h1 class="mt-3 mb-4">🔒 Datenschutzerklärung</h1>
+        <p class="text-muted small">Stand: Mai 2026</p>
+
+        <h2>1. Verantwortlicher</h2>
+        <p>
+            Verantwortlich für die Datenverarbeitung im Sinne der DSGVO ist:<br>
+            <strong>Adrian Maslowski</strong><br>
+            Im Gaiern 11, 73663 Berglen<br>
+            E-Mail: <a href="mailto:a.maslowski00@gmail.com">a.maslowski00@gmail.com</a>
+        </p>
+        <hr>
+
+        <h2>2. Erhobene Daten</h2>
+        <p>Folgende personenbezogene Daten werden im Rahmen der Nutzung von Game-Log Pro verarbeitet:</p>
+        <ul>
+            <li><strong>Benutzername</strong> — zur Identifikation innerhalb der App.</li>
+            <li><strong>E-Mail-Adresse</strong> (optional) — wird nur gespeichert, wenn du sie bei der Registrierung
+                angibst.</li>
+            <li><strong>Passwort</strong> — wird <strong>nicht im Klartext</strong> gespeichert, sondern ausschließlich
+                als unumkehrbarer Hashwert (Bcrypt).</li>
+            <li><strong>Spielstatistiken</strong> — Spielrunden, Punkte, Gewinner, Timer-Daten und optionale Kommentare.
+            </li>
+            <li><strong>Fotos</strong> (optional) — hochgeladene Bilder von Spielrunden werden auf dem Server
+                gespeichert.</li>
+            <li><strong>Server-Logs</strong> — IP-Adressen und Zeitstempel werden technisch bedingt in den Server-Logs
+                aufgezeichnet.</li>
+        </ul>
+
+        <hr>
+
+        <h2>3. Zweck der Verarbeitung</h2>
+        <p>Die Daten werden ausschließlich zur Bereitstellung des Spielgruppen-Trackers und der dazugehörigen
+            Statistiken verwendet. Es findet <strong>keine Weitergabe an Dritte</strong> statt.</p>
+
+        <hr>
+
+        <h2>4. Hosting & Speicherort</h2>
+        <p>Die App und alle Daten werden auf einem <strong>privaten Server</strong> gehostet (Standort: Deutschland/EU).
+            Die Verbindung ist über HTTPS (TLS) verschlüsselt.</p>
+
+        <hr>
+
+        <h2>5. Cookies & Tracking</h2>
+        <p>Game-Log Pro verwendet <strong>keine Cookies</strong> und <strong>kein Tracking</strong> (kein Google
+            Analytics, kein Facebook Pixel o.ä.). Die Authentifizierung basiert auf einem JWT-Token, das ausschließlich
+            im <code>localStorage</code> des Browsers gespeichert wird. Dies ist technisch notwendig und erfordert
+            <strong>kein Cookie-Banner</strong>.</p>
+
+        <hr>
+
+        <h2>6. Deine Rechte (DSGVO Art. 15–21)</h2>
+        <p>Du hast jederzeit das Recht auf:</p>
+        <ul>
+            <li><strong>Auskunft</strong> (Art. 15) — welche Daten über dich gespeichert sind.</li>
+            <li><strong>Berichtigung</strong> (Art. 16) — Änderung falscher Daten (z.B. Username-Änderung in den
+                Kontoeinstellungen).</li>
+            <li><strong>Löschung</strong> (Art. 17, „Recht auf Vergessenwerden") — du kannst dein Konto jederzeit direkt
+                in der App unter <em>👤 → ⚠️ Konto löschen</em> unwiderruflich löschen. Dabei werden alle deine
+                Spielergebnisse, Statistiken, Gruppenmitgliedschaften und hochgeladene Fotos restlos vom Server
+                entfernt.</li>
+            <li><strong>Datenübertragbarkeit</strong> (Art. 20) — ein Export deiner Daten wird in einer zukünftigen
+                Version bereitgestellt.</li>
+        </ul>
+
+        <hr>
+
+        <h2>7. Datensicherheit</h2>
+        <ul>
+            <li>Passwörter werden mit <strong>Bcrypt</strong> (automatisches Salting, hoher Work Factor) gehasht.</li>
+            <li>API-Zugriffe sind über <strong>JWT-Token</strong> (HS256, 30 Tage Gültigkeit) abgesichert.</li>
+            <li>Der Server wird regelmäßig mit Sicherheitsupdates versorgt.</li>
+            <li>Die Datenbank wird verschlüsselt gesichert (Backup).</li>
+        </ul>
+
+        <hr>
+
+        <h2>8. Änderungen an dieser Datenschutzerklärung</h2>
+        <p>Wir behalten uns vor, diese Datenschutzerklärung bei Bedarf anzupassen, z.B. bei Erweiterungen der
+            App-Funktionalität. Die jeweils aktuelle Version ist stets unter dieser URL abrufbar.</p>
+
+        <hr>
+        <p class="text-muted small mt-4">Bei Fragen zum Datenschutz wende dich bitte per E-Mail an den oben genannten
+            Verantwortlichen.</p>
+    </div>
+</body>
+
+</html>

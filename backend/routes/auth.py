@@ -18,6 +18,11 @@ class LoginRequest(BaseModel):
     username: str
     password: str
 
+class UpdateProfileRequest(BaseModel):
+    new_username: Optional[str] = None
+    current_password: str
+    new_password: Optional[str] = None
+
 # ─── Endpunkte ────────────────────────────────────────────────────────────────
 
 @router.post("/register")
@@ -103,7 +108,7 @@ def get_me(current_user: dict = Depends(get_current_user)):
         groups_list = []
         for g in groups:
             members = conn.execute("""
-                SELECT u.id, gm.display_name, gm.avatar_color,
+                SELECT u.id AS id, gm.display_name, gm.avatar_color,
                        CASE WHEN g2.admin_id = u.id THEN 1 ELSE 0 END as is_admin
                 FROM group_members gm
                 JOIN users u ON u.id = gm.user_id
@@ -139,3 +144,139 @@ def change_password(data: dict, current_user: dict = Depends(get_current_user)):
                      (hash_password(new_pw), current_user["id"]))
         conn.commit()
     return {"status": "Passwort geändert"}
+
+
+@router.put("/me")
+def update_me(data: UpdateProfileRequest, current_user: dict = Depends(get_current_user)):
+    """Aktualisiert Username und/oder Passwort des aktuellen Users."""
+    user_id = current_user["id"]
+    
+    with get_db_connection() as conn:
+        user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        
+        # 1. Aktuelles Passwort überprüfen
+        if not verify_password(data.current_password, user["password_hash"]):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Das aktuelle Passwort ist falsch."
+            )
+            
+        new_username = data.new_username.strip() if data.new_username else None
+        
+        # 2. Username ändern (falls gewünscht)
+        if new_username and new_username.lower() != user["username"].lower():
+            if len(new_username) < 2 or len(new_username) > 30:
+                raise HTTPException(status_code=400, detail="Username muss 2–30 Zeichen lang sein.")
+                
+            existing = conn.execute("SELECT id FROM users WHERE username = ?", (new_username.lower(),)).fetchone()
+            if existing:
+                raise HTTPException(status_code=400, detail="Dieser Username ist bereits vergeben.")
+                
+            conn.execute("UPDATE users SET username = ? WHERE id = ?", (new_username.lower(), user_id))
+            conn.execute("UPDATE group_members SET display_name = ? WHERE user_id = ?", (new_username, user_id))
+            
+        # 3. Passwort ändern (falls gewünscht)
+        if data.new_password:
+            if len(data.new_password) < 6:
+                raise HTTPException(status_code=400, detail="Das neue Passwort muss mindestens 6 Zeichen lang sein.")
+            new_hash = hash_password(data.new_password)
+            conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_hash, user_id))
+            
+        conn.commit()
+        
+        # 4. Aktualisierte Daten laden und neuen Token generieren
+        updated_user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+        
+    token = create_access_token(updated_user["id"], updated_user["username"])
+    return {
+        "status": "Profil aktualisiert",
+        "access_token": token,
+        "token_type": "bearer",
+        "user": {
+            "id": updated_user["id"],
+            "username": updated_user["username"],
+            "email": updated_user["email"],
+            "avatar_color": updated_user["avatar_color"]
+        }
+    }
+
+
+@router.delete("/me")
+def delete_account(current_user: dict = Depends(get_current_user)):
+    import os
+    user_id = current_user["id"]
+    
+    with get_db_connection() as conn:
+        c = conn.cursor()
+        
+        # 1. Alle Gruppen-Zugehörigkeiten holen
+        memberships = c.execute("SELECT group_id FROM group_members WHERE user_id = ?", (user_id,)).fetchall()
+        
+        for m in memberships:
+            group_id = m["group_id"]
+            
+            # Prüfen ob dieser User Admin dieser Gruppe ist
+            group_info = c.execute("SELECT admin_id FROM groups WHERE id = ?", (group_id,)).fetchone()
+            if group_info and group_info["admin_id"] == user_id:
+                # Andere Gruppen-Mitglieder holen, sortiert nach joined_at
+                other_members = c.execute(
+                    "SELECT user_id FROM group_members WHERE group_id = ? AND user_id != ? ORDER BY joined_at ASC",
+                    (group_id, user_id)
+                ).fetchall()
+                
+                if other_members:
+                    # Admin-Rechte an das älteste andere Mitglied übertragen
+                    new_admin_id = other_members[0]["user_id"]
+                    c.execute("UPDATE groups SET admin_id = ? WHERE id = ?", (new_admin_id, group_id))
+                else:
+                    # Keine anderen Mitglieder -> Gesamte Gruppe und Daten löschen
+                    
+                    # 1. Alle Sessions in dieser Gruppe holen und deren Fotos vom Dateisystem löschen
+                    sessions = c.execute("SELECT photo_path FROM sessions WHERE group_id = ?", (group_id,)).fetchall()
+                    for s in sessions:
+                        p_path = s["photo_path"]
+                        if p_path and os.path.exists(p_path):
+                            try:
+                                os.remove(p_path)
+                            except Exception:
+                                pass
+                    
+                    # 2. Runden-Ergebnisse und Gesamt-Ergebnisse dieser Sessions löschen
+                    c.execute("""
+                        DELETE FROM round_scores WHERE session_id IN (
+                            SELECT id FROM sessions WHERE group_id = ?
+                        )
+                    """, (group_id,))
+                    
+                    c.execute("""
+                        DELETE FROM scores WHERE session_id IN (
+                            SELECT id FROM sessions WHERE group_id = ?
+                        )
+                    """, (group_id,))
+                    
+                    # 3. Sessions löschen
+                    c.execute("DELETE FROM sessions WHERE group_id = ?", (group_id,))
+                    
+                    # 4. Spiele dieser Gruppe löschen
+                    c.execute("DELETE FROM games WHERE group_id = ?", (group_id,))
+                    
+                    # 5. Gäste dieser Gruppe löschen
+                    c.execute("DELETE FROM guests WHERE group_id = ?", (group_id,))
+                    
+                    # 6. Gruppe selbst löschen
+                    c.execute("DELETE FROM groups WHERE id = ?", (group_id,))
+            
+            # Aus group_members austragen
+            c.execute("DELETE FROM group_members WHERE group_id = ? AND user_id = ?", (group_id, user_id))
+            
+        # 2. Eigene Scores und Runden-Punkte löschen
+        c.execute("DELETE FROM scores WHERE player_id = ?", (user_id,))
+        c.execute("DELETE FROM round_scores WHERE player_id = ?", (user_id,))
+        
+        # 3. User selbst löschen
+        c.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        
+        conn.commit()
+        
+    return {"status": "Erfolg", "message": "Konto und alle zugehörigen Daten wurden gelöscht."}
+

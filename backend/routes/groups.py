@@ -22,7 +22,7 @@ class JoinGroupRequest(BaseModel):
 
 def _get_group_members(conn, group_id: int):
     members = conn.execute("""
-        SELECT u.id, u.username, gm.display_name, gm.avatar_color,
+        SELECT u.id AS id, u.username, gm.display_name, gm.avatar_color,
                CASE WHEN g.admin_id = u.id THEN 1 ELSE 0 END as is_admin
         FROM group_members gm
         JOIN users u ON u.id = gm.user_id

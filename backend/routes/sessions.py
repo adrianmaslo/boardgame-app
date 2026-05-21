@@ -27,13 +27,82 @@ def _get_active_group(conn, user_id: int, group_id: Optional[int] = None):
         return first["group_id"] if first else None
 
 
+class CreateGuest(BaseModel):
+    name: str
+
+
+@router.post("/guests")
+def create_guest(data: CreateGuest, group_id: Optional[int] = None, current_user: dict = Depends(get_current_user)):
+    """Erstellt einen neuen Gast in der aktiven Gruppe."""
+    name = data.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="Name darf nicht leer sein.")
+    
+    with get_db_connection() as conn:
+        active_group_id = _get_active_group(conn, current_user["id"], group_id)
+        if not active_group_id:
+            raise HTTPException(status_code=400, detail="Keine aktive Gruppe gefunden.")
+        
+        # Check if exists
+        existing = conn.execute(
+            "SELECT id FROM guests WHERE group_id = ? AND name = ?",
+            (active_group_id, name)
+        ).fetchone()
+        if existing:
+            return {"id": existing["id"], "name": name}
+        
+        c = conn.cursor()
+        c.execute(
+            "INSERT INTO guests (group_id, name) VALUES (?, ?)",
+            (active_group_id, name)
+        )
+        conn.commit()
+        return {"id": c.lastrowid, "name": name}
+
+
+@router.get("/guests")
+def get_guests(group_id: Optional[int] = None, current_user: dict = Depends(get_current_user)):
+    """Gibt die Liste der Gäste der aktiven Gruppe zurück."""
+    with get_db_connection() as conn:
+        active_group_id = _get_active_group(conn, current_user["id"], group_id)
+        if not active_group_id:
+            return {"guests": []}
+        rows = conn.execute("SELECT id, name FROM guests WHERE group_id = ?", (active_group_id,)).fetchall()
+        return {"guests": [dict(r) for r in rows]}
+
+
+@router.delete("/guests/{guest_id}")
+def delete_guest(guest_id: int, current_user: dict = Depends(get_current_user)):
+    """Löscht einen Gast aus der Gruppe, falls er noch keine Partien gespielt hat."""
+    with get_db_connection() as conn:
+        guest = conn.execute("SELECT * FROM guests WHERE id = ?", (guest_id,)).fetchone()
+        if not guest:
+            raise HTTPException(status_code=404, detail="Gast nicht gefunden.")
+        
+        member = conn.execute(
+            "SELECT id FROM group_members WHERE group_id = ? AND user_id = ?",
+            (guest["group_id"], current_user["id"])
+        ).fetchone()
+        if not member:
+            raise HTTPException(status_code=403, detail="Kein Zugriff.")
+        
+        # Prüfen ob Gast bereits mitgespielt hat (id ist negativ in der scores Tabelle)
+        count = conn.execute("SELECT count(*) FROM scores WHERE player_id = ?", (-guest_id,)).fetchone()[0]
+        if count > 0:
+            raise HTTPException(status_code=400, detail="Dieser Gast kann nicht gelöscht werden, da er bereits bei Spielen mitgespielt hat!")
+        
+        conn.execute("DELETE FROM guests WHERE id = ?", (guest_id,))
+        conn.commit()
+        return {"status": "Erfolg"}
+
+
 @router.post("/record_session")
 async def record_session(
     game_id: int = Form(...),
     duration: int = Form(...),
     start_time: str = Form(None),
     comment: str = Form(None),
-    scores_json: str = Form("[]"),   # [{"player_id": 1, "score": 10, "is_winner": true}]
+    scores_json: str = Form("[]"),   # [{"player_id": 1, "score": 10, "is_winner": true}, {"player_id": null, "guest_name": "Michael"}]
     rounds_json: str = Form("[]"),
     group_id: int = Form(None),
     photo: UploadFile = File(None),
@@ -57,21 +126,61 @@ async def record_session(
         )
         s_id = c.lastrowid
 
-        # Generische Scores (Liste von player_id + score + is_winner)
+        # Generische Scores (Liste von player_id + score + is_winner + optional guest_name)
         scores = json.loads(scores_json)
+        temp_to_final_id = {}
+
         for s in scores:
+            pid = s.get("player_id")
+            
+            # Wenn player_id null ist, aber ein guest_name übergeben wurde -> Gast anlegen/holen
+            if pid is None and s.get("guest_name"):
+                g_name = s["guest_name"].strip()
+                # Prüfen ob Gast bereits existiert
+                existing = c.execute(
+                    "SELECT id FROM guests WHERE group_id = ? AND name = ?",
+                    (active_group_id, g_name)
+                ).fetchone()
+                if existing:
+                    final_pid = -existing["id"]
+                else:
+                    c.execute(
+                        "INSERT INTO guests (group_id, name) VALUES (?, ?)",
+                        (active_group_id, g_name)
+                    )
+                    final_pid = -c.lastrowid
+                
+                # Temp-ID zu finaler ID zuordnen
+                temp_id = s.get("temp_id")
+                if temp_id:
+                    temp_to_final_id[str(temp_id)] = final_pid
+                # Zur Sicherheit auch per Name
+                temp_to_final_id[g_name] = final_pid
+            else:
+                final_pid = int(pid)
+                temp_to_final_id[str(pid)] = final_pid
+                if final_pid < 0:
+                    temp_to_final_id[str(abs(final_pid))] = final_pid
+
             c.execute(
                 "INSERT INTO scores (session_id, player_id, score_value, is_winner) VALUES (?, ?, ?, ?)",
-                (s_id, s["player_id"], s.get("score", 0), 1 if s.get("is_winner") else 0)
+                (s_id, final_pid, s.get("score", 0), 1 if s.get("is_winner") else 0)
             )
 
         # Round Scores
         rounds_data = json.loads(rounds_json)
         for r in rounds_data:
-            for player_id, points in r.get("scores", {}).items():
+            for player_key, points in r.get("scores", {}).items():
+                final_player_id = temp_to_final_id.get(str(player_key))
+                if final_player_id is None:
+                    try:
+                        final_player_id = int(player_key)
+                    except ValueError:
+                        final_player_id = 0
+
                 c.execute(
                     "INSERT INTO round_scores (session_id, round_number, player_id, points) VALUES (?, ?, ?, ?)",
-                    (s_id, r["round"], int(player_id), points)
+                    (s_id, r["round"], final_player_id, points)
                 )
 
         conn.commit()
@@ -86,7 +195,7 @@ def get_history(group_id: Optional[int] = None, current_user: dict = Depends(get
             return {"history": []}
 
         sessions = conn.execute("""
-            SELECT s.*, g.name as game_name FROM sessions s
+            SELECT s.*, g.name as game_name, g.win_condition FROM sessions s
             JOIN games g ON s.game_id = g.id
             WHERE s.group_id = ?
             ORDER BY play_date DESC
@@ -95,29 +204,38 @@ def get_history(group_id: Optional[int] = None, current_user: dict = Depends(get
         res = []
         for s in sessions:
             scores = conn.execute("""
-                SELECT gm.display_name as name, sc.score_value, sc.is_winner
+                SELECT 
+                    sc.player_id,
+                    CASE WHEN sc.player_id > 0 THEN gm.display_name ELSE gst.name END as name,
+                    sc.score_value, sc.is_winner
                 FROM scores sc
-                JOIN group_members gm ON sc.player_id = gm.user_id AND gm.group_id = ?
+                LEFT JOIN group_members gm ON sc.player_id = gm.user_id AND gm.group_id = ?
+                LEFT JOIN guests gst ON sc.player_id = -gst.id AND gst.group_id = ?
                 WHERE sc.session_id = ?
-            """, (active_group_id, s["id"])).fetchall()
+            """, (active_group_id, active_group_id, s["id"])).fetchall()
 
             # Fallback: falls Scores über alte players-Tabelle
-            if not scores:
+            if not scores or all(sc["name"] is None for sc in scores):
                 scores = conn.execute("""
-                    SELECT p.name, sc.score_value, sc.is_winner FROM scores sc
+                    SELECT sc.player_id, p.name, sc.score_value, sc.is_winner FROM scores sc
                     JOIN players p ON sc.player_id = p.id WHERE session_id = ?
                 """, (s["id"],)).fetchall()
 
             rounds = conn.execute("""
-                SELECT round_number, gm.display_name as name, points
+                SELECT 
+                    round_number,
+                    rs.player_id,
+                    CASE WHEN rs.player_id > 0 THEN gm.display_name ELSE gst.name END as name,
+                    points
                 FROM round_scores rs
-                JOIN group_members gm ON rs.player_id = gm.user_id AND gm.group_id = ?
-                WHERE session_id = ? ORDER BY round_number ASC
-            """, (active_group_id, s["id"])).fetchall()
+                LEFT JOIN group_members gm ON rs.player_id = gm.user_id AND gm.group_id = ?
+                LEFT JOIN guests gst ON rs.player_id = -gst.id AND gst.group_id = ?
+                WHERE rs.session_id = ? ORDER BY round_number ASC
+            """, (active_group_id, active_group_id, s["id"])).fetchall()
 
-            if not rounds:
+            if not rounds or all(r["name"] is None for r in rounds):
                 rounds = conn.execute("""
-                    SELECT round_number, p.name, points FROM round_scores rs
+                    SELECT round_number, rs.player_id, p.name, points FROM round_scores rs
                     JOIN players p ON p.id = rs.player_id
                     WHERE session_id = ? ORDER BY round_number ASC
                 """, (s["id"],)).fetchall()
@@ -200,6 +318,14 @@ def edit_session(session_id: int, data: EditSession, current_user: dict = Depend
                     "INSERT INTO scores (session_id, player_id, score_value, is_winner) VALUES (?, ?, ?, ?)",
                     (session_id, s["player_id"], s.get("score", 0), 1 if s.get("is_winner") else 0)
                 )
+            
+            # Runden-Punkte für Spieler löschen, die nicht mehr in der Partie sind
+            new_player_ids = [s["player_id"] for s in scores]
+            if new_player_ids:
+                placeholders = ", ".join("?" for _ in new_player_ids)
+                c.execute(f"DELETE FROM round_scores WHERE session_id = ? AND player_id NOT IN ({placeholders})", (session_id, *new_player_ids))
+            else:
+                c.execute("DELETE FROM round_scores WHERE session_id = ?", (session_id,))
 
         conn.commit()
     return {"status": "Erfolg"}

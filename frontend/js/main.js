@@ -21,10 +21,13 @@ window.onload = async () => {
 window.initApp = function(group) {
     // Spielernamen aus der Gruppe setzen
     if (group && group.members) {
-        const names = group.members.map(m => m.display_name);
-        player1Name = names[0] || 'Spieler 1';
-        player2Name = names[1] || 'Spieler 2';
-        allPlayers = group.members; // Alle Spieler für dynamische UI
+        allPlayers = group.members.map(m => ({
+            id: m.id || m.user_id,
+            name: m.display_name,
+            avatar_color: m.avatar_color
+        }));
+        player1Name = allPlayers[0]?.name || 'Spieler 1';
+        player2Name = allPlayers[1]?.name || 'Spieler 2';
     }
 
     // Header-Infos aktualisieren
@@ -44,9 +47,6 @@ window.initApp = function(group) {
             if (groupLabel) groupLabel.textContent = group.name;
         }
     });
-
-    // Spieler für Session-Recording laden
-    if (typeof loadPlayersForSession === 'function') loadPlayersForSession();
 
     // Dashboard laden
     if (typeof loadDashboard === 'function') loadDashboard();

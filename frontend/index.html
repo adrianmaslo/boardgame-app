@@ -46,7 +46,7 @@
                 <input type="password" id="loginPassword" class="form-control rounded-3 py-2 px-3" placeholder="••••••">
             </div>
             <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="loginError"></div>
-            <button class="btn btn-primary w-100 py-3 rounded-3 fw-bold" id="loginBtn" onclick="doLogin()">Einloggen</button>
+            <button type="button" class="btn btn-primary w-100 py-3 rounded-3 fw-bold" id="loginBtn" onclick="doLogin()">Einloggen</button>
         </div>
 
         <!-- Register Form -->
@@ -68,7 +68,7 @@
                 <input type="password" id="regPassword2" class="form-control rounded-3 py-2 px-3" placeholder="••••••">
             </div>
             <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="registerError"></div>
-            <button class="btn btn-primary w-100 py-3 rounded-3 fw-bold" id="registerBtn" onclick="doRegister()">Konto erstellen</button>
+            <button type="button" class="btn btn-primary w-100 py-3 rounded-3 fw-bold" id="registerBtn" onclick="doRegister()">Konto erstellen</button>
         </div>
     </div>
 </div>
@@ -77,7 +77,8 @@
 <div id="groupWizard" class="container pt-5 d-none animate-fade-in" style="max-width: 480px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
     <div class="text-center mb-4">
         <h2 class="fw-bold text-white mb-2" id="wizardTitle">Willkommen! 👋</h2>
-        <p class="text-muted small">Lass uns zuerst deine Spielgruppe einrichten.</p>
+        <p class="text-muted small mb-1">Lass uns zuerst deine Spielgruppe einrichten.</p>
+        <a href="#" class="text-white-50 x-small text-uppercase tracking-wider fw-bold text-decoration-none" onclick="Auth.logout(); return false;">🚪 Abmelden</a>
     </div>
 
     <!-- Step 1: Create or Join -->
@@ -148,7 +149,12 @@
                 👤 <span id="headerUsername" class="small fw-bold">User</span>
             </button>
             <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark border-0 rounded-3 mt-2" style="background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px);">
+                <li><a class="dropdown-item small fw-bold text-white" href="#" onclick="openProfileSettings(); return false;">⚙️ Konto verwalten</a></li>
+                <li><a class="dropdown-item small text-white-50" href="/datenschutz.html" target="_blank">📜 Datenschutz</a></li>
+                <li><hr class="dropdown-divider border-secondary border-opacity-25"></li>
                 <li><a class="dropdown-item text-danger small fw-bold" href="#" onclick="Auth.logout(); return false;">🚪 Ausloggen</a></li>
+                <li><hr class="dropdown-divider border-secondary border-opacity-25"></li>
+                <li><a class="dropdown-item text-danger small fw-bold" href="#" onclick="confirmAccountDeletion(); return false;">⚠️ Konto löschen</a></li>
             </ul>
         </div>
     </header>
@@ -162,18 +168,8 @@
 
                 <div class="premium-scoreboard text-center mb-4">
                     <small class="text-uppercase tracking-widest text-white-50 x-small d-block mb-3 fw-bold">Ewiges Duell</small>
-                    <div class="d-flex justify-content-center align-items-start w-100">
-                        <div class="d-flex flex-column align-items-center" style="flex: 1; max-width: 45%;">
-                            <span class="score-name adrian-color d-block player1-name">Spieler 1</span>
-                            <h1 class="display-2 fw-bold mb-0 text-shadow" id="dashWinsA">0</h1>
-                            <div id="dashboardAchievementsAdrian" class="mt-2 d-flex flex-column gap-1 align-items-center w-100"></div>
-                        </div>
-                        <div class="fs-2 text-white-50 fw-light px-2" style="margin-top: 1.5rem;">⚡</div>
-                        <div class="d-flex flex-column align-items-center" style="flex: 1; max-width: 45%;">
-                            <span class="score-name lea-color d-block player2-name">Spieler 2</span>
-                            <h1 class="display-2 fw-bold mb-0 text-shadow" id="dashWinsL">0</h1>
-                            <div id="dashboardAchievementsLea" class="mt-2 d-flex flex-column gap-1 align-items-center w-100"></div>
-                        </div>
+                    <div class="d-flex justify-content-center align-items-start w-100 gap-1 gap-md-3" id="dashboardDuellContainer" style="overflow: hidden;">
+                        <!-- Injected via JS -->
                     </div>
                     
                     <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 w-100">
@@ -258,6 +254,14 @@
             </div>
             <div id="historyList" class="list-group list-group-custom mb-5 animate-fade-in"></div>
         </section>
+
+        <!-- STATS TAB -->
+        <section id="tab-stats" class="app-tab">
+            <h3 class="fw-bold mb-4 animate-fade-in">Statistiken</h3>
+            <div id="statsContent" class="mb-5 animate-fade-in">
+                <!-- Injected via JS -->
+            </div>
+        </section>
     </main>
 
     <!-- MINI PLAYER -->
@@ -278,6 +282,7 @@
         <a href="javascript:void(0)" class="nav-item active" id="nav-home" onclick="switchTab('home')"><span class="icon">📊</span><span class="label">Dashboard</span></a>
         <a href="javascript:void(0)" class="nav-item" id="nav-collection" onclick="switchTab('collection')"><span class="icon">📚</span><span class="label">Sammlung</span></a>
         <a href="javascript:void(0)" class="nav-item" id="nav-history" onclick="switchTab('history')"><span class="icon">📜</span><span class="label">Verlauf</span></a>
+        <a href="javascript:void(0)" class="nav-item" id="nav-stats" onclick="switchTab('stats')"><span class="icon">🏆</span><span class="label">Stats</span></a>
     </nav>
 </div>
 
@@ -314,7 +319,14 @@
                 </div>
 
                 <h6 class="fw-bold small text-light text-uppercase mb-2 px-1 tracking-wider">Mitglieder (Max. 4)</h6>
-                <div id="manageMemberList" class="mb-4"></div>
+                <div id="manageMemberList" class="mb-3"></div>
+
+                <h6 class="fw-bold small text-light text-uppercase mb-2 px-1 tracking-wider mt-3">Gäste</h6>
+                <div class="d-flex gap-2 mb-3">
+                    <input type="text" id="manageNewGuestNameInput" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50" placeholder="Gastname...">
+                    <button class="btn btn-sm btn-primary rounded-3 px-3 fw-bold" onclick="addGuestFromManage()" style="font-size:0.75rem;">Hinzufügen</button>
+                </div>
+                <div id="manageGuestList" class="mb-4"></div>
             </div>
         </div>
     </div>
@@ -376,10 +388,16 @@
             <div class="modal-body pt-0 pb-4">
                 <div id="profileBggInfo" class="mb-3"></div>
                 
-                <div class="row text-center mb-4 mx-0 py-3 rounded-4 shadow-sm" style="background: rgba(0,0,0,0.4); border: 1px solid var(--surface-border);">
-                    <div class="col"><small class="adrian-color d-block x-small fw-bold tracking-wider player1-name">Spieler 1</small><h2 class="fw-bold mb-0 text-white" id="profileWinsA">0</h2></div>
-                    <div class="col-auto d-flex align-items-center text-light small fw-bold">VS</div>
-                    <div class="col"><small class="lea-color d-block x-small fw-bold tracking-wider player2-name">Spieler 2</small><h2 class="fw-bold mb-0 text-white" id="profileWinsL">0</h2></div>
+                <div class="d-flex justify-content-center align-items-center mb-4 mx-0 py-3 rounded-4 shadow-sm flex-wrap gap-2" id="profileWinsContainer" style="background: rgba(0,0,0,0.4); border: 1px solid var(--surface-border);">
+                    <!-- Injected via JS -->
+                </div>
+
+                <!-- Spieler-Auswahl für die Spielrunde -->
+                <div class="mb-4 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);">
+                    <label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold px-1 mb-2">Wer spielt mit?</label>
+                    <div id="profilePlayersSelectContainer" class="d-flex flex-wrap gap-2">
+                        <!-- Injected via JS -->
+                    </div>
                 </div>
 
                 <button class="btn btn-primary w-100 btn-xl rounded-4 fw-bold shadow-lg mb-3" id="startGameBtn">🚀 PARTIE STARTEN</button>
@@ -413,49 +431,79 @@
         <div class="modal-content">
             <div class="modal-header border-0 pb-0 mt-2 position-relative">
                 <div class="w-100 text-center">
-                    <span class="badge bg-primary bg-opacity-25 text-primary rounded-pill text-uppercase px-3 py-2 mb-1 border border-primary border-opacity-50" id="activeGameNameDisplay">Spielname</span>
-                    <h3 class="fw-bold text-white mt-2 mb-0" id="activeGameTimerDisplay" style="font-family: monospace; font-size: 2.5rem; text-shadow: 0 0 20px var(--primary-glow);">00:00:00</h3>
-                    <button class="btn btn-sm btn-outline-warning rounded-pill mt-2 fw-bold px-4" id="btnPauseModal" onclick="togglePauseTimer()">⏸ PAUSE</button>
+                    <span class="badge bg-primary bg-opacity-25 text-primary rounded-pill text-uppercase px-3 py-1 mb-1 border border-primary border-opacity-50" id="activeGameNameDisplay" style="font-size: 0.75rem;">Spielname</span>
+                    <div class="d-flex align-items-center justify-content-center gap-3 mt-1">
+                        <h3 class="fw-bold text-white mb-0" id="activeGameTimerDisplay" style="font-family: monospace; font-size: 1.8rem; text-shadow: 0 0 20px var(--primary-glow);">00:00:00</h3>
+                        <button class="btn btn-xs btn-outline-warning rounded-pill fw-bold px-3 py-0.5" id="btnPauseModal" onclick="togglePauseTimer()" style="font-size: 0.75rem;">⏸ PAUSE</button>
+                    </div>
                 </div>
-                <button type="button" class="btn position-absolute top-0 end-0 m-3 rounded-circle d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); color: white;" data-bs-dismiss="modal" title="Minimieren">
-                    <span style="font-size: 1.2rem; line-height: 1;">👇</span>
+                <button type="button" class="btn position-absolute top-0 end-0 m-2 rounded-circle d-flex justify-content-center align-items-center" style="width: 32px; height: 32px; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); color: white;" data-bs-dismiss="modal" title="Minimieren">
+                    <span style="font-size: 0.9rem;">👇</span>
                 </button>
             </div>
-            <div class="modal-body pt-3 pb-4">
-                <div class="active-scoreboard mb-4 d-flex align-items-center">
-                    <div class="flex-grow-1 text-center">
-                        <label class="adrian-color small fw-bold tracking-widest d-block mb-1 player1-name" id="scoreLabel1">Spieler 1</label>
-                        <div class="big-score adrian-color" id="sum_adrian">0</div>
-                        <input type="number" id="score_adrian" class="score-input-large" placeholder="+ Pkt" inputmode="numeric">
+            <div class="modal-body pt-2 pb-3">
+                <!-- VIEW 1: ACTIVE ROUND LOGGING -->
+                <div id="activeGamePlayView">
+                    <!-- Active Players Selector & Guest Row -->
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+                        <div class="d-flex align-items-center gap-1 overflow-x-auto py-1" id="activePlayersToggleList" style="scrollbar-width: none; -ms-overflow-style: none;">
+                            <!-- Injected via JS -->
+                        </div>
+                        <div class="d-flex gap-1.5">
+                            <button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1 fw-bold" onclick="showAddGuestPrompt()" style="font-size: 0.75rem;">
+                                ➕ Gast
+                            </button>
+                            <button class="btn btn-xs btn-outline-primary rounded-pill px-2.5 py-1 fw-bold" onclick="openTeamBuilder()" style="font-size: 0.75rem;">
+                                👥 Teams
+                            </button>
+                        </div>
                     </div>
-                    <div class="fw-bold text-light px-3">VS</div>
-                    <div class="flex-grow-1 text-center">
-                        <label class="lea-color small fw-bold tracking-widest d-block mb-1 player2-name" id="scoreLabel2">Spieler 2</label>
-                        <div class="big-score lea-color" id="sum_lea">0</div>
-                        <input type="number" id="score_lea" class="score-input-large" placeholder="+ Pkt" inputmode="numeric">
+
+                    <div class="active-scoreboard mb-3 d-flex align-items-center justify-content-center flex-wrap gap-2" id="activeScoreboardContainer">
+                        <!-- Injected via JS -->
+                    </div>
+
+                    <div class="d-flex gap-2 mb-3">
+                        <button class="btn btn-primary flex-grow-1 rounded-3 fw-bold py-2 shadow-sm" onclick="nextRound()" style="font-size: 0.9rem;">
+                            🎯 RUNDE EINTRAGEN
+                        </button>
+                        <button class="btn btn-outline-warning rounded-3 fw-bold px-3 py-2" onclick="showSaveView()" style="font-size: 0.9rem;">
+                            🏁 BEENDEN
+                        </button>
+                    </div>
+
+                    <div class="text-white-50 x-small text-uppercase tracking-wider fw-bold mb-1">Rundenverlauf</div>
+                    <div id="roundPreview" class="d-flex flex-row overflow-x-auto gap-2 py-1 px-1" style="scrollbar-width: thin; min-height: 40px; white-space: nowrap;">
+                        <!-- Injected via JS -->
                     </div>
                 </div>
 
-                <button class="btn btn-primary w-100 btn-xl rounded-4 fw-bold shadow mb-4" onclick="nextRound()">RUNDE EINTRAGEN</button>
-                <div id="roundPreview" class="d-flex flex-wrap gap-2 mb-4 justify-content-center"></div>
+                <!-- VIEW 2: GAME OVER / SAVE DETAILS -->
+                <div id="activeGameSaveView" class="d-none">
+                    <h5 class="fw-bold text-center text-white mb-3">Spiel beenden 🏆</h5>
+                    
+                    <div id="activeFinalTotalsContainer" class="mb-3 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);">
+                        <!-- Injected via JS -->
+                    </div>
 
-                <div class="p-3 mb-4 rounded-4" style="background: rgba(0,0,0,0.4); border: 1px solid var(--surface-border);">
-                    <select id="winner_id" class="form-select border-0 fw-bold mb-3 rounded-3 py-3">
-                        <option value="1" id="editWinnerP1">🏆 Spieler 1 hat gewonnen</option>
-                        <option value="2" id="editWinnerP2">🏆 Spieler 2 hat gewonnen</option>
-                        <option value="0">⚪ Unentschieden</option>
-                    </select>
+                    <div class="p-3 mb-4 rounded-4" style="background: rgba(0,0,0,0.4); border: 1px solid var(--surface-border);">
+                        <label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold mb-2">Wer hat gewonnen?</label>
+                        <div id="winnerSelectContainer" class="d-flex flex-wrap gap-2 mb-3">
+                            <!-- Checkboxes injected via JS -->
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-dark flex-grow-1 rounded-3 fw-bold border-0 py-2 small" style="background: rgba(255,255,255,0.1); font-size: 0.85rem;" onclick="document.getElementById('photo').click()">📸 Foto hinzufügen</button>
+                            <button class="btn btn-dark flex-grow-1 rounded-3 fw-bold border-0 py-2 small" style="background: rgba(255,255,255,0.1); font-size: 0.85rem;" onclick="toggleComment()">📝 Notiz</button>
+                        </div>
+                        <input type="file" id="photo" class="d-none" accept="image/*" capture="camera">
+                        <textarea id="comment" class="form-control border-0 mt-3 d-none rounded-3 bg-dark text-white" rows="2" placeholder="Besonderer Moment?"></textarea>
+                    </div>
+
                     <div class="d-flex gap-2">
-                        <button class="btn btn-dark flex-grow-1 rounded-3 fw-bold border-0 py-2" style="background: rgba(255,255,255,0.1);" onclick="document.getElementById('photo').click()">📸 Foto</button>
-                        <button class="btn btn-dark flex-grow-1 rounded-3 fw-bold border-0 py-2" style="background: rgba(255,255,255,0.1);" onclick="toggleComment()">📝 Notiz</button>
+                        <button class="btn btn-outline-light rounded-3 fw-bold py-2 small px-3" onclick="showPlayView()" style="font-size: 0.85rem;">⬅ ZURÜCK</button>
+                        <button class="btn btn-outline-danger rounded-3 fw-bold py-2 small px-2" onclick="confirmResetTimer()" style="font-size: 0.85rem;">❌ ABBRECHEN</button>
+                        <button class="btn btn-success flex-grow-1 rounded-3 fw-bold py-2 shadow-lg" onclick="saveSession()" style="font-size: 0.85rem;">💾 SPEICHERN</button>
                     </div>
-                    <input type="file" id="photo" class="d-none" accept="image/*" capture="camera">
-                    <textarea id="comment" class="form-control border-0 mt-3 d-none rounded-3" rows="3" placeholder="Besonderer Moment?"></textarea>
-                </div>
-                
-                <div class="d-flex gap-3">
-                    <button class="btn btn-outline-danger flex-grow-1 rounded-4 fw-bold py-3" onclick="confirmResetTimer()">❌ ABBRECHEN</button>
-                    <button class="btn btn-success flex-grow-1 rounded-4 fw-bold py-3 shadow-lg" onclick="saveSession()">💾 SPEICHERN</button>
                 </div>
             </div>
         </div>
@@ -517,20 +565,12 @@
                 </div>
                 <div class="mb-3 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);">
                     <label class="form-label text-white-50 x-small fw-bold text-uppercase d-block mb-3">Punkte & Gewinner</label>
-                    
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="adrian-color fw-bold player1-name">Spieler 1</span>
-                        <input type="number" id="editScoreA" class="form-control bg-dark text-white border-secondary border-opacity-50 w-50 text-end" inputmode="numeric">
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="lea-color fw-bold player2-name">Spieler 2</span>
-                        <input type="number" id="editScoreL" class="form-control bg-dark text-white border-secondary border-opacity-50 w-50 text-end" inputmode="numeric">
+                    <div id="editScoresContainer">
+                        <!-- Injected via JS -->
                     </div>
                     
                     <select id="editWinner" class="form-select bg-dark text-white border-secondary border-opacity-50 mt-3">
-                        <option value="1" id="selectP1">🏆 Spieler 1</option>
-                        <option value="2" id="selectP2">🏆 Spieler 2</option>
-                        <option value="0">⚪ Unentschieden</option>
+                        <!-- Injected via JS -->
                     </select>
                 </div>
                 <div class="mb-4">
@@ -544,17 +584,186 @@
     </div>
 </div>
 
+<!-- PROFILE SETTINGS MODAL -->
+<div class="modal fade" id="profileSettingsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="background: var(--surface-card); border-radius: 1.2rem;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-white">⚙️ Konto verwalten</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Schließen"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div class="alert d-none rounded-3 small py-2 px-3" id="profileSettingsAlert"></div>
+
+                <!-- Username -->
+                <div class="mb-3">
+                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Neuer Username</label>
+                    <input type="text" id="settingsUsername" class="form-control rounded-3 py-2 px-3 bg-dark text-white border-secondary border-opacity-50" placeholder="Aktueller Username">
+                </div>
+
+                <!-- Neues Passwort -->
+                <div class="mb-3">
+                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Neues Passwort</label>
+                    <input type="password" id="settingsNewPassword" class="form-control rounded-3 py-2 px-3 bg-dark text-white border-secondary border-opacity-50" placeholder="Leer lassen = nicht ändern">
+                </div>
+
+                <hr class="border-secondary border-opacity-25 my-3">
+
+                <!-- Aktuelles Passwort (Pflichtfeld) -->
+                <div class="mb-3">
+                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Aktuelles Passwort (Pflicht)</label>
+                    <input type="password" id="settingsCurrentPassword" class="form-control rounded-3 py-2 px-3 bg-dark text-white border-secondary border-opacity-50" placeholder="Zur Bestätigung eingeben">
+                    <div class="form-text text-white-50 x-small">Zur Sicherheit musst du immer dein aktuelles Passwort eingeben.</div>
+                </div>
+
+                <button type="button" class="btn btn-primary w-100 py-2 rounded-3 fw-bold" id="saveProfileSettingsBtn" onclick="saveProfileSettings()">💾 Änderungen speichern</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ACCOUNT DELETION MODAL -->
+<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="background: var(--surface-card); border-radius: 1.2rem;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-danger">⚠️ Konto löschen</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Schließen"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div class="alert alert-danger rounded-3 small py-2 px-3 mb-3">
+                    <strong>ACHTUNG:</strong> Alle deine persönlichen Spielergebnisse, Statistiken und Gruppen-Mitgliedschaften werden dauerhaft gelöscht.<br><br>
+                    Falls du Admin einer Spielgruppe bist und noch andere Personen in der Gruppe sind, werden deine Admin-Rechte übertragen.<br>
+                    Falls du der einzige in der Gruppe bist, wird die Gruppe mitsamt allen zugeordneten Spielen, Partien und Fotos ebenfalls gelöscht.<br><br>
+                    Diese Aktion kann <strong>nicht</strong> rückgängig gemacht werden!
+                </div>
+                <div class="alert d-none rounded-3 small py-2 px-3 mb-3" id="deleteAccountAlert"></div>
+
+                <div class="mb-3">
+                    <p class="text-white-50 small mb-2">Bitte gib zur Bestätigung deinen Benutzernamen ein (<strong class="text-white" id="deleteConfirmUsernameHint"></strong>):</p>
+                    <input type="text" id="deleteConfirmUsername" class="form-control rounded-3 py-2 px-3 bg-dark text-white border-danger border-opacity-50" placeholder="Benutzername eingeben">
+                </div>
+
+                <button type="button" class="btn btn-danger w-100 py-2 rounded-3 fw-bold" id="deleteAccountBtn" onclick="deleteAccountSubmit()">🔥 Konto endgültig löschen</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/ui-groups.js"></script>
-<script src="js/state.js"></script>
-<script src="js/utils.js"></script>
-<script src="js/api.js"></script>
-<script src="js/timer.js"></script>
-<script src="js/ui-dashboard.js"></script>
-<script src="js/ui-collection.js"></script>
-<script src="js/ui-history.js"></script>
-<script src="js/ui-profile.js"></script>
-<script src="js/main.js"></script>
+<script src="js/auth.js?v=22"></script>
+<script src="js/ui-groups.js?v=22"></script>
+<script src="js/state.js?v=22"></script>
+<script src="js/utils.js?v=22"></script>
+<script src="js/api.js?v=22"></script>
+<script src="js/timer.js?v=22"></script>
+<script src="js/ui-dashboard.js?v=22"></script>
+<script src="js/ui-collection.js?v=22"></script>
+<script src="js/ui-history.js?v=22"></script>
+<script src="js/ui-profile.js?v=22"></script>
+<script src="js/ui-stats.js?v=22"></script>
+<script src="js/main.js?v=22"></script>
+
+<!-- CONFIRM ACTION MODAL -->
+<div class="modal fade" id="confirmActionModal" tabindex="-1" aria-hidden="true" style="z-index: 2000;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 380px;">
+        <div class="modal-content border-0 shadow-lg" style="background: var(--surface-card); border-radius: 1.2rem; border: 1px solid var(--surface-border) !important;">
+            <div class="modal-body text-center p-4">
+                <div class="mb-3 text-warning" style="font-size: 2.5rem;">⚠️</div>
+                <h5 class="fw-bold text-white mb-2" id="confirmActionTitle">Aktion bestätigen</h5>
+                <p class="text-white-50 small mb-4" id="confirmActionMessage">Bist du sicher?</p>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-light flex-grow-1 py-2 rounded-3 fw-bold small" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="button" class="btn btn-danger flex-grow-1 py-2 rounded-3 fw-bold small" id="confirmActionBtn">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TEAM BUILDER MODAL -->
+<div class="modal fade" id="teamBuilderModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+        <div class="modal-content border-0 shadow-lg" style="background: var(--surface-card); border-radius: 1.2rem; border: 1px solid var(--surface-border) !important;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold text-white mb-0">👥 Teams bilden</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="text-white-50 small mb-3">Ordne die Spieler Teams zu. Spieler im selben Team teilen sich Punkte und Siege.</p>
+                <div id="teamBuilderPlayersList" class="d-flex flex-column gap-3 mb-4">
+                    <!-- Injected via JS -->
+                </div>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-light flex-grow-1 py-2 rounded-3 fw-bold small" data-bs-dismiss="modal">Abbrechen</button>
+                    <button type="button" class="btn btn-primary flex-grow-1 py-2 rounded-3 fw-bold small" onclick="saveTeams()">Teams speichern</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- GUEST SELECTION MODAL -->
+<div class="modal fade" id="activeGuestModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+        <div class="modal-content border-0 shadow-lg" style="background: rgba(30, 41, 59, 0.95) !important; border-radius: 1.2rem; border: 1px solid var(--surface-border) !important;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold text-white mb-0">👤 Gast hinzufügen</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Add New Guest Section -->
+                <div class="mb-4">
+                    <label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold">Neuen Gast registrieren</label>
+                    <div class="input-group">
+                        <input type="text" id="timerNewGuestNameInput" class="form-control bg-dark text-white border-secondary border-opacity-50" placeholder="Name des Gasts...">
+                        <button class="btn btn-primary fw-bold" type="button" onclick="submitNewGuestFromTimer()">Hinzufügen</button>
+                    </div>
+                    <div id="newGuestError" class="text-danger small mt-1 d-none"></div>
+                </div>
+
+                <!-- Select Existing Guests Section -->
+                <div>
+                    <label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold mb-2">Vorhandene Gäste auswählen</label>
+                    <div id="timerExistingGuestsList" class="d-flex flex-column gap-2" style="max-height: 200px; overflow-y: auto;">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PROFILE GUEST SELECTION MODAL -->
+<div class="modal fade" id="profileGuestModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+        <div class="modal-content border-0 shadow-lg" style="background: rgba(30, 41, 59, 0.95) !important; border-radius: 1.2rem; border: 1px solid var(--surface-border) !important;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold text-white mb-0">👤 Gast hinzufügen</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <!-- Add New Guest Section -->
+                <div class="mb-4">
+                    <label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold">Neuen Gast registrieren</label>
+                    <div class="input-group">
+                        <input type="text" id="profileNewGuestNameInput" class="form-control bg-dark text-white border-secondary border-opacity-50" placeholder="Name des Gasts...">
+                        <button class="btn btn-primary fw-bold" type="button" onclick="submitNewGuestFromProfile()">Hinzufügen</button>
+                    </div>
+                    <div id="profileNewGuestError" class="text-danger small mt-1 d-none"></div>
+                </div>
+
+                <!-- Select Existing Guests Section -->
+                <div>
+                    <label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold mb-2">Vorhandene Gäste auswählen</label>
+                    <div id="profileExistingGuestsList" class="d-flex flex-column gap-2" style="max-height: 200px; overflow-y: auto;">
+                        <!-- Injected via JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
 </html>

@@ -24,13 +24,23 @@ def _get_active_group_id(conn, user_id: int, group_id: Optional[int] = None):
 
 
 def _get_group_players(conn, group_id: int):
-    """Gibt alle Mitglieder der Gruppe als Dict {user_id: display_name} zurück."""
+    """Gibt alle Mitglieder und Gäste der Gruppe als Dict {id: {"name": display_name, "color": color}} zurück."""
     members = conn.execute("""
         SELECT u.id, gm.display_name, gm.avatar_color
         FROM group_members gm JOIN users u ON u.id = gm.user_id
         WHERE gm.group_id = ? ORDER BY gm.joined_at ASC
     """, (group_id,)).fetchall()
-    return {m["id"]: {"name": m["display_name"], "color": m["avatar_color"]} for m in members}
+    
+    players_dict = {m["id"]: {"name": m["display_name"], "color": m["avatar_color"]} for m in members}
+    
+    # Gäste laden (mit negativer ID)
+    guests = conn.execute("""
+        SELECT id, name FROM guests WHERE group_id = ?
+    """, (group_id,)).fetchall()
+    for g in guests:
+        players_dict[-g["id"]] = {"name": g["name"] + " (Gast)", "color": "#94a3b8"}
+        
+    return players_dict
 
 
 @router.get("/dashboard")
@@ -40,7 +50,8 @@ def get_dashboard_stats(group_id: Optional[int] = None, current_user: dict = Dep
         if not active_group_id:
             return {"wins": {}, "most_played": None, "players": []}
 
-        players = _get_group_players(conn, active_group_id)
+        # Dashboard zeigt nur registrierte Gruppenmitglieder (id > 0)
+        players = {pid: pdata for pid, pdata in _get_group_players(conn, active_group_id).items() if pid > 0}
         player_ids = list(players.keys())
 
         # 1. Gesamtsiege pro Spieler
@@ -64,7 +75,7 @@ def get_dashboard_stats(group_id: Optional[int] = None, current_user: dict = Dep
 
         # 3. Bestes Spiel pro Spieler (meiste Siege darin)
         best_per_player = {}
-        for pid in player_ids[:2]:  # Nur erste 2 für Dashboard-Karten
+        for pid in player_ids:  # Alle Spieler für Dashboard-Karten
             best = conn.execute("""
                 SELECT g.name, g.image_url, COUNT(*) as wins FROM scores sc
                 JOIN sessions s ON sc.session_id = s.id
@@ -175,20 +186,36 @@ def get_game_specific_stats(game_id: int, group_id: Optional[int] = None,
         full_history = []
         for s in history_query:
             scs = conn.execute("""
-                SELECT gm.display_name as name, sc.score_value, sc.is_winner
-                FROM scores sc JOIN group_members gm ON sc.player_id = gm.user_id AND gm.group_id = ?
+                SELECT 
+                    CASE WHEN sc.player_id > 0 THEN gm.display_name ELSE gst.name END as name,
+                    sc.score_value, sc.is_winner
+                FROM scores sc
+                LEFT JOIN group_members gm ON sc.player_id = gm.user_id AND gm.group_id = ?
+                LEFT JOIN guests gst ON sc.player_id = -gst.id AND gst.group_id = ?
                 WHERE sc.session_id = ?
-            """, (active_group_id, s["id"])).fetchall()
-            if not scs:
+            """, (active_group_id, active_group_id, s["id"])).fetchall()
+            if not scs or all(sc["name"] is None for sc in scs):
                 scs = conn.execute("""
                     SELECT p.name, sc.score_value, sc.is_winner FROM scores sc
                     JOIN players p ON sc.player_id = p.id WHERE session_id = ?
                 """, (s["id"],)).fetchall()
             rds = conn.execute("""
-                SELECT round_number, gm.display_name as name, points
-                FROM round_scores rs JOIN group_members gm ON rs.player_id = gm.user_id AND gm.group_id = ?
+                SELECT 
+                    round_number,
+                    rs.player_id,
+                    CASE WHEN rs.player_id > 0 THEN gm.display_name ELSE gst.name END as name,
+                    points
+                FROM round_scores rs
+                LEFT JOIN group_members gm ON rs.player_id = gm.user_id AND gm.group_id = ?
+                LEFT JOIN guests gst ON rs.player_id = -gst.id AND gst.group_id = ?
                 WHERE rs.session_id = ? ORDER BY round_number ASC
-            """, (active_group_id, s["id"])).fetchall()
+            """, (active_group_id, active_group_id, s["id"])).fetchall()
+            if not rds or all(r["name"] is None for r in rds):
+                rds = conn.execute("""
+                    SELECT round_number, rs.player_id, p.name, points FROM round_scores rs
+                    JOIN players p ON p.id = rs.player_id
+                    WHERE session_id = ? ORDER BY round_number ASC
+                """, (s["id"],)).fetchall()
             full_history.append({**dict(s), "scores": [dict(sc) for sc in scs], "rounds": [dict(r) for r in rds]})
 
         def pid_to_name(pid):
@@ -306,7 +333,7 @@ def get_chart_data(group_id: Optional[int] = None, current_user: dict = Depends(
         if not active_group_id:
             return {"labels": [], "datasets": []}
 
-        players = _get_group_players(conn, active_group_id)
+        players = {pid: pdata for pid, pdata in _get_group_players(conn, active_group_id).items() if pid > 0}
         colors = ["#00f0ff", "#ff00e5", "#7c3aed", "#f59e0b"]
 
         sessions = conn.execute("""
@@ -339,8 +366,97 @@ def get_chart_data(group_id: Optional[int] = None, current_user: dict = Depends(
                 "data": data_series[pid],
                 "borderColor": color,
                 "tension": 0.3,
-                "backgroundColor": color.replace("#", "rgba(").rstrip(")") + ", 0.1)",
+                "backgroundColor": color + "1a",
                 "fill": True
             })
 
         return {"labels": labels, "datasets": datasets}
+
+
+@router.get("/global")
+def get_global_group_stats(group_id: Optional[int] = None, current_user: dict = Depends(get_current_user)):
+    with get_db_connection() as conn:
+        active_group_id = _get_active_group_id(conn, current_user["id"], group_id)
+        if not active_group_id:
+            return {"status": "error", "message": "No active group"}
+
+        # 1. Guest play counts
+        guests_stats = conn.execute("""
+            SELECT g.name, COUNT(DISTINCT s.id) as play_count
+            FROM guests g
+            JOIN scores sc ON sc.player_id = -g.id
+            JOIN sessions s ON s.id = sc.session_id
+            WHERE g.group_id = ?
+            GROUP BY g.id, g.name
+            ORDER BY play_count DESC
+        """, (active_group_id,)).fetchall()
+        guests_list = [dict(r) for r in guests_stats]
+
+        # 2. Recently popular games (last 30 days)
+        recent_popular_stats = conn.execute("""
+            SELECT g.name, g.image_url, COUNT(s.id) as play_count
+            FROM games g
+            JOIN sessions s ON s.game_id = g.id
+            WHERE g.group_id = ? AND s.play_date >= datetime('now', '-30 days')
+            GROUP BY g.id, g.name, g.image_url
+            ORDER BY play_count DESC
+            LIMIT 5
+        """, (active_group_id,)).fetchall()
+        recent_popular = [dict(r) for r in recent_popular_stats]
+
+        # All-time popular as fallback or additional info
+        all_time_popular_stats = conn.execute("""
+            SELECT g.name, g.image_url, COUNT(s.id) as play_count
+            FROM games g
+            JOIN sessions s ON s.game_id = g.id
+            WHERE g.group_id = ?
+            GROUP BY g.id, g.name, g.image_url
+            ORDER BY play_count DESC
+            LIMIT 5
+        """, (active_group_id,)).fetchall()
+        all_time_popular = [dict(r) for r in all_time_popular_stats]
+
+        # 3. Never played games
+        never_played_stats = conn.execute("""
+            SELECT g.name, g.image_url
+            FROM games g
+            LEFT JOIN sessions s ON s.game_id = g.id
+            WHERE g.group_id = ?
+            GROUP BY g.id, g.name, g.image_url
+            HAVING COUNT(s.id) = 0
+            ORDER BY g.name ASC
+        """, (active_group_id,)).fetchall()
+        never_played = [dict(r) for r in never_played_stats]
+
+        # 4. Win rates (Who is good/bad at what)
+        win_rates_stats = conn.execute("""
+            SELECT 
+                sc.player_id, 
+                gm.display_name as player_name,
+                g.name as game_name,
+                COUNT(sc.id) as games_played,
+                SUM(sc.is_winner) as games_won,
+                CAST(SUM(sc.is_winner) AS FLOAT) / COUNT(sc.id) as win_rate
+            FROM scores sc
+            JOIN sessions s ON s.id = sc.session_id
+            JOIN games g ON g.id = s.game_id
+            JOIN group_members gm ON gm.user_id = sc.player_id AND gm.group_id = s.group_id
+            WHERE s.group_id = ? AND sc.player_id > 0
+            GROUP BY sc.player_id, gm.display_name, g.id, g.name
+        """, (active_group_id,)).fetchall()
+        
+        # Sort and filter for good/bad
+        raw_rates = [dict(r) for r in win_rates_stats]
+        # Best: win_rate DESC, games_played DESC
+        best_rates = sorted([r for r in raw_rates if r["games_played"] >= 1], key=lambda x: (x["win_rate"], x["games_played"]), reverse=True)
+        # Worst: win_rate ASC, games_played DESC
+        worst_rates = sorted([r for r in raw_rates if r["games_played"] >= 1], key=lambda x: (x["win_rate"], -x["games_played"]))
+
+        return {
+            "guests": guests_list,
+            "recent_popular": recent_popular,
+            "all_time_popular": all_time_popular,
+            "never_played": never_played,
+            "best_performances": best_rates[:5],
+            "worst_performances": worst_rates[:5]
+        }

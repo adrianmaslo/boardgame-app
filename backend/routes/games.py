@@ -131,7 +131,8 @@ def toggle_win_condition(game_id: int, current_user: dict = Depends(get_current_
         current = conn.execute("SELECT win_condition FROM games WHERE id = ?", (game_id,)).fetchone()
         if not current:
             raise HTTPException(status_code=404, detail="Spiel nicht gefunden")
-        new_cond = 1 if current["win_condition"] == 0 else 0
+        # Cycle through 0 (highest wins), 1 (lowest wins), 2 (no points, only winner)
+        new_cond = (current["win_condition"] + 1) % 3
         conn.execute("UPDATE games SET win_condition = ? WHERE id = ?", (new_cond, game_id))
         conn.commit()
         return {"status": "Erfolg", "new_win_condition": new_cond}

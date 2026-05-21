@@ -11,56 +11,77 @@ window.loadDashboard = async function() {
         }
     }).catch(()=>{});
 
-    const res = await authFetch('/stats/dashboard'); const data = await res.json();
-    player1Name = data.player1_name || "Adrian";
-    player2Name = data.player2_name || "Lea";
+    const res = await authFetch('/stats/dashboard'); 
+    const data = await res.json();
     
-    // Fallback: If only 1 player exists in group
-    document.querySelectorAll('.player1-name').forEach(el => el.innerText = player1Name);
-    document.querySelectorAll('.player2-name').forEach(el => el.innerText = player2Name);
-    
-    // Update select options if they exist
-    const editWinnerP1 = document.getElementById('editWinnerP1');
-    if (editWinnerP1) editWinnerP1.innerText = `🏆 ${player1Name} hat gewonnen`;
-    const editWinnerP2 = document.getElementById('editWinnerP2');
-    if (editWinnerP2) editWinnerP2.innerText = `🏆 ${player2Name} hat gewonnen`;
-    
-    const selectP1 = document.getElementById('selectP1');
-    if (selectP1) selectP1.innerText = `🏆 ${player1Name}`;
-    const selectP2 = document.getElementById('selectP2');
-    if (selectP2) selectP2.innerText = `🏆 ${player2Name}`;
-
-    document.getElementById('dashWinsA').innerText = data.wins[player1Name] || 0; 
-    document.getElementById('dashWinsL').innerText = data.wins[player2Name] || 0;
-    
-    // Render Achievements for P1
-    const achContA = document.getElementById('dashboardAchievementsAdrian');
-    if (achContA) {
-        let htmlA = '';
-        if (data.achievements && data.achievements[player1Name]) {
-            htmlA += data.achievements[player1Name].map(a => `<span class="badge rounded-pill bg-dark text-warning border border-warning border-opacity-50 px-2 py-1 shadow-sm mt-1 mx-1">${a}</span>`).join('');
-        }
-        if (data.streaks && data.streaks[player1Name]) {
-            htmlA += `<span class="badge rounded-pill bg-dark text-danger border border-danger border-opacity-50 px-2 py-1 shadow-sm mt-1 mx-1">${data.streaks[player1Name]}</span>`;
-        }
-        achContA.innerHTML = htmlA;
+    // Fallback if global allPlayers is not populated yet
+    if ((!allPlayers || allPlayers.length === 0) && data.players) {
+        allPlayers = data.players.map(p => ({
+            id: p.id,
+            name: p.name,
+            avatar_color: p.avatar_color
+        }));
     }
+    if (allPlayers.length >= 1) player1Name = allPlayers[0].name;
+    if (allPlayers.length >= 2) player2Name = allPlayers[1].name;
 
-    // Render Achievements for P2
-    const achContL = document.getElementById('dashboardAchievementsLea');
-    if (achContL) {
-        let htmlL = '';
-        if (data.achievements && data.achievements[player2Name]) {
-            htmlL += data.achievements[player2Name].map(a => `<span class="badge rounded-pill bg-dark text-warning border border-warning border-opacity-50 px-2 py-1 shadow-sm mt-1 mx-1">${a}</span>`).join('');
-        }
-        if (data.streaks && data.streaks[player2Name]) {
-            htmlL += `<span class="badge rounded-pill bg-dark text-danger border border-danger border-opacity-50 px-2 py-1 shadow-sm mt-1 mx-1">${data.streaks[player2Name]}</span>`;
-        }
-        achContL.innerHTML = htmlL;
+    // Render Ewiges Duell columns dynamically
+    const duellContainer = document.getElementById('dashboardDuellContainer');
+    if (duellContainer) {
+        let html = '';
+        allPlayers.forEach((p, idx) => {
+            const colorClass = idx === 0 ? 'adrian-color' : (idx === 1 ? 'lea-color' : (idx === 2 ? 'text-success' : 'text-warning'));
+            const pWins = data.wins[p.name] || 0;
+            
+            // Build achievements html
+            let achsHtml = '';
+            const parseBadge = (str) => {
+                const parts = str.split(' ');
+                const emoji = parts[0] || '🏆';
+                const label = parts.slice(1).join(' ') || str;
+                const escapedLabel = label.replace(/'/g, "\\'");
+                return `
+                <span class="d-inline-flex align-items-center justify-content-center rounded-circle border shadow-sm cursor-pointer" 
+                      style="width: 28px; height: 28px; background: rgba(0,0,0,0.5); font-size: 1rem; border-color: var(--surface-border); transition: transform 0.2s;" 
+                      onclick="window.showToast('${emoji} ${escapedLabel}')" 
+                      title="${emoji} ${escapedLabel}"
+                      onmouseover="this.style.transform='scale(1.15)'"
+                      onmouseout="this.style.transform='scale(1)'">
+                    ${emoji}
+                </span>`;
+            };
+
+            let badgesList = [];
+            if (data.achievements && data.achievements[p.name]) {
+                data.achievements[p.name].forEach(a => {
+                    badgesList.push(parseBadge(a));
+                });
+            }
+            if (data.streaks && data.streaks[p.name]) {
+                badgesList.push(parseBadge(data.streaks[p.name]));
+            }
+
+            if (badgesList.length > 0) {
+                achsHtml = `<div class="d-flex flex-wrap justify-content-center gap-1 mt-1">${badgesList.join('')}</div>`;
+            }
+
+            html += `
+            <div class="d-flex flex-column align-items-center py-2" style="flex: 1 1 0; min-width: 0; max-width: 25%;">
+                <span class="score-name ${colorClass} d-block w-100 text-truncate text-center" style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;" title="${p.name}">${p.name}</span>
+                <h1 class="display-3 fw-bold mb-0 text-shadow my-1" style="font-size: 2.2rem;">${pWins}</h1>
+                <div class="mt-1 d-flex flex-wrap justify-content-center gap-1 w-100">
+                    ${achsHtml}
+                </div>
+            </div>`;
+            
+            if (idx < allPlayers.length - 1) {
+                html += `<div class="text-white-50 opacity-25 align-self-center px-1" style="font-size: 0.75rem; margin-top: -0.75rem;">⚡</div>`;
+            }
+        });
+        duellContainer.innerHTML = html;
     }
     
     // Render Highlights
-    
     let highlightsHtml = '';
     
     if (data.most_played) {
@@ -75,34 +96,25 @@ window.loadDashboard = async function() {
         </div>`;
     }
     
-    if (data.best_player1) {
-        highlightsHtml += `
-        <div class="dashboard-card shadow-sm">
-            <img src="${data.best_player1.image_url || 'https://via.placeholder.com/60?text=🏆'}">
-            <div>
-                <small class="adrian-color text-uppercase x-small d-block tracking-wider fw-bold">${player1Name}s Festung</small>
-                <span class="fw-bold d-block text-white">${data.best_player1.name}</span>
-                <small class="text-white-50">${data.best_player1.wins} Siege</small>
-            </div>
-        </div>`;
-    }
-    
-    if (data.best_player2) {
-        highlightsHtml += `
-        <div class="dashboard-card shadow-sm">
-            <img src="${data.best_player2.image_url || 'https://via.placeholder.com/60?text=👑'}">
-            <div>
-                <small class="lea-color text-uppercase x-small d-block tracking-wider fw-bold">${player2Name}s Imperium</small>
-                <span class="fw-bold d-block text-white">${data.best_player2.name}</span>
-                <small class="text-white-50">${data.best_player2.wins} Siege</small>
-            </div>
-        </div>`;
-    }
+    // Loop over all group members and check for best games in data.best_per_player
+    allPlayers.forEach((p, idx) => {
+        const best = data.best_per_player && data.best_per_player[p.name];
+        if (best) {
+            const colorClass = idx === 0 ? 'adrian-color' : (idx === 1 ? 'lea-color' : (idx === 2 ? 'text-success' : 'text-warning'));
+            const suffix = idx === 0 ? 's Festung' : (idx === 1 ? 's Imperium' : 's Domäne');
+            highlightsHtml += `
+            <div class="dashboard-card shadow-sm">
+                <img src="${best.image_url || 'https://via.placeholder.com/60?text=🏆'}">
+                <div>
+                    <small class="${colorClass} text-uppercase x-small d-block tracking-wider fw-bold">${p.name}${suffix}</small>
+                    <span class="fw-bold d-block text-white">${best.name}</span>
+                    <small class="text-white-50">${best.wins} Siege</small>
+                </div>
+            </div>`;
+        }
+    });
 
-    if (highlightsHtml === '' && data.most_played) {
-         // If there's only 1 game, just show it.
-         document.getElementById('dashboardHighlights').innerHTML = highlightsHtml;
-    } else if (highlightsHtml === '') {
+    if (highlightsHtml === '') {
          document.getElementById('dashboardHighlights').innerHTML = '<div class="text-center text-white-50 small py-4">Noch keine Highlights. Spielt ein paar Partien!</div>';
     } else {
          document.getElementById('dashboardHighlights').innerHTML = highlightsHtml;

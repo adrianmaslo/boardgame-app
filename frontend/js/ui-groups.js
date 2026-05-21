@@ -193,6 +193,15 @@ window.openGroupManageModal = async function() {
     } catch(e) {
         console.error(e);
     }
+
+    // Gäste laden
+    try {
+        const res = await authFetch('/guests');
+        const data = await res.json();
+        renderManageGuests(data.guests, group);
+    } catch(e) {
+        console.error(e);
+    }
 };
 
 function renderManageMembers(members, group) {
@@ -216,16 +225,83 @@ function renderManageMembers(members, group) {
     `).join('');
 }
 
+function renderManageGuests(guests, group) {
+    const el = document.getElementById('manageGuestList');
+    if (!el) return;
+
+    if (guests.length === 0) {
+        el.innerHTML = '<div class="text-muted small ps-1">Keine Gäste in dieser Gruppe.</div>';
+        return;
+    }
+
+    el.innerHTML = guests.map(g => `
+        <div class="d-flex align-items-center gap-2 p-2 rounded-3 mb-2" style="background:rgba(255,255,255,0.05)">
+            <div class="avatar-dot" style="background:#94a3b8"></div>
+            <div class="flex-grow-1">
+                <div class="small fw-bold text-white">${g.name}</div>
+                <div class="text-muted" style="font-size:0.65rem">Gast</div>
+            </div>
+            <button class="btn btn-sm btn-outline-danger" style="font-size:0.7rem; padding:2px 8px"
+                onclick="removeGuest(${g.id})">Entfernen</button>
+        </div>
+    `).join('');
+}
+
 window.removeMember = async function(groupId, userId) {
-    if (!confirm('Mitglied wirklich entfernen?')) return;
+    showConfirmModal("Mitglied entfernen", "Willst du dieses Mitglied wirklich aus der Gruppe entfernen?", async () => {
+        try {
+            const res = await authFetch(`/groups/${groupId}/member/${userId}`, { method: 'DELETE' });
+            if (res.ok) {
+                showToast('Mitglied entfernt.');
+                openGroupManageModal();
+            }
+        } catch(e) {
+            showToast('Fehler beim Entfernen.');
+        }
+    });
+};
+
+window.removeGuest = async function(guestId) {
+    showConfirmModal("Gast entfernen", "Willst du diesen Gast wirklich aus der Gruppe entfernen?", async () => {
+        try {
+            const res = await authFetch(`/guests/${guestId}`, { method: 'DELETE' });
+            if (res.ok) {
+                showToast('Gast entfernt.');
+                openGroupManageModal();
+            } else {
+                const data = await res.json();
+                showToast(data.detail || 'Fehler beim Entfernen.');
+            }
+        } catch(e) {
+            showToast('Fehler beim Entfernen.');
+        }
+    });
+};
+
+window.addGuestFromManage = async function() {
+    const input = document.getElementById('manageNewGuestNameInput');
+    const name = input ? input.value.trim() : '';
+    if (!name) {
+        showToast('Bitte einen Namen eingeben.');
+        return;
+    }
+    
     try {
-        const res = await authFetch(`/groups/${groupId}/member/${userId}`, { method: 'DELETE' });
+        const res = await authFetch('/guests', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name })
+        });
         if (res.ok) {
-            showToast('Mitglied entfernt.');
+            showToast('Gast hinzugefügt.');
+            if (input) input.value = '';
             openGroupManageModal();
+        } else {
+            const data = await res.json();
+            showToast(data.detail || 'Fehler beim Hinzufügen.');
         }
     } catch(e) {
-        showToast('Fehler beim Entfernen.');
+        showToast('Verbindungsfehler.');
     }
 };
 
@@ -247,7 +323,7 @@ window.regenerateCode = async function() {
 
 // ─── Hilfsfunktionen ─────────────────────────────────────────────────────────
 
-function showToast(msg) {
+window.showToast = function(msg) {
     const toast = document.getElementById('appToast');
     if (!toast) { alert(msg); return; }
     document.getElementById('appToastMsg').textContent = msg;

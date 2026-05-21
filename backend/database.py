@@ -113,8 +113,35 @@ def init_db():
         # Alte players Tabelle bleibt für Legacy-Kompatibilität
         c.execute("CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL)")
 
+        # Neue guests Tabelle
+        c.execute("""CREATE TABLE IF NOT EXISTS guests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            group_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (group_id) REFERENCES groups(id),
+            UNIQUE(group_id, name)
+        )""")
+
         # ── Legacy-Migration: Bestehende Daten in Default-Gruppe migrieren ───
         _migrate_legacy_data(c)
+
+        # ── Migration: Gast-IDs in round_scores vereinheitlichen (negativ setzen) ───
+        c.execute("""
+            UPDATE round_scores 
+            SET player_id = (
+                SELECT s.player_id 
+                FROM scores s 
+                WHERE s.session_id = round_scores.session_id 
+                  AND (s.player_id = round_scores.player_id OR s.player_id = -round_scores.player_id)
+            )
+            WHERE EXISTS (
+                SELECT 1 
+                FROM scores s 
+                WHERE s.session_id = round_scores.session_id 
+                  AND (s.player_id = round_scores.player_id OR s.player_id = -round_scores.player_id)
+            )
+        """)
 
         conn.commit()
 

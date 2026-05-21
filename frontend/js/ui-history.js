@@ -5,16 +5,28 @@ window.loadHistory = async function() {
 
 function renderHistory(sessions) {
     document.getElementById('historyList').innerHTML = sessions.map(s => {
-        const winner = s.scores.find(sc => sc.is_winner === 1);
-        const winnerColor = winner ? (winner.name === player1Name ? 'adrian-color' : 'lea-color') : 'text-white';
-        const bgClass = winner ? 'bg-opacity-10 bg-white' : 'bg-transparent';
+        const winners = s.scores.filter(sc => sc.is_winner === 1);
         
-        return `<div class="list-group-item d-flex justify-content-between align-items-center ${bgClass}" onclick="showDetails(${s.id})">
+        let winnerText = 'Remis';
+        let winnerColor = 'text-white-50';
+        if (winners.length > 0) {
+            winnerText = winners.map(w => w.name).join(' & ') + ' 🏆';
+            if (winners.length === 1) {
+                const idx = allPlayers.findIndex(p => p.id === winners[0].player_id || p.name === winners[0].name);
+                winnerColor = idx === 0 ? 'adrian-color' : (idx === 1 ? 'lea-color' : (idx === 2 ? 'text-success' : 'text-warning'));
+            } else {
+                winnerColor = 'text-info';
+            }
+        }
+        
+        const bgClass = winners.length > 0 ? 'bg-opacity-10 bg-white' : 'bg-transparent';
+        
+        return `<div class="list-group-item d-flex justify-content-between align-items-center ${bgClass}" onclick="showDetails(${s.id})" style="cursor: pointer;">
             <div>
                 <div class="fw-bold text-white mb-1">${s.game_name}</div>
                 <small class="text-white-50">${new Date(s.play_date).toLocaleDateString('de-DE')}</small>
             </div>
-            <span class="fw-bold ${winnerColor} bg-dark bg-opacity-50 px-3 py-1 rounded-pill border border-secondary border-opacity-50">${winner ? winner.name + ' 🏆' : 'Remis'}</span>
+            <span class="fw-bold ${winnerColor} bg-dark bg-opacity-50 px-3 py-1 rounded-pill border border-secondary border-opacity-50">${winnerText}</span>
         </div>`;
     }).join('');
 }
@@ -33,23 +45,34 @@ window.showDetails = function(sessionId) {
 
     let scoreHtml = '<div class="list-group border-0 mb-3">';
     scoreHtml += s.scores.map(sc => {
-        const colorClass = sc.name === player1Name ? 'adrian-color' : 'lea-color';
+        const idx = allPlayers.findIndex(p => p.id === sc.player_id || p.name === sc.name);
+        const colorClass = idx === 0 ? 'adrian-color' : (idx === 1 ? 'lea-color' : (idx === 2 ? 'text-success' : 'text-warning'));
         return `<div class="list-group-item px-3 py-2 d-flex justify-content-between align-items-center mb-2 rounded-3" style="background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border);">
             <span class="${sc.is_winner ? 'fw-bold text-white' : 'text-white-50'}">${sc.name} ${sc.is_winner ? '🏆' : ''}</span>
-            <span class="fs-4 fw-bold ${colorClass}">${sc.score_value}</span>
+            ${s.win_condition !== 2 ? `<span class="fs-4 fw-bold ${colorClass}">${sc.score_value}</span>` : ''}
         </div>`;
     }).join('');
     scoreHtml += '</div>';
 
-    if (s.rounds && s.rounds.length > 0) {
+    if (s.rounds && s.rounds.length > 0 && s.win_condition !== 2) {
+        let headersHtml = s.scores.map((sc, idx) => {
+            const memberIdx = allPlayers.findIndex(p => p.id === sc.player_id || p.name === sc.name);
+            const colorClass = memberIdx === 0 ? 'adrian-color' : (memberIdx === 1 ? 'lea-color' : (memberIdx === 2 ? 'text-success' : (sc.player_id < 0 ? 'text-white-50' : 'text-warning')));
+            return `<th class="${colorClass} fw-normal">${sc.name}</th>`;
+        }).join('');
+
         scoreHtml += `<div class="table-responsive rounded-3 overflow-hidden" style="border: 1px solid var(--surface-border);">
             <table class="table table-dark table-striped table-sm mb-0 text-center">
-            <thead><tr><th class="text-muted fw-normal">Runde</th><th class="adrian-color fw-normal">${player1Name}</th><th class="lea-color fw-normal">${player2Name}</th></tr></thead><tbody>`;
+            <thead><tr><th class="text-muted fw-normal">Runde</th>${headersHtml}</tr></thead><tbody>`;
+            
         const roundNumbers = [...new Set(s.rounds.map(r => r.round_number))].sort((a,b) => a - b);
         roundNumbers.forEach(i => {
-            const rA = s.rounds.find(r => r.round_number === i && r.name === player1Name);
-            const rL = s.rounds.find(r => r.round_number === i && r.name === player2Name);
-            scoreHtml += `<tr><td class="text-white-50">${i}</td><td>${rA ? rA.points : 0}</td><td>${rL ? rL.points : 0}</td></tr>`;
+            let rowHtml = `<td class="text-white-50">${i}</td>`;
+            s.scores.forEach(sc => {
+                const rP = s.rounds.find(r => r.round_number === i && (r.player_id === sc.player_id || r.name === sc.name));
+                rowHtml += `<td>${rP ? rP.points : 0}</td>`;
+            });
+            scoreHtml += `<tr>${rowHtml}</tr>`;
         });
         scoreHtml += '</tbody></table></div>';
     }
@@ -62,43 +85,158 @@ window.showDetails = function(sessionId) {
         duration: s.duration_seconds ? Math.floor(s.duration_seconds / 60) : 0,
         date: s.play_date ? s.play_date.split(' ')[0] : '',
         comment: s.comment || '',
-        score_adrian: null,
-        score_lea: null,
         winner_id: 0
     };
-    const sA = s.scores.find(sc => sc.name === player1Name);
-    const sL = s.scores.find(sc => sc.name === player2Name);
-    if (sA) window.currentEditSessionData.score_adrian = sA.score_value;
-    if (sL) window.currentEditSessionData.score_lea = sL.score_value;
-    if (sA && sA.is_winner === 1) window.currentEditSessionData.winner_id = 1;
-    if (sL && sL.is_winner === 1) window.currentEditSessionData.winner_id = 2;
+    const activeWinner = s.scores.find(sc => sc.is_winner === 1);
+    if (activeWinner) {
+        window.currentEditSessionData.winner_id = activeWinner.player_id;
+    }
 
-    document.getElementById('editSessionBtn').onclick = () => {
+    document.getElementById('editSessionBtn').onclick = async () => {
+        window.isOpeningEditModal = true;
         modal.hide();
         document.getElementById('editSessionDate').value = currentEditSessionData.date;
         document.getElementById('editSessionDuration').value = currentEditSessionData.duration;
-        document.getElementById('editScoreA').value = currentEditSessionData.score_adrian !== null ? currentEditSessionData.score_adrian : '';
-        document.getElementById('editScoreL').value = currentEditSessionData.score_lea !== null ? currentEditSessionData.score_lea : '';
-        document.getElementById('editWinner').value = currentEditSessionData.winner_id;
+        
+        let guests = [];
+        try {
+            const res = await authFetch('/guests');
+            if (res && res.ok) {
+                const data = await res.json();
+                guests = data.guests || [];
+            }
+        } catch(e) {
+            console.error("Guests fetch failed:", e);
+        }
+
+        const potentialPlayers = [
+            ...allPlayers.map(p => ({ id: p.id, name: p.name, is_guest: false })),
+            ...guests.map(g => ({ id: -g.id, name: g.name, is_guest: true }))
+        ];
+
+        s.scores.forEach(sc => {
+            const exists = potentialPlayers.some(p => p.id === sc.player_id || p.name === sc.name);
+            if (!exists) {
+                potentialPlayers.push({
+                    id: sc.player_id,
+                    name: sc.name,
+                    is_guest: sc.player_id < 0
+                });
+            }
+        });
+
+        const editScoresContainer = document.getElementById('editScoresContainer');
+        
+        let checklistHtml = `
+            <label class="form-label text-white-50 x-small fw-bold text-uppercase d-block mb-2">Wer hat mitgespielt?</label>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+        `;
+        
+        potentialPlayers.forEach(p => {
+            const isParticipating = s.scores.some(sc => sc.player_id === p.id || sc.name === p.name);
+            checklistHtml += `
+                <div class="form-check form-check-inline m-0">
+                    <input class="form-check-input d-none" type="checkbox" id="edit_p_${p.id}" value="${p.id}" ${isParticipating ? 'checked' : ''} onchange="toggleEditPlayerBadge(this, '${p.id}')">
+                    <label class="form-check-label badge rounded-pill px-3 py-2 border fs-6 d-flex align-items-center gap-1" for="edit_p_${p.id}" id="edit_lbl_p_${p.id}" style="cursor: pointer; transition: all 0.2s ease; ${isParticipating ? 'background-color: var(--bs-primary); border-color: var(--bs-primary); opacity: 1;' : 'background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); opacity: 0.5;'}">
+                        ${p.is_guest ? '👤' : '👥'} ${p.name}
+                    </label>
+                </div>
+            `;
+        });
+        
+        checklistHtml += `</div>`;
+        
+        window.toggleEditPlayerBadge = function(cb, pId) {
+            const lbl = document.getElementById(`edit_lbl_p_${pId}`);
+            if (lbl) {
+                if (cb.checked) {
+                    lbl.style.backgroundColor = 'var(--bs-primary)';
+                    lbl.style.borderColor = 'var(--bs-primary)';
+                    lbl.style.opacity = '1';
+                } else {
+                    lbl.style.backgroundColor = 'rgba(255,255,255,0.05)';
+                    lbl.style.borderColor = 'rgba(255,255,255,0.1)';
+                    lbl.style.opacity = '0.5';
+                }
+            }
+            const inputContainer = document.getElementById(`editScoreContainer_${pId}`);
+            if (inputContainer) {
+                inputContainer.classList.toggle('d-none', !cb.checked);
+            }
+            updateEditWinnerOptions();
+        };
+
+        const editWinner = document.getElementById('editWinner');
+        
+        window.updateEditWinnerOptions = function() {
+            const checkedBoxes = Array.from(document.querySelectorAll('#editScoresContainer input[type="checkbox"]:checked'));
+            const selectedWinnerId = editWinner.value;
+            
+            let winnerOptionsHtml = checkedBoxes.map(cb => {
+                const pId = parseInt(cb.value);
+                const player = potentialPlayers.find(p => p.id === pId);
+                return `<option value="${pId}">🏆 ${player.name}</option>`;
+            }).join('');
+            winnerOptionsHtml += `<option value="0">⚪ Unentschieden</option>`;
+            editWinner.innerHTML = winnerOptionsHtml;
+            
+            const hasWinner = checkedBoxes.some(cb => parseInt(cb.value) === parseInt(selectedWinnerId));
+            if (hasWinner) {
+                editWinner.value = selectedWinnerId;
+            } else {
+                editWinner.value = "0";
+            }
+        };
+
+        let inputsHtml = `<div id="editScoresInputs">`;
+        if (s.win_condition === 2) {
+            inputsHtml += `<div class="text-center text-muted mb-3">Dieses Spiel hat keine Punkte. Du kannst nur den Gewinner anpassen.</div>`;
+        } else {
+            potentialPlayers.forEach((p, idx) => {
+                const isParticipating = s.scores.some(sc => sc.player_id === p.id || sc.name === p.name);
+                const pScore = s.scores.find(sc => sc.player_id === p.id || sc.name === p.name);
+                const scoreVal = pScore ? pScore.score_value : '';
+                const memberIdx = allPlayers.findIndex(mp => mp.id === p.id || mp.name === p.name);
+                const colorClass = memberIdx === 0 ? 'adrian-color' : (memberIdx === 1 ? 'lea-color' : (memberIdx === 2 ? 'text-success' : (p.id < 0 ? 'text-white-50' : 'text-warning')));
+                
+                inputsHtml += `
+                <div id="editScoreContainer_${p.id}" class="d-flex justify-content-between align-items-center mb-3 ${isParticipating ? '' : 'd-none'}">
+                    <span class="${colorClass} fw-bold">${p.name}</span>
+                    <input type="number" id="editScore_${p.id}" value="${scoreVal}" class="form-control bg-dark text-white border-secondary border-opacity-50 w-50 text-end" inputmode="numeric">
+                </div>`;
+            });
+        }
+        inputsHtml += `</div>`;
+        
+        editScoresContainer.innerHTML = checklistHtml + inputsHtml;
+
+        updateEditWinnerOptions();
+        editWinner.value = currentEditSessionData.winner_id;
+        
         document.getElementById('editSessionComment').value = currentEditSessionData.comment;
         
         const editModal = new bootstrap.Modal(document.getElementById('editSessionModal'));
         editModal.show();
         
         document.getElementById('saveEditSessionBtn').onclick = async () => {
-            const p1 = allPlayers[0];
-            const p2 = allPlayers[1];
-            const scA = parseInt(document.getElementById('editScoreA').value) || 0;
-            const scL = parseInt(document.getElementById('editScoreL').value) || 0;
-            const winVal = parseInt(document.getElementById('editWinner').value);
-
-            const scores = [];
-            if (p1) {
-                scores.push({ player_id: p1.id, score: scA, is_winner: winVal === 1 });
+            const winVal = parseInt(editWinner.value);
+            const checkedBoxes = Array.from(document.querySelectorAll('#editScoresContainer input[type="checkbox"]:checked'));
+            
+            if (checkedBoxes.length === 0) {
+                alert("Bitte wähle mindestens einen Spieler aus!");
+                return;
             }
-            if (p2) {
-                scores.push({ player_id: p2.id, score: scL, is_winner: winVal === 2 });
-            }
+            
+            const scores = checkedBoxes.map(cb => {
+                const pId = parseInt(cb.value);
+                const scInput = document.getElementById(`editScore_${pId}`);
+                const scVal = scInput ? (parseInt(scInput.value) || 0) : 0;
+                return {
+                    player_id: pId,
+                    score: s.win_condition === 2 ? 0 : scVal,
+                    is_winner: pId === winVal
+                };
+            });
 
             const payload = {
                 play_date: document.getElementById('editSessionDate').value + " 12:00:00",
@@ -127,14 +265,15 @@ window.showDetails = function(sessionId) {
 };
 
 window.deleteSession = async function(sessionId) {
-    if(!confirm("Willst du diese Partie wirklich aus dem Verlauf löschen?")) return;
-    try {
-        const res = await authFetch(`/session/${sessionId}`, { method: 'DELETE' });
-        if (!res || !res.ok) throw new Error();
-        bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
-        loadHistory(); 
-        if (typeof loadDashboard === 'function') loadDashboard(); 
-    } catch (e) { alert("Fehler beim Löschen."); }
+    showConfirmModal("Partie löschen", "Willst du diese Partie wirklich aus dem Verlauf löschen?", async () => {
+        try {
+            const res = await authFetch(`/session/${sessionId}`, { method: 'DELETE' });
+            if (!res || !res.ok) throw new Error();
+            bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
+            loadHistory(); 
+            if (typeof loadDashboard === 'function') loadDashboard(); 
+        } catch (e) { alert("Fehler beim Löschen."); }
+    });
 };
 
 window.filterHistory = function() {
@@ -162,3 +301,40 @@ window.filterHistory = function() {
         return textMatch && rangeMatch;
     }));
 };
+
+// Return to profile modal events
+document.addEventListener('DOMContentLoaded', () => {
+    const detailModalEl = document.getElementById('detailModal');
+    if (detailModalEl) {
+        detailModalEl.addEventListener('hidden.bs.modal', () => {
+            if (window.isOpeningEditModal) {
+                window.isOpeningEditModal = false;
+                return;
+            }
+            if (window.returnToGameProfileData) {
+                const d = window.returnToGameProfileData;
+                window.returnToGameProfileData = null;
+                setTimeout(() => {
+                    if (typeof showGameProfile === 'function') {
+                        showGameProfile(d.id, d.bgg_id, d.image_url, d.min_players, d.max_players, d.playing_time, d.weight, d.category);
+                    }
+                }, 350);
+            }
+        });
+    }
+
+    const editModalEl = document.getElementById('editSessionModal');
+    if (editModalEl) {
+        editModalEl.addEventListener('hidden.bs.modal', () => {
+            if (window.returnToGameProfileData) {
+                const d = window.returnToGameProfileData;
+                window.returnToGameProfileData = null;
+                setTimeout(() => {
+                    if (typeof showGameProfile === 'function') {
+                        showGameProfile(d.id, d.bgg_id, d.image_url, d.min_players, d.max_players, d.playing_time, d.weight, d.category);
+                    }
+                }, 350);
+            }
+        });
+    }
+});

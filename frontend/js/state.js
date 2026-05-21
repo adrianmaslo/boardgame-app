@@ -18,6 +18,8 @@ function saveTimerState() {
         seconds, startTime, activeGameId, activeGameImg, isPaused,
         name: document.getElementById('miniPlayerGameName')?.innerText || '',
         rounds: roundHistory,
+        sessionPlayers: window.sessionPlayers || [],
+        sessionTeams: window.sessionTeams || {},
         last: Date.now()
     }));
 }
@@ -37,6 +39,15 @@ function restoreTimerState() {
         seconds += Math.floor((Date.now() - s.last) / 1000);
     }
 
+    // Fetch win condition dynamically for restored game
+    if (activeGameId) {
+        authFetch(`/stats/game/${activeGameId}`).then(res => res && res.json()).then(data => {
+            window.activeGameWinCondition = data.win_condition;
+        }).catch(() => {
+            window.activeGameWinCondition = 0;
+        });
+    }
+
     const nameEl = document.getElementById('activeGameNameDisplay');
     const miniNameEl = document.getElementById('miniPlayerGameName');
     const miniImgEl = document.getElementById('miniPlayerImg');
@@ -47,32 +58,16 @@ function restoreTimerState() {
     if (miniImgEl) miniImgEl.src = activeGameImg || 'https://via.placeholder.com/42?text=🎲';
     if (miniPlayerEl) miniPlayerEl.classList.remove('d-none');
 
+    if (s.sessionPlayers && s.sessionPlayers.length > 0) {
+        window.sessionPlayers = s.sessionPlayers;
+        window.sessionTeams = s.sessionTeams || {};
+        if (typeof renderActiveScoreboard === 'function') renderActiveScoreboard();
+        if (typeof renderWinnerSelect === 'function') renderWinnerSelect(window.sessionPlayers);
+    }
+
     if (typeof updateTotals === 'function') updateTotals();
     if (typeof renderRoundPreview === 'function') renderRoundPreview();
     if (typeof startInternalTimer === 'function') startInternalTimer();
 }
 
-// ─── Spieler für Session laden ────────────────────────────────────────────────
-
-window.loadPlayersForSession = async function() {
-    try {
-        const res = await authFetch('/players');
-        if (!res) return;
-        const data = await res.json();
-        allPlayers = data.players || [];
-
-        if (allPlayers.length >= 1) player1Name = allPlayers[0].name;
-        if (allPlayers.length >= 2) player2Name = allPlayers[1].name;
-
-        // Score-Inputs mit echten Namen beschriften
-        const p1Label = document.getElementById('scoreLabel1');
-        const p2Label = document.getElementById('scoreLabel2');
-        if (p1Label) p1Label.textContent = player1Name;
-        if (p2Label) p2Label.textContent = player2Name;
-
-        // Gewinner-Auswahl aktualisieren
-        if (typeof renderWinnerSelect === 'function') renderWinnerSelect(allPlayers);
-    } catch(e) {
-        console.error('Fehler beim Laden der Spieler:', e);
-    }
-};
+// Spieler laden (entfernt: wird nun komplett dynamisch in timer.js via selectGame und renderActiveScoreboard abgewickelt)

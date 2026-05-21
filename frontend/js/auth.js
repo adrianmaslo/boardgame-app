@@ -72,7 +72,9 @@ window.authFetch = async function(url, options = {}) {
 
 // ─── Login ────────────────────────────────────────────────────────────────────
 
+let _loginInProgress = false;
 window.doLogin = async function() {
+    if (_loginInProgress) return;
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value;
     const btn = document.getElementById('loginBtn');
@@ -84,6 +86,7 @@ window.doLogin = async function() {
         return;
     }
 
+    _loginInProgress = true;
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Einloggen...';
     errorEl.classList.add('d-none');
@@ -108,6 +111,7 @@ window.doLogin = async function() {
         errorEl.textContent = 'Verbindungsfehler. Ist der Server erreichbar?';
         errorEl.classList.remove('d-none');
     } finally {
+        _loginInProgress = false;
         btn.disabled = false;
         btn.innerHTML = 'Einloggen';
     }
@@ -252,6 +256,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') {
             const authView = document.getElementById('authView');
             if (authView && !authView.classList.contains('d-none')) {
+                e.preventDefault();
+                e.stopPropagation();
                 const loginTab = document.getElementById('loginTab');
                 if (!loginTab.classList.contains('d-none')) {
                     doLogin();
@@ -262,3 +268,94 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+
+window.confirmAccountDeletion = function() {
+    console.log("confirmAccountDeletion: Clicked");
+    const user = Auth.getUser();
+    if (!user) {
+        console.error("confirmAccountDeletion: No user logged in.");
+        return;
+    }
+
+    // Reset modal fields
+    const hintEl = document.getElementById('deleteConfirmUsernameHint');
+    if (hintEl) hintEl.textContent = user.username;
+    
+    const inputEl = document.getElementById('deleteConfirmUsername');
+    if (inputEl) inputEl.value = '';
+
+    const alertEl = document.getElementById('deleteAccountAlert');
+    if (alertEl) {
+        alertEl.classList.add('d-none');
+        alertEl.textContent = '';
+    }
+
+    const modalEl = document.getElementById('deleteAccountModal');
+    if (modalEl) {
+        console.log("confirmAccountDeletion: Showing modal");
+        window.deleteAccountModalInstance = new bootstrap.Modal(modalEl);
+        window.deleteAccountModalInstance.show();
+    } else {
+        console.error("confirmAccountDeletion: deleteAccountModal element not found!");
+    }
+};
+
+window.deleteAccountSubmit = async function() {
+    console.log("deleteAccountSubmit: Initiated");
+    const user = Auth.getUser();
+    if (!user) return;
+
+    const typedUsername = document.getElementById('deleteConfirmUsername').value.trim();
+    const alertEl = document.getElementById('deleteAccountAlert');
+    const btn = document.getElementById('deleteAccountBtn');
+
+    if (typedUsername.toLowerCase() !== user.username.toLowerCase()) {
+        alertEl.textContent = `Fehler: Bitte gib exakt den Namen "${user.username}" ein.`;
+        alertEl.className = 'alert alert-danger rounded-3 small py-2 px-3 mb-3';
+        alertEl.classList.remove('d-none');
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Wird gelöscht...';
+    alertEl.classList.add('d-none');
+
+    try {
+        const res = await authFetch('/auth/me', { method: 'DELETE' });
+        if (!res) {
+            btn.disabled = false;
+            btn.textContent = '🔥 Konto endgültig löschen';
+            return;
+        }
+        
+        const data = await res.json();
+        
+        if (res.ok) {
+            alertEl.textContent = '✅ Dein Konto wurde erfolgreich gelöscht.';
+            alertEl.className = 'alert alert-success rounded-3 small py-2 px-3 mb-3';
+            alertEl.classList.remove('d-none');
+            
+            setTimeout(() => {
+                if (window.deleteAccountModalInstance) {
+                    window.deleteAccountModalInstance.hide();
+                }
+                Auth.logout();
+            }, 2000);
+        } else {
+            alertEl.textContent = data.detail || 'Fehler beim Löschen des Kontos.';
+            alertEl.className = 'alert alert-danger rounded-3 small py-2 px-3 mb-3';
+            alertEl.classList.remove('d-none');
+            btn.disabled = false;
+            btn.textContent = '🔥 Konto endgültig löschen';
+        }
+    } catch (e) {
+        console.error("deleteAccountSubmit: Error during deletion", e);
+        alertEl.textContent = 'Verbindungsfehler beim Versuch, das Konto zu löschen.';
+        alertEl.className = 'alert alert-danger rounded-3 small py-2 px-3 mb-3';
+        alertEl.classList.remove('d-none');
+        btn.disabled = false;
+        btn.textContent = '🔥 Konto endgültig löschen';
+    }
+};
+
