@@ -163,6 +163,33 @@ def init_db():
             )
         """)
 
+        # ── Migration: Remove UNIQUE constraint from bgg_id (if exists) ───
+        create_stmt = c.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='games'").fetchone()
+        if create_stmt and "UNIQUE" in create_stmt["sql"].upper() and "BGG_ID" in create_stmt["sql"].upper():
+            print("Migrating 'games' table to remove UNIQUE constraint on bgg_id...")
+            c.execute("PRAGMA foreign_keys=OFF")
+            
+            columns_info = c.execute("PRAGMA table_info(games)").fetchall()
+            cols_def = []
+            cols_names = []
+            for row in columns_info:
+                name = row["name"]
+                type_ = row["type"]
+                cols_names.append(name)
+                if name == "id":
+                    cols_def.append(f"{name} INTEGER PRIMARY KEY AUTOINCREMENT")
+                else:
+                    cols_def.append(f"{name} {type_}")
+                    
+            cols_def_csv = ", ".join(cols_def)
+            cols_names_csv = ", ".join(cols_names)
+            
+            c.execute(f"CREATE TABLE games_new ({cols_def_csv})")
+            c.execute(f"INSERT INTO games_new ({cols_names_csv}) SELECT {cols_names_csv} FROM games")
+            c.execute("DROP TABLE games")
+            c.execute("ALTER TABLE games_new RENAME TO games")
+            c.execute("PRAGMA foreign_keys=ON")
+
         conn.commit()
 
 def _migrate_legacy_data(c):
