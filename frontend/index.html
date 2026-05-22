@@ -87,6 +87,12 @@
 <label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_display_name">Dein Anzeigename in der Gruppe</label>
 <input class="form-control rounded-3 py-2 px-3" data-i18n-placeholder="label_dein_name" id="wizardDisplayName" placeholder="Dein Name" type="text"/>
 </div>
+<div class="form-check mb-3">
+<input class="form-check-input" id="wizardCreateDsgvo" type="checkbox"/>
+<label class="form-check-label text-white-50 x-small" data-i18n="wizard_label_dsgvo" for="wizardCreateDsgvo">
+Ich stimme den <a class="text-primary text-decoration-none" href="datenschutz.html" target="_blank">Datenschutzbestimmungen</a> zu.
+</label>
+</div>
 <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="wizardError"></div>
 <button class="btn btn-primary w-100 py-3 rounded-3 fw-bold mb-4" data-i18n="wizard_btn_create" id="wizardCreateBtn" onclick="wizardCreateGroup()">Gruppe erstellen</button>
 <hr class="my-4" style="border-color: rgba(255,255,255,0.1)"/>
@@ -98,6 +104,12 @@
 <div class="mb-4">
 <label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_display_name">Dein Anzeigename in der Gruppe</label>
 <input class="form-control rounded-3 py-2 px-3" data-i18n-placeholder="label_dein_name" id="wizardJoinDisplayName" placeholder="Dein Name" type="text"/>
+</div>
+<div class="form-check mb-3">
+<input class="form-check-input" id="wizardJoinDsgvo" type="checkbox"/>
+<label class="form-check-label text-white-50 x-small" data-i18n="wizard_label_dsgvo" for="wizardJoinDsgvo">
+Ich stimme den <a class="text-primary text-decoration-none" href="datenschutz.html" target="_blank">Datenschutzbestimmungen</a> zu.
+</label>
 </div>
 <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="wizardJoinError"></div>
 <button class="btn btn-outline-light w-100 py-3 rounded-3 fw-bold" data-i18n="wizard_btn_join" id="wizardJoinBtn" onclick="wizardJoinGroup()">Gruppe beitreten</button>

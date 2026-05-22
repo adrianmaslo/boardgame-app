@@ -24,7 +24,12 @@ window.wizardCreateGroup = async function() {
         return;
     }
 
-    // Removed DSGVO Checkbox logic as it's not present in HTML
+    const dsgvoChecked = document.getElementById('wizardCreateDsgvo').checked;
+    if (!dsgvoChecked) {
+        errorEl.textContent = t('msg_agree_dsgvo', 'Bitte stimme den Datenschutzbestimmungen (DSGVO Disclaimer) zu.');
+        errorEl.classList.remove('d-none');
+        return;
+    }
 
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>';
@@ -76,7 +81,12 @@ window.wizardJoinGroup = async function() {
         return;
     }
 
-    // Removed DSGVO Checkbox logic as it's not present in HTML
+    const dsgvoChecked = document.getElementById('wizardJoinDsgvo').checked;
+    if (!dsgvoChecked) {
+        errorEl.textContent = t('msg_agree_dsgvo', 'Bitte stimme den Datenschutzbestimmungen (DSGVO Disclaimer) zu.');
+        errorEl.classList.remove('d-none');
+        return;
+    }
 
     btn.disabled = true;
     errorEl.classList.add('d-none');
