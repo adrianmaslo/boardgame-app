@@ -196,6 +196,8 @@ window.openGroupManageModal = async function() {
     if (!group) return;
 
     document.getElementById('manageGroupName').textContent = group.name;
+    const editBtn = document.getElementById('manageGroupNameEditBtn');
+    if (editBtn) editBtn.classList.toggle('d-none', !group.is_admin);
     document.getElementById('groupInviteCode').textContent = group.invite_code;
     document.getElementById('manageIsAdmin').classList.toggle('d-none', !group.is_admin);
 
@@ -260,6 +262,38 @@ function renderManageGuests(guests, group) {
         </div>
     `).join('');
 }
+
+window.promptEditGroupName = async function() {
+    const group = Auth.getActiveGroup();
+    if (!group || !group.is_admin) return;
+
+    const newName = prompt(t('prompt_new_group_name', 'Neuer Gruppenname:'), group.name);
+    if (!newName || newName.trim() === '' || newName.trim() === group.name) return;
+
+    try {
+        const res = await authFetch(`/groups/${group.id}/name`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: newName.trim() })
+        });
+
+        if (res.ok) {
+            const data = await res.json();
+            group.name = data.name;
+            Auth.setActiveGroup(group);
+            document.getElementById('manageGroupName').textContent = group.name;
+            showToast(t('msg_group_name_updated', 'Gruppenname aktualisiert! ✅'));
+            
+            // UI neu laden falls nötig (z.B. den Switcher aktualisieren)
+            if (typeof initApp === 'function') initApp(group);
+        } else {
+            const err = await res.json();
+            showToast(err.detail || t('msg_error', 'Fehler'));
+        }
+    } catch(e) {
+        showToast(t('msg_connection_error', 'Verbindungsfehler'));
+    }
+};
 
 window.removeMember = async function(groupId, userId) {
     showConfirmModal(t('title_remove_member', "Mitglied entfernen"), t('confirm_remove_member', "Willst du dieses Mitglied wirklich aus der Gruppe entfernen?"), async () => {

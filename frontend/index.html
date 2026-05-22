@@ -286,7 +286,10 @@ Ich stimme den <a class="text-primary text-decoration-none" href="datenschutz.ht
 <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
 </div>
 <div class="modal-body pt-0 pb-4">
-<h3 class="fw-bold text-primary mb-3" id="manageGroupName">-</h3>
+<div class="d-flex justify-content-center align-items-center gap-2 mb-3">
+<h3 class="fw-bold text-primary mb-0" id="manageGroupName">-</h3>
+<button class="btn btn-sm btn-outline-primary d-none" id="manageGroupNameEditBtn" onclick="promptEditGroupName()">✏️</button>
+</div>
 <div class="text-center p-3 mb-4 rounded-4" style="background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border);">
 <small class="text-white-50 x-small fw-bold text-uppercase tracking-wider d-block mb-1" data-i18n="label_invite_code">Einladungs-Code</small>
 <h2 class="fw-bold text-white tracking-widest mb-2" id="groupInviteCode">------</h2>

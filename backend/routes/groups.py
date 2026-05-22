@@ -226,3 +226,24 @@ def update_display_name(group_id: int, data: dict, current_user: dict = Depends(
         )
         conn.commit()
     return {"status": "Name aktualisiert", "display_name": new_name}
+
+
+@router.patch("/{group_id}/name")
+def update_group_name(group_id: int, data: dict, current_user: dict = Depends(get_current_user)):
+    """Admin ändert den Namen der gesamten Gruppe."""
+    new_name = data.get("name", "").strip()
+    if len(new_name) < 2 or len(new_name) > 40:
+        raise HTTPException(status_code=400, detail="Der Gruppenname muss zwischen 2 und 40 Zeichen lang sein.")
+
+    with get_db_connection() as conn:
+        group = conn.execute("SELECT * FROM groups WHERE id = ?", (group_id,)).fetchone()
+        if not group:
+            raise HTTPException(status_code=404, detail="Gruppe nicht gefunden.")
+        
+        if group["admin_id"] != current_user["id"]:
+            raise HTTPException(status_code=403, detail="Nur der Admin darf den Gruppennamen ändern.")
+
+        conn.execute("UPDATE groups SET name = ? WHERE id = ?", (new_name, group_id))
+        conn.commit()
+        
+    return {"status": "Gruppenname aktualisiert", "name": new_name}
