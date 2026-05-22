@@ -24,12 +24,12 @@ window.updatePauseUI = function() {
     const btnMini = document.getElementById('btnPauseMini');
     
     if (isPaused) {
-        if(btnModal) btnModal.innerHTML = '▶️ WEITER';
+        if(btnModal) btnModal.innerHTML = t('btn_resume_timer', '▶️ WEITER');
         if(btnMini) btnMini.innerHTML = '▶️';
         document.getElementById('activeGameTimerDisplay').classList.add('text-warning');
         document.getElementById('miniPlayerTimer').classList.add('text-warning');
     } else {
-        if(btnModal) btnModal.innerHTML = '⏸ PAUSE';
+        if(btnModal) btnModal.innerHTML = t('btn_pause', '⏸ PAUSE');
         if(btnMini) btnMini.innerHTML = '⏸';
         document.getElementById('activeGameTimerDisplay').classList.remove('text-warning');
         document.getElementById('miniPlayerTimer').classList.remove('text-warning');
@@ -38,7 +38,7 @@ window.updatePauseUI = function() {
 
 window.confirmResetTimer = function() {
     if (activeGameId) {
-        showConfirmModal("Partie abbrechen", "Willst du diese Partie wirklich abbrechen? Der Fortschritt geht verloren.", () => {
+        showConfirmModal(t('title_cancel_session', "Partie abbrechen"), t('confirm_cancel_session', "Willst du diese Partie wirklich abbrechen? Der Fortschritt geht verloren."), () => {
             clearInterval(timerInterval); timerInterval = null; seconds = 0; activeGameId = null; activeGameImg = ''; isPaused = false;
             document.getElementById('miniPlayer').classList.add('d-none');
             const modalEl = document.getElementById('activeGameModal');
@@ -93,7 +93,7 @@ window.selectGame = async function(id, name, imageUrl, checkedPlayerIds) {
     
     const photoBtn = document.querySelector('[onclick="document.getElementById(\'photo\').click()"]');
     if (photoBtn) {
-        photoBtn.innerHTML = '📸 Foto hinzufügen';
+        photoBtn.innerHTML = '📸 ' + t('btn_add_photo', 'Foto hinzufügen');
         photoBtn.classList.remove('btn-success');
         photoBtn.classList.add('btn-dark');
     }
@@ -134,8 +134,8 @@ window.togglePointsInterfaceVisibility = function() {
         noPointsBlock.style.border = '1px solid var(--surface-border)';
         noPointsBlock.innerHTML = `
             <div style="font-size: 2.2rem;" class="mb-2">🎲</div>
-            <h6 class="fw-bold text-white mb-2">Dieses Spiel hat keine Punkte</h6>
-            <p class="text-white-50 small mb-0">Die Rundenwertung ist für dieses Spiel deaktiviert. Du kannst den Gewinner am Spielende manuell auswählen.</p>
+            <h6 class="fw-bold text-white mb-2">${t('label_no_points_game_header', 'Dieses Spiel hat keine Punkte')}</h6>
+            <p class="text-white-50 small mb-0">${t('label_no_points_game_desc', 'Die Rundenwertung ist für dieses Spiel deaktiviert. Du kannst den Gewinner am Spielende manuell auswählen.')}</p>
         `;
         const scoreboard = document.getElementById('activeScoreboardContainer');
         if (scoreboard) {
@@ -233,7 +233,7 @@ window.togglePlayerActive = function(key) {
     if (player) {
         const activeCount = window.sessionPlayers.filter(p => p.active).length;
         if (player.active && activeCount <= 1) {
-            alert("Mindestens ein Spieler muss mitspielen!");
+            alert(t('msg_at_least_one_player', "Mindestens ein Spieler muss mitspielen!"));
             return;
         }
         player.active = !player.active;
@@ -270,13 +270,13 @@ window.showAddGuestPrompt = async function() {
         const availableGuests = existingGuests.filter(g => !activeNames.includes(g.name.toLowerCase()));
 
         if (availableGuests.length === 0) {
-            listEl.innerHTML = '<div class="text-white-50 small text-center py-2">Keine weiteren Gäste vorhanden.</div>';
+            listEl.innerHTML = `<div class="text-white-50 small text-center py-2">${t('msg_no_more_guests', 'Keine weiteren Gäste vorhanden.')}</div>`;
         } else {
             listEl.innerHTML = availableGuests.map(g => `
                 <div class="d-flex justify-content-between align-items-center p-2 rounded" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);">
                     <span class="text-white small fw-bold">👤 ${g.name}</span>
                     <button class="btn btn-xs btn-outline-primary rounded-pill px-2.5 py-0.5 fw-bold" onclick="addGuestToActiveSession(${g.id}, '${g.name.replace(/'/g, "\\'")}')" style="font-size: 0.7rem;">
-                        ➕ Hinzufügen
+                        ➕ ${t('btn_add', 'Hinzufügen')}
                     </button>
                 </div>
             `).join('');
@@ -293,7 +293,7 @@ window.addGuestToActiveSession = function(guestId, name) {
 
     const alreadyInSessionActive = window.sessionPlayers.some(p => p.name.toLowerCase() === trimmedName.toLowerCase() && p.active);
     if (alreadyInSessionActive) {
-        alert("Dieser Spieler ist bereits in der Session!");
+        alert(t('msg_player_already_in_session', "Dieser Spieler ist bereits in der Session!"));
         return;
     }
 
@@ -327,7 +327,7 @@ window.submitNewGuestFromTimer = async function() {
     const name = input.value.trim();
     if (!name) {
         if (err) {
-            err.textContent = "Bitte einen Namen eingeben.";
+            err.textContent = t('msg_enter_name', "Bitte einen Namen eingeben.");
             err.classList.remove('d-none');
         }
         return;
@@ -344,13 +344,13 @@ window.submitNewGuestFromTimer = async function() {
             addGuestToActiveSession(data.id, data.name);
         } else {
             if (err) {
-                err.textContent = data.detail || "Fehler beim Erstellen.";
+                err.textContent = data.detail || t('msg_error_creating', "Fehler beim Erstellen.");
                 err.classList.remove('d-none');
             }
         }
     } catch (e) {
         if (err) {
-            err.textContent = "Verbindungsfehler.";
+            err.textContent = t('msg_connection_error', "Verbindungsfehler.");
             err.classList.remove('d-none');
         }
     }
@@ -409,7 +409,7 @@ window.renderActiveScoreboard = function() {
         <div class="text-center px-2 py-2 rounded-3 flex-grow-1" style="min-width: 80px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); max-width: 200px;">
             <div class="${colorClass} x-small fw-bold text-uppercase tracking-wider text-truncate" style="margin: 0 auto;" title="${displayName}">${displayName}</div>
             <div class="fs-3 fw-bold ${colorClass} my-1" id="sum_${g.key}">0</div>
-            <input type="number" id="score_${g.key}" value="${prevInputVal}" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50 mx-auto text-center" placeholder="+ Pkt" style="max-width: 85px; font-size: 0.9rem;" inputmode="numeric">
+            <input type="number" id="score_${g.key}" value="${prevInputVal}" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50 mx-auto text-center" placeholder="${t('placeholder_points_input', '+ Pkt')}" style="max-width: 85px; font-size: 0.9rem;" inputmode="numeric">
         </div>`;
     });
     container.innerHTML = html;
@@ -522,7 +522,7 @@ window.nextRound = function() {
 };
 
 window.removeRound = function(index) {
-    showConfirmModal("Runde löschen", "Möchtest du diese Runde wirklich löschen?", () => {
+    showConfirmModal(t('title_delete_round', "Runde löschen"), t('confirm_delete_round', "Möchtest du diese Runde wirklich löschen?"), () => {
         roundHistory.splice(index, 1);
         roundHistory.forEach((r, i) => r.round = i + 1);
         updateTotals(); renderRoundPreview(); saveTimerState();
@@ -724,7 +724,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const file = this.files[0];
             const btn = document.querySelector('[onclick="document.getElementById(\'photo\').click()"]');
             if (file && btn) {
-                btn.innerHTML = `📸 Foto: ${file.name.substring(0, 10)}... ✔`;
+                btn.innerHTML = `📸 ${t('label_photo', 'Foto')}: ${file.name.substring(0, 10)}... ✔`;
                 btn.classList.remove('btn-dark');
                 btn.classList.add('btn-success');
             }
@@ -734,7 +734,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 window.saveSession = async function() {
     if (!window.sessionPlayers || !window.sessionPlayers.length) {
-        alert('Fehler: Keine Spieler-Daten vorhanden. Bitte starte das Spiel neu.');
+        alert(t('msg_error_no_player_data', 'Fehler: Keine Spieler-Daten vorhanden. Bitte starte das Spiel neu.'));
         return;
     }
     const activePlayers = window.sessionPlayers.filter(p => p.active);
@@ -840,6 +840,6 @@ window.saveSession = async function() {
         localStorage.removeItem('activeTimer');
         location.reload();
     } else {
-        alert('Fehler beim Speichern der Partie.');
+        alert(t('msg_error_save_session', 'Fehler beim Speichern der Partie.'));
     }
 };

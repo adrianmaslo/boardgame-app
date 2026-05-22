@@ -1,17 +1,18 @@
 <!DOCTYPE html>
+
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Game-Log Pro</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css?v=21">
-    <link rel="manifest" href="manifest.json" crossorigin="use-credentials">
-    <link rel="icon" type="image/png" href="icons/icon.png?v=1">
-    <link rel="apple-touch-icon" href="icons/icon.png?v=1">
-    <meta name="theme-color" content="#0f172a">
-    <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title data-i18n="header_title">Game-Log Pro</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="style.css?v=21" rel="stylesheet"/>
+<link crossorigin="use-credentials" href="manifest.json" rel="manifest"/>
+<link href="icons/icon.png?v=1" rel="icon" type="image/png"/>
+<link href="icons/icon.png?v=1" rel="apple-touch-icon"/>
+<meta content="#0f172a" name="theme-color"/>
+<style>
         .avatar-dot {
             width: 10px;
             height: 10px;
@@ -21,749 +22,737 @@
     </style>
 </head>
 <body>
-
 <!-- ─── AUTHENTIFIZIERUNGS-VIEW (LOGIN/REGISTRIERUNG) ────────────────────────── -->
-<div id="authView" class="container pt-5 animate-fade-in" style="max-width: 480px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
-    <div class="text-center mb-5">
-        <h1 class="fw-extrabold tracking-widest text-white mb-2" style="font-size: 2.2rem; letter-spacing: 4px;">🎲 GAME-LOG PRO</h1>
-        <p class="text-muted small">Dein ultimativer Brettspiel Tracker</p>
-    </div>
-    
-    <div class="premium-scoreboard p-4">
-        <div class="btn-group w-100 mb-4" role="group">
-            <button type="button" class="btn btn-outline-secondary text-white active" id="authTabLogin" onclick="showLoginTab()">Login</button>
-            <button type="button" class="btn btn-outline-secondary text-white" id="authTabRegister" onclick="showRegisterTab()">Registrieren</button>
-        </div>
-
-        <!-- Login Form -->
-        <div id="loginTab">
-            <div class="mb-3">
-                <label class="form-label text-white-50 x-small fw-bold text-uppercase">Username</label>
-                <input type="text" id="loginUsername" class="form-control rounded-3 py-2 px-3" placeholder="z.B. adrian">
-            </div>
-            <div class="mb-4">
-                <label class="form-label text-white-50 x-small fw-bold text-uppercase">Passwort</label>
-                <input type="password" id="loginPassword" class="form-control rounded-3 py-2 px-3" placeholder="••••••">
-            </div>
-            <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="loginError"></div>
-            <button type="button" class="btn btn-primary w-100 py-3 rounded-3 fw-bold" id="loginBtn" onclick="doLogin()">Einloggen</button>
-        </div>
-
-        <!-- Register Form -->
-        <div id="registerTab" class="d-none">
-            <div class="mb-3">
-                <label class="form-label text-white-50 x-small fw-bold text-uppercase">Username</label>
-                <input type="text" id="regUsername" class="form-control rounded-3 py-2 px-3" placeholder="z.B. lea">
-            </div>
-            <div class="mb-3">
-                <label class="form-label text-white-50 x-small fw-bold text-uppercase">E-Mail (Optional)</label>
-                <input type="email" id="regEmail" class="form-control rounded-3 py-2 px-3" placeholder="name@beispiel.de">
-            </div>
-            <div class="mb-3">
-                <label class="form-label text-white-50 x-small fw-bold text-uppercase">Passwort (min. 6 Zeichen)</label>
-                <input type="password" id="regPassword" class="form-control rounded-3 py-2 px-3" placeholder="••••••">
-            </div>
-            <div class="mb-4">
-                <label class="form-label text-white-50 x-small fw-bold text-uppercase">Passwort bestätigen</label>
-                <input type="password" id="regPassword2" class="form-control rounded-3 py-2 px-3" placeholder="••••••">
-            </div>
-            <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="registerError"></div>
-            <button type="button" class="btn btn-primary w-100 py-3 rounded-3 fw-bold" id="registerBtn" onclick="doRegister()">Konto erstellen</button>
-        </div>
-    </div>
+<div class="container pt-5 animate-fade-in" id="authView" style="max-width: 480px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
+<div class="text-center mb-5">
+<h1 class="fw-extrabold tracking-widest text-white mb-2" style="font-size: 2.2rem; letter-spacing: 4px;">🎲 GAME-LOG PRO</h1>
+<p class="text-muted small">Dein ultimativer Brettspiel Tracker</p>
 </div>
-
+<div class="premium-scoreboard p-4">
+<div class="btn-group w-100 mb-4" role="group">
+<button class="btn btn-outline-secondary text-white active" data-i18n="tab_login" id="authTabLogin" onclick="showLoginTab()" type="button">Login</button>
+<button class="btn btn-outline-secondary text-white" data-i18n="tab_register" id="authTabRegister" onclick="showRegisterTab()" type="button">Registrieren</button>
+</div>
+<!-- Login Form -->
+<div id="loginTab">
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase">Username</label>
+<input class="form-control rounded-3 py-2 px-3" data-i18n-placeholder="label_username_placeholder" id="loginUsername" placeholder="z.B. adrian" type="text"/>
+</div>
+<div class="mb-4">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase">Passwort</label>
+<input class="form-control rounded-3 py-2 px-3" id="loginPassword" placeholder="••••••" type="password"/>
+</div>
+<div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="loginError"></div>
+<button class="btn btn-primary w-100 py-3 rounded-3 fw-bold" data-i18n="btn_login" id="loginBtn" onclick="doLogin()" type="button">Einloggen</button>
+</div>
+<!-- Register Form -->
+<div class="d-none" id="registerTab">
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase">Username</label>
+<input class="form-control rounded-3 py-2 px-3" data-i18n-placeholder="label_register_username_placeholder" id="regUsername" placeholder="z.B. lea" type="text"/>
+</div>
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase">E-Mail (Optional)</label>
+<input class="form-control rounded-3 py-2 px-3" data-i18n-placeholder="label_email_placeholder" id="regEmail" placeholder="name@beispiel.de" type="email"/>
+</div>
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase">Passwort (min. 6 Zeichen)</label>
+<input class="form-control rounded-3 py-2 px-3" id="regPassword" placeholder="••••••" type="password"/>
+</div>
+<div class="mb-4">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase">Passwort bestätigen</label>
+<input class="form-control rounded-3 py-2 px-3" id="regPassword2" placeholder="••••••" type="password"/>
+</div>
+<div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="registerError"></div>
+<button class="btn btn-primary w-100 py-3 rounded-3 fw-bold" data-i18n="btn_create_account" id="registerBtn" onclick="doRegister()" type="button">Konto erstellen</button>
+</div>
+</div>
+</div>
 <!-- ─── GRUPPEN-SETUP-WIZARD ────────────────────────────────────────────────── -->
-<div id="groupWizard" class="container pt-5 d-none animate-fade-in" style="max-width: 480px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
-    <div class="text-center mb-4">
-        <h2 class="fw-bold text-white mb-2" id="wizardTitle">Willkommen! 👋</h2>
-        <p class="text-muted small mb-1">Lass uns zuerst deine Spielgruppe einrichten.</p>
-        <a href="#" class="text-white-50 x-small text-uppercase tracking-wider fw-bold text-decoration-none" onclick="Auth.logout(); return false;">🚪 Abmelden</a>
-    </div>
-
-    <!-- Step 1: Create or Join -->
-    <div id="wizardStep1" class="premium-scoreboard p-4">
-        <h5 class="fw-bold text-white mb-3">Option A: Neue Gruppe erstellen</h5>
-        <div class="mb-3">
-            <label class="form-label text-white-50 x-small fw-bold text-uppercase">Name deiner Spielgruppe</label>
-            <input type="text" id="wizardGroupName" class="form-control rounded-3 py-2 px-3" placeholder="z.B. Die Brettspiel-Runde">
-        </div>
-        <div class="mb-4">
-            <label class="form-label text-white-50 x-small fw-bold text-uppercase">Dein Anzeigename in der Gruppe</label>
-            <input type="text" id="wizardDisplayName" class="form-control rounded-3 py-2 px-3" placeholder="Dein Name">
-        </div>
-        <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="wizardError"></div>
-        <button class="btn btn-primary w-100 py-3 rounded-3 fw-bold mb-4" id="wizardCreateBtn" onclick="wizardCreateGroup()">Gruppe erstellen</button>
-
-        <hr class="my-4" style="border-color: rgba(255,255,255,0.1)">
-
-        <h5 class="fw-bold text-white mb-3">Option B: Einer Gruppe beitreten</h5>
-        <div class="mb-3">
-            <label class="form-label text-white-50 x-small fw-bold text-uppercase">6-stelliger Einladungs-Code</label>
-            <input type="text" id="wizardJoinCode" class="form-control rounded-3 py-2 px-3 text-center tracking-widest fw-bold" placeholder="z.B. AB12CD">
-        </div>
-        <div class="mb-4">
-            <label class="form-label text-white-50 x-small fw-bold text-uppercase">Dein Anzeigename in der Gruppe</label>
-            <input type="text" id="wizardJoinDisplayName" class="form-control rounded-3 py-2 px-3" placeholder="Dein Name">
-        </div>
-        <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="wizardJoinError"></div>
-        <button class="btn btn-outline-light w-100 py-3 rounded-3 fw-bold" id="wizardJoinBtn" onclick="wizardJoinGroup()">Gruppe beitreten</button>
-    </div>
-
-    <!-- Step 2: Invite Members -->
-    <div id="wizardStep2" class="premium-scoreboard p-4 d-none">
-        <h5 class="fw-bold text-white mb-1">Deine Gruppe steht! 🎉</h5>
-        <p class="text-muted small mb-4">Gruppe: <strong id="wizardGroupNameDisplay" class="text-white"></strong></p>
-        
-        <div class="text-center p-3 mb-4 rounded-4" style="background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border);">
-            <small class="text-white-50 x-small fw-bold text-uppercase tracking-wider d-block mb-2">Einladungs-Code für deine Freunde</small>
-            <h1 class="display-4 fw-bold text-primary tracking-wider mb-2" id="wizardInviteCode">------</h1>
-            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="copyInviteCode()">📋 Code kopieren</button>
-        </div>
-
-        <h6 class="fw-bold text-white small text-uppercase mb-2">Aktuelle Mitglieder (Max. 4)</h6>
-        <div id="wizardMemberList" class="mb-4"></div>
-
-        <button class="btn btn-success w-100 py-3 rounded-3 fw-bold" onclick="wizardDone()">Fertig & App starten 🚀</button>
-    </div>
+<div class="container pt-5 d-none animate-fade-in" id="groupWizard" style="max-width: 480px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center;">
+<div class="text-center mb-4">
+<h2 class="fw-bold text-white mb-2" data-i18n="wizard_welcome" id="wizardTitle">Willkommen! 👋</h2>
+<p class="text-muted small mb-1" data-i18n="wizard_subtitle">Lass uns zuerst deine Spielgruppe einrichten.</p>
+<a class="text-white-50 x-small text-uppercase tracking-wider fw-bold text-decoration-none" data-i18n="wizard_logout" href="#" onclick="Auth.logout(); return false;">🚪 Abmelden</a>
 </div>
-
+<!-- Step 1: Create or Join -->
+<div class="premium-scoreboard p-4" id="wizardStep1">
+<h5 class="fw-bold text-white mb-3" data-i18n="wizard_option_a">Option A: Neue Gruppe erstellen</h5>
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="wizard_label_group_name">Name deiner Spielgruppe</label>
+<input class="form-control rounded-3 py-2 px-3" data-i18n-placeholder="label_group_name_placeholder" id="wizardGroupName" placeholder="z.B. Die Brettspiel-Runde" type="text"/>
+</div>
+<div class="mb-4">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_display_name">Dein Anzeigename in der Gruppe</label>
+<input class="form-control rounded-3 py-2 px-3" data-i18n-placeholder="label_dein_name" id="wizardDisplayName" placeholder="Dein Name" type="text"/>
+</div>
+<div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="wizardError"></div>
+<button class="btn btn-primary w-100 py-3 rounded-3 fw-bold mb-4" data-i18n="wizard_btn_create" id="wizardCreateBtn" onclick="wizardCreateGroup()">Gruppe erstellen</button>
+<hr class="my-4" style="border-color: rgba(255,255,255,0.1)"/>
+<h5 class="fw-bold text-white mb-3" data-i18n="wizard_option_b">Option B: Einer Gruppe beitreten</h5>
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="wizard_label_join_code">6-stelliger Einladungs-Code</label>
+<input class="form-control rounded-3 py-2 px-3 text-center tracking-widest fw-bold" data-i18n-placeholder="label_invite_code_placeholder" id="wizardJoinCode" placeholder="z.B. AB12CD" type="text"/>
+</div>
+<div class="mb-4">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_display_name">Dein Anzeigename in der Gruppe</label>
+<input class="form-control rounded-3 py-2 px-3" data-i18n-placeholder="label_dein_name" id="wizardJoinDisplayName" placeholder="Dein Name" type="text"/>
+</div>
+<div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="wizardJoinError"></div>
+<button class="btn btn-outline-light w-100 py-3 rounded-3 fw-bold" data-i18n="wizard_btn_join" id="wizardJoinBtn" onclick="wizardJoinGroup()">Gruppe beitreten</button>
+</div>
+<!-- Step 2: Invite Members -->
+<div class="premium-scoreboard p-4 d-none" id="wizardStep2">
+<h5 class="fw-bold text-white mb-1" data-i18n="wizard_success_title">Deine Gruppe steht! 🎉</h5>
+<p class="text-muted small mb-4">Gruppe: <strong class="text-white" id="wizardGroupNameDisplay"></strong></p>
+<div class="text-center p-3 mb-4 rounded-4" style="background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border);">
+<small class="text-white-50 x-small fw-bold text-uppercase tracking-wider d-block mb-2" data-i18n="wizard_invite_hint">Einladungs-Code für deine Freunde</small>
+<h1 class="display-4 fw-bold text-primary tracking-wider mb-2" id="wizardInviteCode">------</h1>
+<button class="btn btn-sm btn-outline-primary rounded-pill px-3" data-i18n="wizard_btn_copy" onclick="copyInviteCode()">📋 Code kopieren</button>
+</div>
+<h6 class="fw-bold text-white small text-uppercase mb-2" data-i18n="wizard_members_title">Aktuelle Mitglieder (Max. 4)</h6>
+<div class="mb-4" id="wizardMemberList"></div>
+<button class="btn btn-success w-100 py-3 rounded-3 fw-bold" data-i18n="wizard_btn_done" onclick="wizardDone()">Fertig &amp; App starten 🚀</button>
+</div>
+</div>
 <!-- ─── HAUPT-APP CONTAINER ─────────────────────────────────────────────────── -->
-<div id="mainApp" class="app-container d-none">
-    <header class="app-header shadow-sm d-flex justify-content-between align-items-center px-3">
-        <!-- Group Switcher -->
-        <div class="dropdown">
-            <button class="btn btn-sm btn-outline-light dropdown-toggle rounded-pill px-3 py-1" type="button" id="activeGroupLabel" data-bs-toggle="dropdown" aria-expanded="false">
+<div class="app-container d-none" id="mainApp">
+<header class="app-header shadow-sm d-flex justify-content-between align-items-center px-3">
+<!-- Group Switcher -->
+<div class="dropdown">
+<button aria-expanded="false" class="btn btn-sm btn-outline-light dropdown-toggle rounded-pill px-3 py-1" data-bs-toggle="dropdown" data-i18n="header_loading_group" id="activeGroupLabel" type="button">
                 Lade Gruppe...
             </button>
-            <ul class="dropdown-menu dropdown-menu-dark shadow-lg border-0 rounded-3 mt-2" id="groupSwitcherItems" style="background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px);">
-                <!-- Injected via JS -->
-            </ul>
-        </div>
-        
-        <span class="fw-bold tracking-widest text-white small d-none d-sm-inline" style="letter-spacing: 3px; font-size: 0.8rem;">✨ GAMELOG PRO</span>
-        
-        <!-- User Dropdown / Logout -->
-        <div class="dropdown">
-            <button class="btn btn-sm btn-link text-white text-decoration-none dropdown-toggle px-2" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                👤 <span id="headerUsername" class="small fw-bold">User</span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark border-0 rounded-3 mt-2" style="background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px);">
-                <li><a class="dropdown-item small fw-bold text-white" href="#" onclick="openProfileSettings(); return false;">⚙️ Konto verwalten</a></li>
-                <li><a class="dropdown-item small text-white-50" href="/datenschutz.html" target="_blank">📜 Datenschutz</a></li>
-                <li><hr class="dropdown-divider border-secondary border-opacity-25"></li>
-                <li><a class="dropdown-item text-danger small fw-bold" href="#" onclick="Auth.logout(); return false;">🚪 Ausloggen</a></li>
-                <li><hr class="dropdown-divider border-secondary border-opacity-25"></li>
-                <li><a class="dropdown-item text-danger small fw-bold" href="#" onclick="confirmAccountDeletion(); return false;">⚠️ Konto löschen</a></li>
-            </ul>
-        </div>
-    </header>
-
-    <main class="content-area container pt-4">
-        <!-- DASHBOARD TAB -->
-        <section id="tab-home" class="app-tab active">
-            <div class="animate-fade-in">
-                <h3 class="fw-bold mb-1">Hey ihr! 👋</h3>
-                <p class="text-muted small mb-4">Bereit für das nächste Duell?</p>
-
-                <div class="premium-scoreboard text-center mb-4">
-                    <small class="text-uppercase tracking-widest text-white-50 x-small d-block mb-3 fw-bold">Ewiges Duell</small>
-                    <div class="d-flex justify-content-center align-items-start w-100 gap-1 gap-md-3" id="dashboardDuellContainer" style="overflow: hidden;">
-                        <!-- Injected via JS -->
-                    </div>
-                    
-                    <div class="mt-4 pt-3 border-top border-secondary border-opacity-25 w-100">
-                        <canvas id="ewigesDuellChart" style="max-height: 150px; width: 100%;"></canvas>
-                    </div>
-                </div>
-
-                <button class="btn btn-primary w-100 btn-xl rounded-4 fw-bold shadow-lg mb-5" onclick="switchTab('collection')">
-                    🕹️ SPIEL AUSWÄHLEN & STARTEN
-                </button>
-
-                <div id="dailyPhotoContainer" class="mb-5 d-none animate-fade-in">
-                    <h5 class="fw-bold mb-3">Bild des Tages 📸</h5>
-                    <div class="rounded-4 overflow-hidden position-relative shadow" style="border: 1px solid var(--surface-border);">
-                        <img id="dailyPhotoImg" src="" class="w-100" style="height: 250px; object-fit: cover;">
-                        <div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
-                            <span id="dailyPhotoGame" class="fw-bold text-white d-block"></span>
-                            <small id="dailyPhotoDate" class="text-white-50 x-small"></small>
-                        </div>
-                    </div>
-                </div>
-
-                <h5 class="fw-bold mb-3">Highlights 🏆</h5>
-                <div id="dashboardHighlights">
-                    <!-- Highlights rendered via JS -->
-                </div>
-                <div class="mb-5"></div>
-            </div>
-        </section>
-
-        <!-- COLLECTION TAB -->
-        <section id="tab-collection" class="app-tab">
-            <div class="d-flex justify-content-between align-items-center mb-2 animate-fade-in">
-                <h3 class="fw-bold m-0">Sammlung</h3>
-                <button class="btn btn-primary rounded-pill btn-sm px-3 fw-bold shadow-sm" onclick="toggleSearch()">+ Hinzufügen</button>
-            </div>
-            
-            <div class="btn-group w-100 mb-4 animate-fade-in shadow-sm" role="group">
-                <input type="radio" class="btn-check" name="collectionTab" id="btn-col-games" autocomplete="off" checked onclick="switchCollectionTab('games')">
-                <label class="btn btn-outline-secondary text-white border-secondary border-opacity-50" for="btn-col-games">Meine Spiele</label>
-
-                <input type="radio" class="btn-check" name="collectionTab" id="btn-col-wish" autocomplete="off" onclick="switchCollectionTab('wishlist')">
-                <label class="btn btn-outline-secondary text-white border-secondary border-opacity-50" for="btn-col-wish">Wunschliste</label>
-            </div>
-
-            <div id="collectionMainContainer">
-                <div class="search-bar mb-3 animate-fade-in">
-                    <input type="text" id="collectionFilter" class="form-control bg-dark text-white rounded-pill border-secondary border-opacity-50 shadow-sm px-4 py-3" placeholder="In deiner Sammlung suchen..." onkeyup="filterCollection()">
-                </div>
-                <div id="collectionNotFound" class="d-none text-center p-3 mb-4 rounded-4" style="background: rgba(255,255,255,0.05); border: 1px dashed var(--surface-border);">
-                    <p class="text-muted mb-3 small">Dieses Spiel ist noch nicht in deiner Sammlung.</p>
-                    <button class="btn btn-outline-primary rounded-pill btn-sm fw-bold" onclick="searchMissingGame()">Auf BGG suchen</button>
-                </div>
-                <div id="collectionList" class="accordion accordion-flush mb-5 animate-fade-in" style="--bs-accordion-bg: transparent; --bs-accordion-color: white; --bs-accordion-btn-color: white;"></div>
-            </div>
-
-            <div id="wishlistMainContainer" class="d-none animate-fade-in">
-                <p class="text-white-50 small mb-3">Spiele, die du auf dem Radar hast. Klicke auf ein Spiel, um es in deine Sammlung zu übernehmen!</p>
-                <div id="wishlistList" class="list-group list-group-custom mb-5"></div>
-            </div>
-            
-            <div class="collapse mb-4" id="searchCol">
-                <div class="input-group shadow-sm rounded-4 overflow-hidden">
-                    <input type="text" id="searchInput" class="form-control border-0 px-4 py-3" placeholder="Auf BGG suchen...">
-                    <button class="btn btn-primary px-4 fw-bold" onclick="searchBGG()">🔍</button>
-                </div>
-                <div id="searchResults" class="mt-3"></div>
-            </div>
-        </section>
-
-        <!-- HISTORY TAB -->
-        <section id="tab-history" class="app-tab">
-            <h3 class="fw-bold mb-4 animate-fade-in">Verlauf</h3>
-            <div class="search-bar mb-4 animate-fade-in">
-                <input type="text" id="historyFilter" class="form-control bg-dark text-white rounded-pill border-secondary border-opacity-50 shadow-sm px-4 py-3 mb-3" placeholder="Nach Spiel oder Spieler filtern..." onkeyup="filterHistory()">
-                <div class="d-flex justify-content-between align-items-center gap-2 px-1">
-                    <small class="text-white-50 fw-bold tracking-wider x-small text-uppercase">Von:</small>
-                    <input type="date" id="historyDateFrom" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50 rounded-pill" style="color-scheme: dark;" onchange="filterHistory()">
-                    <small class="text-white-50 fw-bold tracking-wider x-small text-uppercase">Bis:</small>
-                    <input type="date" id="historyDateTo" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50 rounded-pill" style="color-scheme: dark;" onchange="filterHistory()">
-                </div>
-            </div>
-            <div id="historyList" class="list-group list-group-custom mb-5 animate-fade-in"></div>
-        </section>
-
-        <!-- STATS TAB -->
-        <section id="tab-stats" class="app-tab">
-            <h3 class="fw-bold mb-4 animate-fade-in">Statistiken</h3>
-            <div id="statsContent" class="mb-5 animate-fade-in">
-                <!-- Injected via JS -->
-            </div>
-        </section>
-    </main>
-
-    <!-- MINI PLAYER -->
-    <div id="miniPlayer" class="mini-player d-none" onclick="openActiveGame()">
-        <div class="d-flex align-items-center">
-            <img id="miniPlayerImg" src="https://via.placeholder.com/42?text=🎲" alt="Game Cover">
-            <div>
-                <span class="fw-bold small d-block" id="miniPlayerGameName">-</span>
-                <span class="text-info x-small fw-bold" id="miniPlayerTimer" style="font-family: monospace; font-size: 0.75rem;">00:00:00</span>
-            </div>
-            <button class="btn btn-sm btn-outline-warning rounded-pill ms-3 fw-bold px-2 py-0" id="btnPauseMini" onclick="togglePauseTimer(event)">⏸</button>
-        </div>
-        <span class="badge bg-primary rounded-pill px-3 py-2 small shadow-sm">ÖFFNEN</span>
-    </div>
-
-    <!-- BOTTOM NAV -->
-    <nav class="bottom-nav">
-        <a href="javascript:void(0)" class="nav-item active" id="nav-home" onclick="switchTab('home')"><span class="icon">📊</span><span class="label">Dashboard</span></a>
-        <a href="javascript:void(0)" class="nav-item" id="nav-collection" onclick="switchTab('collection')"><span class="icon">📚</span><span class="label">Sammlung</span></a>
-        <a href="javascript:void(0)" class="nav-item" id="nav-history" onclick="switchTab('history')"><span class="icon">📜</span><span class="label">Verlauf</span></a>
-        <a href="javascript:void(0)" class="nav-item" id="nav-stats" onclick="switchTab('stats')"><span class="icon">🏆</span><span class="label">Stats</span></a>
-    </nav>
+<ul class="dropdown-menu dropdown-menu-dark shadow-lg border-0 rounded-3 mt-2" id="groupSwitcherItems" style="background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px);">
+<!-- Injected via JS -->
+</ul>
 </div>
-
+<span class="fw-bold tracking-widest text-white small d-none d-sm-inline" style="letter-spacing: 3px; font-size: 0.8rem;">✨ GAMELOG PRO</span>
+<!-- User Dropdown / Logout -->
+<div class="dropdown">
+<button aria-expanded="false" class="btn btn-sm btn-link text-white text-decoration-none dropdown-toggle px-2" data-bs-toggle="dropdown" type="button">
+<span class="small fw-bold" id="headerUsername">User</span>
+</button>
+<ul class="dropdown-menu dropdown-menu-end dropdown-menu-dark border-0 rounded-3 mt-2" style="background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px);">
+<li><a class="dropdown-item small fw-bold text-white" data-i18n="btn_profile_settings" href="#" onclick="openProfileSettings(); return false;">⚙️ Konto verwalten</a></li>
+<li><a class="dropdown-item small text-white-50" data-i18n="label_privacy" href="/datenschutz.html" target="_blank">📜 Datenschutz</a></li>
+<li><hr class="dropdown-divider border-secondary border-opacity-25"/></li>
+<li><a class="dropdown-item text-danger small fw-bold" data-i18n="btn_logout_dropdown" href="#" onclick="Auth.logout(); return false;">🚪 Ausloggen</a></li>
+<li><hr class="dropdown-divider border-secondary border-opacity-25"/></li>
+<li><a class="dropdown-item text-danger small fw-bold" data-i18n="btn_delete_account" href="#" onclick="confirmAccountDeletion(); return false;">⚠️ Konto löschen</a></li>
+</ul>
+</div>
+</header>
+<main class="content-area container pt-4">
+<!-- DASHBOARD TAB -->
+<section class="app-tab active" id="tab-home">
+<div class="animate-fade-in">
+<h3 class="fw-bold mb-1" data-i18n="title_welcome">Hey ihr! 👋</h3>
+<p class="text-muted small mb-4" data-i18n="subtitle_welcome">Bereit für das nächste Duell?</p>
+<div class="premium-scoreboard text-center mb-4">
+<small class="text-uppercase tracking-widest text-white-50 x-small d-block mb-3 fw-bold" data-i18n="label_eternal_duel">Ewiges Duell</small>
+<div class="d-flex justify-content-center align-items-start w-100 gap-1 gap-md-3" id="dashboardDuellContainer" style="overflow: hidden;">
+<!-- Injected via JS -->
+</div>
+<div class="mt-4 pt-3 border-top border-secondary border-opacity-25 w-100">
+<canvas id="ewigesDuellChart" style="max-height: 150px; width: 100%;"></canvas>
+</div>
+</div>
+<button class="btn btn-primary w-100 btn-xl rounded-4 fw-bold shadow-lg mb-5" data-i18n="btn_select_and_start" onclick="switchTab('collection')">
+                    🕹️ SPIEL AUSWÄHLEN &amp; STARTEN
+                </button>
+<div class="mb-5 d-none animate-fade-in" id="dailyPhotoContainer">
+<h5 class="fw-bold mb-3" data-i18n="title_daily_photo">Bild des Tages 📸</h5>
+<div class="rounded-4 overflow-hidden position-relative shadow" style="border: 1px solid var(--surface-border);">
+<img class="w-100" id="dailyPhotoImg" src="" style="height: 250px; object-fit: cover;"/>
+<div class="position-absolute bottom-0 start-0 w-100 p-3" style="background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);">
+<span class="fw-bold text-white d-block" id="dailyPhotoGame"></span>
+<small class="text-white-50 x-small" id="dailyPhotoDate"></small>
+</div>
+</div>
+</div>
+<h5 class="fw-bold mb-3" data-i18n="title_highlights_label">Highlights 🏆</h5>
+<div id="dashboardHighlights">
+<!-- Highlights rendered via JS -->
+</div>
+<div class="mb-5"></div>
+</div>
+</section>
+<!-- COLLECTION TAB -->
+<section class="app-tab" id="tab-collection">
+<div class="d-flex justify-content-between align-items-center mb-2 animate-fade-in">
+<h3 class="fw-bold m-0" data-i18n="nav_collection">Sammlung</h3>
+<button class="btn btn-primary rounded-pill btn-sm px-3 fw-bold shadow-sm" data-i18n="btn_add_game" onclick="toggleSearch()">+ Hinzufügen</button>
+</div>
+<div class="btn-group w-100 mb-4 animate-fade-in shadow-sm" role="group">
+<input autocomplete="off" checked="" class="btn-check" id="btn-col-games" name="collectionTab" onclick="switchCollectionTab('games')" type="radio"/>
+<label class="btn btn-outline-secondary text-white border-secondary border-opacity-50" data-i18n="label_my_games" for="btn-col-games">Meine Spiele</label>
+<input autocomplete="off" class="btn-check" id="btn-col-wish" name="collectionTab" onclick="switchCollectionTab('wishlist')" type="radio"/>
+<label class="btn btn-outline-secondary text-white border-secondary border-opacity-50" data-i18n="label_wishlist_tab" for="btn-col-wish">Wunschliste</label>
+</div>
+<div id="collectionMainContainer">
+<div class="search-bar mb-3 animate-fade-in">
+<input class="form-control bg-dark text-white rounded-pill border-secondary border-opacity-50 shadow-sm px-4 py-3" data-i18n-placeholder="placeholder_search_collection" id="collectionFilter" onkeyup="filterCollection()" placeholder="In deiner Sammlung suchen..." type="text"/>
+</div>
+<div class="d-none text-center p-3 mb-4 rounded-4" id="collectionNotFound" style="background: rgba(255,255,255,0.05); border: 1px dashed var(--surface-border);">
+<p class="text-muted mb-3 small" data-i18n="msg_game_not_in_collection">Dieses Spiel ist noch nicht in deiner Sammlung.</p>
+<button class="btn btn-outline-primary rounded-pill btn-sm fw-bold" data-i18n="btn_search_bgg" onclick="searchMissingGame()">Auf BGG suchen</button>
+</div>
+<div class="accordion accordion-flush mb-5 animate-fade-in" id="collectionList" style="--bs-accordion-bg: transparent; --bs-accordion-color: white; --bs-accordion-btn-color: white;"></div>
+</div>
+<div class="d-none animate-fade-in" id="wishlistMainContainer">
+<p class="text-white-50 small mb-3" data-i18n="msg_wishlist_intro">Spiele, die du auf dem Radar hast. Klicke auf ein Spiel, um es in deine Sammlung zu übernehmen!</p>
+<div class="list-group list-group-custom mb-5" id="wishlistList"></div>
+</div>
+<div class="collapse mb-4" id="searchCol">
+<div class="input-group shadow-sm rounded-4 overflow-hidden">
+<input class="form-control border-0 px-4 py-3" data-i18n-placeholder="placeholder_search_bgg" id="searchInput" placeholder="Auf BGG suchen..." type="text"/>
+<button class="btn btn-primary px-4 fw-bold" onclick="searchBGG()">🔍</button>
+</div>
+<div class="mt-3" id="searchResults"></div>
+</div>
+</section>
+<!-- HISTORY TAB -->
+<section class="app-tab" id="tab-history">
+<h3 class="fw-bold mb-4 animate-fade-in" data-i18n="title_history_header">Verlauf</h3>
+<div class="search-bar mb-4 animate-fade-in">
+<input class="form-control bg-dark text-white rounded-pill border-secondary border-opacity-50 shadow-sm px-4 py-3 mb-3" data-i18n-placeholder="history_filter_placeholder" id="historyFilter" onkeyup="filterHistory()" placeholder="Nach Spiel oder Spieler filtern..." type="text"/>
+<div class="d-flex justify-content-between align-items-center gap-2 px-1">
+<small class="text-white-50 fw-bold tracking-wider x-small text-uppercase" data-i18n="label_from">Von:</small>
+<input class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50 rounded-pill" id="historyDateFrom" onchange="filterHistory()" style="color-scheme: dark;" type="date"/>
+<small class="text-white-50 fw-bold tracking-wider x-small text-uppercase" data-i18n="label_to">Bis:</small>
+<input class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50 rounded-pill" id="historyDateTo" onchange="filterHistory()" style="color-scheme: dark;" type="date"/>
+</div>
+</div>
+<div class="list-group list-group-custom mb-5 animate-fade-in" id="historyList"></div>
+</section>
+<!-- STATS TAB -->
+<section class="app-tab" id="tab-stats">
+<h3 class="fw-bold mb-4 animate-fade-in" data-i18n="title_stats_header">Statistiken</h3>
+<div class="mb-5 animate-fade-in" id="statsContent">
+<!-- Injected via JS -->
+</div>
+</section>
+</main>
+<!-- MINI PLAYER -->
+<div class="mini-player d-none" id="miniPlayer" onclick="openActiveGame()">
+<div class="d-flex align-items-center">
+<img alt="Game Cover" id="miniPlayerImg" src="https://via.placeholder.com/42?text=🎲"/>
+<div>
+<span class="fw-bold small d-block" id="miniPlayerGameName">-</span>
+<span class="text-info x-small fw-bold" id="miniPlayerTimer" style="font-family: monospace; font-size: 0.75rem;">00:00:00</span>
+</div>
+<button class="btn btn-sm btn-outline-warning rounded-pill ms-3 fw-bold px-2 py-0" id="btnPauseMini" onclick="togglePauseTimer(event)">⏸</button>
+</div>
+<span class="badge bg-primary rounded-pill px-3 py-2 small shadow-sm" data-i18n="btn_open_game">ÖFFNEN</span>
+</div>
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+<a class="nav-item active" href="javascript:void(0)" id="nav-home" onclick="switchTab('home')"><span class="icon">📊</span><span class="label" data-i18n="nav_dashboard">Dashboard</span></a>
+<a class="nav-item" href="javascript:void(0)" id="nav-collection" onclick="switchTab('collection')"><span class="icon">📚</span><span class="label" data-i18n="nav_collection">Sammlung</span></a>
+<a class="nav-item" href="javascript:void(0)" id="nav-history" onclick="switchTab('history')"><span class="icon">📜</span><span class="label" data-i18n="nav_history">Verlauf</span></a>
+<a class="nav-item" href="javascript:void(0)" id="nav-stats" onclick="switchTab('stats')"><span class="icon">🏆</span><span class="label" data-i18n="nav_stats">Stats</span></a>
+</nav>
+</div>
 <!-- ─── TOAST NOTIFICATION ──────────────────────────────────────────────────── -->
 <div class="position-fixed bottom-0 start-50 translate-middle-x p-3" style="z-index: 1060; bottom: 90px !important;">
-    <div id="appToast" class="toast align-items-center text-white bg-dark border-0 rounded-3 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="d-flex">
-            <div class="toast-body fw-bold" id="appToastMsg">Aktion erfolgreich!</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-        </div>
-    </div>
+<div aria-atomic="true" aria-live="assertive" class="toast align-items-center text-white bg-dark border-0 rounded-3 shadow-lg" id="appToast" role="alert">
+<div class="d-flex">
+<div class="toast-body fw-bold" data-i18n="toast_action_success" id="appToastMsg">Aktion erfolgreich!</div>
+<button aria-label="Close" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" type="button"></button>
 </div>
-
+</div>
+</div>
 <!-- ================= MODALS ================= -->
-
 <!-- GROUP MANAGE MODAL -->
-<div class="modal fade" id="groupManageModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-1 mt-2">
-                <h5 class="modal-title fw-bold fs-4 text-white">Gruppe verwalten</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body pt-0 pb-4">
-                <h3 class="fw-bold text-primary mb-3" id="manageGroupName">-</h3>
-                
-                <div class="text-center p-3 mb-4 rounded-4" style="background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border);">
-                    <small class="text-white-50 x-small fw-bold text-uppercase tracking-wider d-block mb-1">Einladungs-Code</small>
-                    <h2 class="fw-bold text-white tracking-widest mb-2" id="groupInviteCode">------</h2>
-                    <div class="d-flex justify-content-center gap-2">
-                        <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="copyInviteCode()">📋 Kopieren</button>
-                        <button class="btn btn-sm btn-outline-warning rounded-pill px-3 d-none" id="manageIsAdmin" onclick="regenerateCode()">🔄 Neuer Code</button>
-                    </div>
-                </div>
-
-                <h6 class="fw-bold small text-light text-uppercase mb-2 px-1 tracking-wider">Mitglieder (Max. 4)</h6>
-                <div id="manageMemberList" class="mb-3"></div>
-
-                <h6 class="fw-bold small text-light text-uppercase mb-2 px-1 tracking-wider mt-3">Gäste</h6>
-                <div class="d-flex gap-2 mb-3">
-                    <input type="text" id="manageNewGuestNameInput" class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50" placeholder="Gastname...">
-                    <button class="btn btn-sm btn-primary rounded-3 px-3 fw-bold" onclick="addGuestFromManage()" style="font-size:0.75rem;">Hinzufügen</button>
-                </div>
-                <div id="manageGuestList" class="mb-4"></div>
-            </div>
-        </div>
-    </div>
+<div aria-hidden="true" class="modal fade" id="groupManageModal" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+<div class="modal-content">
+<div class="modal-header border-0 pb-1 mt-2">
+<h5 class="modal-title fw-bold fs-4 text-white" data-i18n="title_manage_group">Gruppe verwalten</h5>
+<button class="btn-close" data-bs-dismiss="modal" type="button"></button>
 </div>
-
+<div class="modal-body pt-0 pb-4">
+<h3 class="fw-bold text-primary mb-3" id="manageGroupName">-</h3>
+<div class="text-center p-3 mb-4 rounded-4" style="background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border);">
+<small class="text-white-50 x-small fw-bold text-uppercase tracking-wider d-block mb-1" data-i18n="label_invite_code">Einladungs-Code</small>
+<h2 class="fw-bold text-white tracking-widest mb-2" id="groupInviteCode">------</h2>
+<div class="d-flex justify-content-center gap-2">
+<button class="btn btn-sm btn-outline-primary rounded-pill px-3" data-i18n="btn_copy" onclick="copyInviteCode()">📋 Kopieren</button>
+<button class="btn btn-sm btn-outline-warning rounded-pill px-3 d-none" data-i18n="btn_new_code" id="manageIsAdmin" onclick="regenerateCode()">🔄 Neuer Code</button>
+</div>
+</div>
+<h6 class="fw-bold small text-light text-uppercase mb-2 px-1 tracking-wider" data-i18n="title_members">Mitglieder (Max. 4)</h6>
+<div class="mb-3" id="manageMemberList"></div>
+<h6 class="fw-bold small text-light text-uppercase mb-2 px-1 tracking-wider mt-3" data-i18n="title_guests">Gäste</h6>
+<div class="d-flex gap-2 mb-3">
+<input class="form-control form-control-sm bg-dark text-white border-secondary border-opacity-50" data-i18n-placeholder="placeholder_guest_name" id="manageNewGuestNameInput" placeholder="Gastname..." type="text"/>
+<button class="btn btn-sm btn-primary rounded-3 px-3 fw-bold" data-i18n="btn_add" onclick="addGuestFromManage()" style="font-size:0.75rem;">Hinzufügen</button>
+</div>
+<div class="mb-4" id="manageGuestList"></div>
+</div>
+</div>
+</div>
+</div>
 <!-- CREATE GROUP MODAL (from dropdown switcher) -->
-<div class="modal fade" id="createGroupModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-1 mt-2">
-                <h5 class="modal-title fw-bold fs-4 text-white">Neue Gruppe erstellen</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body pt-0 pb-4">
-                <div class="mb-3">
-                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Gruppenname</label>
-                    <input type="text" id="newGroupName" class="form-control rounded-3 py-2 px-3" placeholder="z.B. Mittwochsrunde">
-                </div>
-                <div class="mb-4">
-                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Dein Anzeigename in der Gruppe</label>
-                    <input type="text" id="newGroupDisplayName" class="form-control rounded-3 py-2 px-3" placeholder="Dein Name">
-                </div>
-                <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="createGroupError"></div>
-                <button class="btn btn-primary w-100 py-3 rounded-3 fw-bold" onclick="createNewGroupFromModal()">Gruppe erstellen</button>
-            </div>
-        </div>
-    </div>
+<div aria-hidden="true" class="modal fade" id="createGroupModal" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered">
+<div class="modal-content">
+<div class="modal-header border-0 pb-1 mt-2">
+<h5 class="modal-title fw-bold fs-4 text-white" data-i18n="title_create_group">Neue Gruppe erstellen</h5>
+<button class="btn-close" data-bs-dismiss="modal" type="button"></button>
 </div>
-
+<div class="modal-body pt-0 pb-4">
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_group_name">Gruppenname</label>
+<input class="form-control rounded-3 py-2 px-3" data-i18n-placeholder="label_group_name_placeholder" id="newGroupName" placeholder="z.B. Mittwochsrunde" type="text"/>
+</div>
+<div class="mb-4">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_display_name">Dein Anzeigename in der Gruppe</label>
+<input class="form-control rounded-3 py-2 px-3" data-i18n-placeholder="label_dein_name" id="newGroupDisplayName" placeholder="Dein Name" type="text"/>
+</div>
+<div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="createGroupError"></div>
+<button class="btn btn-primary w-100 py-3 rounded-3 fw-bold" data-i18n="wizard_btn_create" onclick="createNewGroupFromModal()">Gruppe erstellen</button>
+</div>
+</div>
+</div>
+</div>
 <!-- BGG PREVIEW MODAL -->
-<div class="modal fade" id="bggPreviewModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div id="previewCoverImage" class="bg-dark text-center"></div>
-            <div class="modal-header border-0 pb-0 mt-2">
-                <h5 class="modal-title fw-bold fs-4" id="previewGameName">Lade...</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body pt-2 pb-4 text-center">
-                <div id="previewBadges" class="d-flex justify-content-center flex-wrap gap-2 mb-4"></div>
-                <div class="d-flex flex-column gap-2">
-                    <button class="btn btn-success w-100 btn-xl rounded-4 fw-bold shadow" id="confirmAddBtn">ZUR SAMMLUNG HINZUFÜGEN</button>
-                    <button class="btn btn-outline-light w-100 btn-xl rounded-4 fw-bold" id="confirmWishlistBtn" style="border-color: var(--surface-border); background: rgba(255,255,255,0.05);">AUF DIE WUNSCHLISTE</button>
-                </div>
-            </div>
-        </div>
-    </div>
+<div aria-hidden="true" class="modal fade" id="bggPreviewModal" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+<div class="modal-content">
+<div class="bg-dark text-center" id="previewCoverImage"></div>
+<div class="modal-header border-0 pb-0 mt-2">
+<h5 class="modal-title fw-bold fs-4" data-i18n="title_loading" id="previewGameName">Lade...</h5>
+<button class="btn-close" data-bs-dismiss="modal" type="button"></button>
 </div>
-
+<div class="modal-body pt-2 pb-4 text-center">
+<div class="d-flex justify-content-center flex-wrap gap-2 mb-4" id="previewBadges"></div>
+<div class="d-flex flex-column gap-2">
+<button class="btn btn-success w-100 btn-xl rounded-4 fw-bold shadow" data-i18n="btn_add_to_collection_cap" id="confirmAddBtn">ZUR SAMMLUNG HINZUFÜGEN</button>
+<button class="btn btn-outline-light w-100 btn-xl rounded-4 fw-bold" data-i18n="btn_add_to_wishlist_cap" id="confirmWishlistBtn" style="border-color: var(--surface-border); background: rgba(255,255,255,0.05);">AUF DIE WUNSCHLISTE</button>
+</div>
+</div>
+</div>
+</div>
+</div>
 <!-- GAME PROFILE MODAL -->
-<div class="modal fade" id="gameProfileModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div id="profileCoverImage" class="bg-dark text-center d-none"></div>
-            <div class="modal-header border-0 pb-1 mt-2">
-                <h5 class="modal-title fw-bold fs-4" id="profileGameName">Spiel Profil</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body pt-0 pb-4">
-                <div id="profileBggInfo" class="mb-3"></div>
-                
-                <div class="d-flex justify-content-center align-items-center mb-4 mx-0 py-3 rounded-4 shadow-sm flex-wrap gap-2" id="profileWinsContainer" style="background: rgba(0,0,0,0.4); border: 1px solid var(--surface-border);">
-                    <!-- Injected via JS -->
-                </div>
-
-                <!-- Spieler-Auswahl für die Spielrunde -->
-                <div class="mb-4 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);">
-                    <label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold px-1 mb-2">Wer spielt mit?</label>
-                    <div id="profilePlayersSelectContainer" class="d-flex flex-wrap gap-2">
-                        <!-- Injected via JS -->
-                    </div>
-                </div>
-
-                <button class="btn btn-primary w-100 btn-xl rounded-4 fw-bold shadow-lg mb-3" id="startGameBtn">🚀 PARTIE STARTEN</button>
-                <button class="btn btn-outline-light w-100 rounded-pill fw-bold mb-4 btn-sm" id="toggleWinCondBtn" style="border-color: var(--surface-border); background: rgba(255,255,255,0.05);">🔄 Regel: Höchste Punkte gewinnen</button>
-
-                <h6 class="fw-bold small text-light text-uppercase mb-3 px-1 tracking-wider">Erweiterte Stats & Rekorde</h6>
-                <div id="profileAdvancedStats" class="list-group list-group-flush mb-4 small">
-                    <!-- Injected via JS -->
-                </div>
-
-                <h6 class="fw-bold small text-light text-uppercase mb-2 px-1 tracking-wider">Letzte Duelle</h6>
-                <div id="profileHistoryList" class="list-group list-group-flush mb-4 small"></div>
-                
-                <div class="mb-4">
-                    <label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold px-1">Ordner / Kategorie</label>
-                    <div class="input-group input-group-sm">
-                        <select class="form-select bg-dark text-white border-secondary border-opacity-50" id="profileCategorySelect"></select>
-                        <button class="btn btn-outline-light bg-dark bg-opacity-50" type="button" id="changeCategoryBtn">Verschieben</button>
-                    </div>
-                </div>
-                
-                <button class="btn btn-outline-danger w-100 rounded-pill fw-bold" id="deleteGameBtn">🗑️ Spiel löschen</button>
-            </div>
-        </div>
-    </div>
+<div aria-hidden="true" class="modal fade" id="gameProfileModal" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+<div class="modal-content">
+<div class="bg-dark text-center d-none" id="profileCoverImage"></div>
+<div class="modal-header border-0 pb-1 mt-2">
+<h5 class="modal-title fw-bold fs-4" data-i18n="title_game_profile" id="profileGameName">Spiel Profil</h5>
+<button class="btn-close" data-bs-dismiss="modal" type="button"></button>
 </div>
-
+<div class="modal-body pt-0 pb-4">
+<div class="mb-3" id="profileBggInfo"></div>
+<div class="d-flex justify-content-center align-items-center mb-4 mx-0 py-3 rounded-4 shadow-sm flex-wrap gap-2" id="profileWinsContainer" style="background: rgba(0,0,0,0.4); border: 1px solid var(--surface-border);">
+<!-- Injected via JS -->
+</div>
+<!-- Spieler-Auswahl für die Spielrunde -->
+<div class="mb-4 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);">
+<label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold px-1 mb-2" data-i18n="label_play_with">Wer spielt mit?</label>
+<div class="d-flex flex-wrap gap-2" id="profilePlayersSelectContainer">
+<!-- Injected via JS -->
+</div>
+</div>
+<button class="btn btn-primary w-100 btn-xl rounded-4 fw-bold shadow-lg mb-3" data-i18n="btn_start_session" id="startGameBtn">🚀 PARTIE STARTEN</button>
+<button class="btn btn-outline-light w-100 rounded-pill fw-bold mb-4 btn-sm" data-i18n="btn_rule_highest_wins" id="toggleWinCondBtn" style="border-color: var(--surface-border); background: rgba(255,255,255,0.05);">🔄 Regel: Höchste Punkte gewinnen</button>
+<h6 class="fw-bold small text-light text-uppercase mb-3 px-1 tracking-wider" data-i18n="title_advanced_stats">Erweiterte Stats &amp; Rekorde</h6>
+<div class="list-group list-group-flush mb-4 small" id="profileAdvancedStats">
+<!-- Injected via JS -->
+</div>
+<h6 class="fw-bold small text-light text-uppercase mb-2 px-1 tracking-wider" data-i18n="title_last_duels">Letzte Duelle</h6>
+<div class="list-group list-group-flush mb-4 small" id="profileHistoryList"></div>
+<div class="mb-4">
+<label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold px-1" data-i18n="label_category">Ordner / Kategorie</label>
+<div class="input-group input-group-sm">
+<select class="form-select bg-dark text-white border-secondary border-opacity-50" id="profileCategorySelect"></select>
+<button class="btn btn-outline-light bg-dark bg-opacity-50" data-i18n="btn_move" id="changeCategoryBtn" type="button">Verschieben</button>
+</div>
+</div>
+<button class="btn btn-outline-danger w-100 rounded-pill fw-bold" data-i18n="btn_delete_game" id="deleteGameBtn">🗑️ Spiel löschen</button>
+</div>
+</div>
+</div>
+</div>
 <!-- ACTIVE GAME MODAL -->
-<div class="modal fade" id="activeGameModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0 mt-2 position-relative">
-                <div class="w-100 text-center">
-                    <span class="badge bg-primary bg-opacity-25 text-primary rounded-pill text-uppercase px-3 py-1 mb-1 border border-primary border-opacity-50" id="activeGameNameDisplay" style="font-size: 0.75rem;">Spielname</span>
-                    <div class="d-flex align-items-center justify-content-center gap-3 mt-1">
-                        <h3 class="fw-bold text-white mb-0" id="activeGameTimerDisplay" style="font-family: monospace; font-size: 1.8rem; text-shadow: 0 0 20px var(--primary-glow);">00:00:00</h3>
-                        <button class="btn btn-xs btn-outline-warning rounded-pill fw-bold px-3 py-0.5" id="btnPauseModal" onclick="togglePauseTimer()" style="font-size: 0.75rem;">⏸ PAUSE</button>
-                    </div>
-                </div>
-                <button type="button" class="btn position-absolute top-0 end-0 m-2 rounded-circle d-flex justify-content-center align-items-center" style="width: 32px; height: 32px; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); color: white;" data-bs-dismiss="modal" title="Minimieren">
-                    <span style="font-size: 0.9rem;">👇</span>
-                </button>
-            </div>
-            <div class="modal-body pt-2 pb-3">
-                <!-- VIEW 1: ACTIVE ROUND LOGGING -->
-                <div id="activeGamePlayView">
-                    <!-- Active Players Selector & Guest Row -->
-                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
-                        <div class="d-flex align-items-center gap-1 overflow-x-auto py-1" id="activePlayersToggleList" style="scrollbar-width: none; -ms-overflow-style: none;">
-                            <!-- Injected via JS -->
-                        </div>
-                        <div class="d-flex gap-1.5">
-                            <button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1 fw-bold" onclick="showAddGuestPrompt()" style="font-size: 0.75rem;">
+<div aria-hidden="true" class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="activeGameModal" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down modal-dialog-scrollable">
+<div class="modal-content">
+<div class="modal-header border-0 pb-0 mt-2 position-relative">
+<div class="w-100 text-center">
+<span class="badge bg-primary bg-opacity-25 text-primary rounded-pill text-uppercase px-3 py-1 mb-1 border border-primary border-opacity-50" id="activeGameNameDisplay" style="font-size: 0.75rem;">Spielname</span>
+<div class="d-flex align-items-center justify-content-center gap-3 mt-1">
+<h3 class="fw-bold text-white mb-0" id="activeGameTimerDisplay" style="font-family: monospace; font-size: 1.8rem; text-shadow: 0 0 20px var(--primary-glow);">00:00:00</h3>
+<button class="btn btn-xs btn-outline-warning rounded-pill fw-bold px-3 py-0.5" data-i18n="btn_pause" id="btnPauseModal" onclick="togglePauseTimer()" style="font-size: 0.75rem;">⏸ PAUSE</button>
+</div>
+</div>
+<button class="btn position-absolute top-0 end-0 m-2 rounded-circle d-flex justify-content-center align-items-center" data-bs-dismiss="modal" style="width: 32px; height: 32px; background: rgba(0,0,0,0.3); border: 1px solid var(--surface-border); color: white;" title="Minimieren" type="button">
+<span style="font-size: 0.9rem;">👇</span>
+</button>
+</div>
+<div class="modal-body pt-2 pb-3">
+<!-- VIEW 1: ACTIVE ROUND LOGGING -->
+<div id="activeGamePlayView">
+<!-- Active Players Selector & Guest Row -->
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+<div class="d-flex align-items-center gap-1 overflow-x-auto py-1" id="activePlayersToggleList" style="scrollbar-width: none; -ms-overflow-style: none;">
+<!-- Injected via JS -->
+</div>
+<div class="d-flex gap-1.5">
+<button class="btn btn-xs btn-outline-info rounded-pill px-2.5 py-1 fw-bold" data-i18n="btn_add_guest_timer" onclick="showAddGuestPrompt()" style="font-size: 0.75rem;">
                                 ➕ Gast
                             </button>
-                            <button class="btn btn-xs btn-outline-primary rounded-pill px-2.5 py-1 fw-bold" onclick="openTeamBuilder()" style="font-size: 0.75rem;">
+<button class="btn btn-xs btn-outline-primary rounded-pill px-2.5 py-1 fw-bold" data-i18n="btn_teams" onclick="openTeamBuilder()" style="font-size: 0.75rem;">
                                 👥 Teams
                             </button>
-                        </div>
-                    </div>
-
-                    <div class="active-scoreboard mb-3 d-flex align-items-center justify-content-center flex-wrap gap-2" id="activeScoreboardContainer">
-                        <!-- Injected via JS -->
-                    </div>
-
-                    <div class="d-flex gap-2 mb-3">
-                        <button class="btn btn-primary flex-grow-1 rounded-3 fw-bold py-2 shadow-sm" onclick="nextRound()" style="font-size: 0.9rem;">
+</div>
+</div>
+<div class="active-scoreboard mb-3 d-flex align-items-center justify-content-center flex-wrap gap-2" id="activeScoreboardContainer">
+<!-- Injected via JS -->
+</div>
+<div class="d-flex gap-2 mb-3">
+<button class="btn btn-primary flex-grow-1 rounded-3 fw-bold py-2 shadow-sm" data-i18n="btn_log_round" onclick="nextRound()" style="font-size: 0.9rem;">
                             🎯 RUNDE EINTRAGEN
                         </button>
-                        <button class="btn btn-outline-warning rounded-3 fw-bold px-3 py-2" onclick="showSaveView()" style="font-size: 0.9rem;">
+<button class="btn btn-outline-warning rounded-3 fw-bold px-3 py-2" data-i18n="btn_finish_game" onclick="showSaveView()" style="font-size: 0.9rem;">
                             🏁 BEENDEN
                         </button>
-                    </div>
-
-                    <div class="text-white-50 x-small text-uppercase tracking-wider fw-bold mb-1">Rundenverlauf</div>
-                    <div id="roundPreview" class="d-flex flex-row overflow-x-auto gap-2 py-1 px-1" style="scrollbar-width: thin; min-height: 40px; white-space: nowrap;">
-                        <!-- Injected via JS -->
-                    </div>
-                </div>
-
-                <!-- VIEW 2: GAME OVER / SAVE DETAILS -->
-                <div id="activeGameSaveView" class="d-none">
-                    <h5 class="fw-bold text-center text-white mb-3">Spiel beenden 🏆</h5>
-                    
-                    <div id="activeFinalTotalsContainer" class="mb-3 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);">
-                        <!-- Injected via JS -->
-                    </div>
-
-                    <div class="p-3 mb-4 rounded-4" style="background: rgba(0,0,0,0.4); border: 1px solid var(--surface-border);">
-                        <label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold mb-2">Wer hat gewonnen?</label>
-                        <div id="winnerSelectContainer" class="d-flex flex-wrap gap-2 mb-3">
-                            <!-- Checkboxes injected via JS -->
-                        </div>
-                        <div class="d-flex gap-2">
-                            <button class="btn btn-dark flex-grow-1 rounded-3 fw-bold border-0 py-2 small" style="background: rgba(255,255,255,0.1); font-size: 0.85rem;" onclick="document.getElementById('photo').click()">📸 Foto hinzufügen</button>
-                            <button class="btn btn-dark flex-grow-1 rounded-3 fw-bold border-0 py-2 small" style="background: rgba(255,255,255,0.1); font-size: 0.85rem;" onclick="toggleComment()">📝 Notiz</button>
-                        </div>
-                        <input type="file" id="photo" class="d-none" accept="image/*" capture="camera">
-                        <textarea id="comment" class="form-control border-0 mt-3 d-none rounded-3 bg-dark text-white" rows="2" placeholder="Besonderer Moment?"></textarea>
-                    </div>
-
-                    <div class="d-flex gap-2">
-                        <button class="btn btn-outline-light rounded-3 fw-bold py-2 small px-3" onclick="showPlayView()" style="font-size: 0.85rem;">⬅ ZURÜCK</button>
-                        <button class="btn btn-outline-danger rounded-3 fw-bold py-2 small px-2" onclick="confirmResetTimer()" style="font-size: 0.85rem;">❌ ABBRECHEN</button>
-                        <button class="btn btn-success flex-grow-1 rounded-3 fw-bold py-2 shadow-lg" onclick="saveSession()" style="font-size: 0.85rem;">💾 SPEICHERN</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
-
+<div class="text-white-50 x-small text-uppercase tracking-wider fw-bold mb-1" data-i18n="title_round_history">Rundenverlauf</div>
+<div class="d-flex flex-row overflow-x-auto gap-2 py-1 px-1" id="roundPreview" style="scrollbar-width: thin; min-height: 40px; white-space: nowrap;">
+<!-- Injected via JS -->
+</div>
+</div>
+<!-- VIEW 2: GAME OVER / SAVE DETAILS -->
+<div class="d-none" id="activeGameSaveView">
+<h5 class="fw-bold text-center text-white mb-3" data-i18n="title_end_game">Spiel beenden 🏆</h5>
+<div class="mb-3 p-3 rounded-4" id="activeFinalTotalsContainer" style="background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);">
+<!-- Injected via JS -->
+</div>
+<div class="p-3 mb-4 rounded-4" style="background: rgba(0,0,0,0.4); border: 1px solid var(--surface-border);">
+<label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold mb-2" data-i18n="label_who_won">Wer hat gewonnen?</label>
+<div class="d-flex flex-wrap gap-2 mb-3" id="winnerSelectContainer">
+<!-- Checkboxes injected via JS -->
+</div>
+<div class="d-flex gap-2">
+<button class="btn btn-dark flex-grow-1 rounded-3 fw-bold border-0 py-2 small" data-i18n="btn_add_photo" onclick="document.getElementById('photo').click()" style="background: rgba(255,255,255,0.1); font-size: 0.85rem;">📸 Foto hinzufügen</button>
+<button class="btn btn-dark flex-grow-1 rounded-3 fw-bold border-0 py-2 small" data-i18n="btn_add_note" onclick="toggleComment()" style="background: rgba(255,255,255,0.1); font-size: 0.85rem;">📝 Notiz</button>
+</div>
+<input accept="image/*" capture="camera" class="d-none" id="photo" type="file"/>
+<textarea class="form-control border-0 mt-3 d-none rounded-3 bg-dark text-white" data-i18n-placeholder="placeholder_note" id="comment" placeholder="Besonderer Moment?" rows="2"></textarea>
+<textarea class="form-control border-0 mt-3 d-none rounded-3 bg-dark text-white" data-i18n-placeholder="placeholder_note" id="comment" placeholder="Besonderer Moment?" rows="2"></textarea>
+</div>
+<div class="d-flex gap-2">
+<button class="btn btn-outline-light rounded-3 fw-bold py-2 small px-3" data-i18n="btn_back" onclick="showPlayView()" style="font-size: 0.85rem;">⬅ ZURÜCK</button>
+<button class="btn btn-outline-danger rounded-3 fw-bold py-2 small px-2" data-i18n="btn_cancel" onclick="confirmResetTimer()" style="font-size: 0.85rem;">❌ ABBRECHEN</button>
+<button class="btn btn-success flex-grow-1 rounded-3 fw-bold py-2 shadow-lg" data-i18n="btn_save" onclick="saveSession()" style="font-size: 0.85rem;">💾 SPEICHERN</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 <!-- SESSION DETAIL MODAL -->
-<div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div id="modalImageContainer" class="bg-dark text-center"></div>
-            <div class="modal-header border-0 align-items-start">
-                <div>
-                    <h5 class="modal-title fw-bold mb-0" id="modalGameName">Details</h5>
-                    <small id="modalFullDate" class="text-muted small"></small>
-                </div>
-                <div class="d-flex gap-2 align-items-center">
-                    <button type="button" class="btn btn-sm btn-outline-light rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" id="editSessionBtn" title="Bearbeiten">✏️</button>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-            </div>
-            <div class="modal-body pt-0 pb-4">
-                <div class="d-flex gap-2 mb-4">
-                    <span id="modalDuration" class="badge rounded-pill bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 px-3 py-2"></span>
-                    <span id="modalStartTime" class="badge rounded-pill bg-dark text-light border border-secondary px-3 py-2"></span>
-                </div>
-                
-                <div id="modalScores"></div>
-                
-                <div id="modalCommentBox" class="p-3 rounded-4 mt-3 d-none" style="background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border);">
-                    <small class="text-muted d-block mb-1 text-uppercase fw-bold x-small tracking-wider">Notiz</small>
-                    <div id="modalComment" class="fst-italic small text-light"></div>
-                </div>
-                <div id="modalPhotoContainer" class="mt-3 d-none">
-                    <img id="modalPhoto" src="" class="img-fluid rounded-4 shadow-sm w-100">
-                </div>
-                <button class="btn btn-outline-danger w-100 mt-4 rounded-pill fw-bold btn-sm border-opacity-50" id="deleteSessionBtn">🗑️ Partie aus Verlauf löschen</button>
-            </div>
-        </div>
-    </div>
+<div aria-hidden="true" class="modal fade" id="detailModal" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+<div class="modal-content">
+<div class="bg-dark text-center" id="modalImageContainer"></div>
+<div class="modal-header border-0 align-items-start">
+<div>
+<h5 class="modal-title fw-bold mb-0" data-i18n="title_details" id="modalGameName">Details</h5>
+<small class="text-muted small" id="modalFullDate"></small>
 </div>
-
+<div class="d-flex gap-2 align-items-center">
+<button class="btn btn-sm btn-outline-light rounded-circle d-flex align-items-center justify-content-center" data-i18n-title="btn_edit" id="editSessionBtn" style="width: 32px; height: 32px;" title="Bearbeiten" type="button">✏️</button>
+<button class="btn btn-sm btn-outline-light rounded-circle d-flex align-items-center justify-content-center" data-i18n-title="btn_share" id="shareSessionBtn" style="width: 32px; height: 32px;" title="Teilen" type="button">🔗</button>
+<button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+</div>
+<div class="modal-body pt-0 pb-4">
+<div class="d-flex gap-2 mb-4">
+<span class="badge rounded-pill bg-primary bg-opacity-25 text-primary border border-primary border-opacity-25 px-3 py-2" id="modalDuration"></span>
+<span class="badge rounded-pill bg-dark text-light border border-secondary px-3 py-2" id="modalStartTime"></span>
+</div>
+<div id="modalScores"></div>
+<div class="p-3 rounded-4 mt-3 d-none" id="modalCommentBox" style="background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border);">
+<small class="text-muted d-block mb-1 text-uppercase fw-bold x-small tracking-wider" data-i18n="label_note">Notiz</small>
+<div class="fst-italic small text-light" id="modalComment"></div>
+</div>
+<div class="mt-3 d-none" id="modalPhotoContainer">
+<img class="img-fluid rounded-4 shadow-sm w-100" id="modalPhoto" src=""/>
+</div>
+<button class="btn btn-outline-danger w-100 mt-4 rounded-pill fw-bold btn-sm border-opacity-50" data-i18n="btn_delete_session" id="deleteSessionBtn">🗑️ Partie aus Verlauf löschen</button>
+</div>
+</div>
+</div>
+</div>
+<!-- SHARE IMAGE MODAL -->
+<div aria-hidden="true" class="modal fade" id="shareImageModal" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+<div class="modal-content">
+<div class="modal-header border-0 pb-1 mt-2">
+<h5 class="modal-title fw-bold fs-4 text-white" data-i18n="btn_share">Teilen</h5>
+<button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body pt-0 pb-4 text-center">
+<div class="d-flex flex-column align-items-center justify-content-center py-5" id="shareLoadingSpinner">
+<div class="spinner-border text-primary mb-3" role="status"></div>
+<span class="text-white-50 small" data-i18n="label_loading">Lade...</span>
+</div>
+<img class="img-fluid rounded-4 shadow-sm w-100 mb-4 border border-secondary border-opacity-25" id="shareModalGeneratedImg" style="display: none;"/>
+<div class="d-flex gap-2">
+<button class="btn btn-outline-light flex-grow-1 rounded-3 fw-bold py-2 small" data-bs-dismiss="modal" data-i18n="btn_cancel" type="button">Abbrechen</button>
+<a class="btn btn-primary flex-grow-1 rounded-3 fw-bold py-2 small d-flex align-items-center justify-content-center gap-1" data-i18n="btn_download_image" id="btnDownloadShareImg">
+📥 Herunterladen
+</a>
+<button class="btn btn-success flex-grow-1 rounded-3 fw-bold py-2 small d-flex align-items-center justify-content-center gap-1" data-i18n="btn_share_image" onclick="triggerWebShare()" type="button">
+🔗 Teilen
+</button>
+</div>
+</div>
+</div>
+</div>
+</div>
 <!-- EDIT SESSION MODAL -->
-<div class="modal fade" id="editSessionModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0 mt-2">
-                <h5 class="modal-title fw-bold fs-4 text-white">Partie bearbeiten</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body pt-3 pb-4">
-                <div class="mb-3">
-                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Datum</label>
-                    <input type="date" class="form-control bg-dark text-white border-secondary border-opacity-50" id="editSessionDate" style="color-scheme: dark;">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Dauer (in Minuten)</label>
-                    <input type="number" class="form-control bg-dark text-white border-secondary border-opacity-50" id="editSessionDuration" inputmode="numeric">
-                </div>
-                <div class="mb-3 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);">
-                    <label class="form-label text-white-50 x-small fw-bold text-uppercase d-block mb-3">Punkte & Gewinner</label>
-                    <div id="editScoresContainer">
-                        <!-- Injected via JS -->
-                    </div>
-                    
-                    <select id="editWinner" class="form-select bg-dark text-white border-secondary border-opacity-50 mt-3">
-                        <!-- Injected via JS -->
-                    </select>
-                </div>
-                <div class="mb-4">
-                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Notiz</label>
-                    <textarea id="editSessionComment" class="form-control bg-dark text-white border-secondary border-opacity-50" rows="2"></textarea>
-                </div>
-                
-                <button class="btn btn-primary w-100 btn-xl rounded-4 fw-bold shadow" id="saveEditSessionBtn">ÄNDERUNGEN SPEICHERN</button>
-            </div>
-        </div>
-    </div>
+<div aria-hidden="true" class="modal fade" data-bs-backdrop="static" id="editSessionModal" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+<div class="modal-content">
+<div class="modal-header border-0 pb-0 mt-2">
+<h5 class="modal-title fw-bold fs-4 text-white" data-i18n="title_edit_session">Partie bearbeiten</h5>
+<button class="btn-close" data-bs-dismiss="modal" type="button"></button>
 </div>
-
+<div class="modal-body pt-3 pb-4">
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_date">Datum</label>
+<input class="form-control bg-dark text-white border-secondary border-opacity-50" id="editSessionDate" style="color-scheme: dark;" type="date"/>
+</div>
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_duration_min">Dauer (in Minuten)</label>
+<input class="form-control bg-dark text-white border-secondary border-opacity-50" id="editSessionDuration" inputmode="numeric" type="number"/>
+</div>
+<div class="mb-3 p-3 rounded-4" style="background: rgba(255,255,255,0.03); border: 1px solid var(--surface-border);">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase d-block mb-3" data-i18n="label_scores_winner">Punkte &amp; Gewinner</label>
+<div id="editScoresContainer">
+<!-- Injected via JS -->
+</div>
+<select class="form-select bg-dark text-white border-secondary border-opacity-50 mt-3" id="editWinner">
+<!-- Injected via JS -->
+</select>
+</div>
+<div class="mb-4">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_note">Notiz</label>
+<textarea class="form-control bg-dark text-white border-secondary border-opacity-50" id="editSessionComment" rows="2"></textarea>
+</div>
+<button class="btn btn-primary w-100 btn-xl rounded-4 fw-bold shadow" data-i18n="btn_save_changes_cap" id="saveEditSessionBtn">ÄNDERUNGEN SPEICHERN</button>
+</div>
+</div>
+</div>
+</div>
 <!-- PROFILE SETTINGS MODAL -->
-<div class="modal fade" id="profileSettingsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="background: var(--surface-card); border-radius: 1.2rem;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold text-white">⚙️ Konto verwalten</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Schließen"></button>
-            </div>
-            <div class="modal-body pt-2">
-                <div class="alert d-none rounded-3 small py-2 px-3" id="profileSettingsAlert"></div>
-
-                <!-- Username -->
-                <div class="mb-3">
-                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Neuer Username</label>
-                    <input type="text" id="settingsUsername" class="form-control rounded-3 py-2 px-3 bg-dark text-white border-secondary border-opacity-50" placeholder="Aktueller Username">
-                </div>
-
-                <!-- Neues Passwort -->
-                <div class="mb-3">
-                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Neues Passwort</label>
-                    <input type="password" id="settingsNewPassword" class="form-control rounded-3 py-2 px-3 bg-dark text-white border-secondary border-opacity-50" placeholder="Leer lassen = nicht ändern">
-                </div>
-
-                <hr class="border-secondary border-opacity-25 my-3">
-
-                <!-- Aktuelles Passwort (Pflichtfeld) -->
-                <div class="mb-3">
-                    <label class="form-label text-white-50 x-small fw-bold text-uppercase">Aktuelles Passwort (Pflicht)</label>
-                    <input type="password" id="settingsCurrentPassword" class="form-control rounded-3 py-2 px-3 bg-dark text-white border-secondary border-opacity-50" placeholder="Zur Bestätigung eingeben">
-                    <div class="form-text text-white-50 x-small">Zur Sicherheit musst du immer dein aktuelles Passwort eingeben.</div>
-                </div>
-
-                <button type="button" class="btn btn-primary w-100 py-2 rounded-3 fw-bold" id="saveProfileSettingsBtn" onclick="saveProfileSettings()">💾 Änderungen speichern</button>
-            </div>
-        </div>
-    </div>
+<div aria-hidden="true" class="modal fade" id="profileSettingsModal" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered">
+<div class="modal-content border-0 shadow-lg" style="background: var(--surface-card); border-radius: 1.2rem;">
+<div class="modal-header border-0 pb-0">
+<h5 class="modal-title fw-bold text-white" data-i18n="btn_profile_settings">⚙️ Konto verwalten</h5>
+<button aria-label="Close" class="btn-close btn-close-white" data-i18n-aria-label="btn_close" data-bs-dismiss="modal" type="button"></button>
 </div>
-
+<div class="modal-body pt-2">
+<div class="alert d-none rounded-3 small py-2 px-3" id="profileSettingsAlert"></div>
+<!-- Username -->
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_username">Neuer Username</label>
+<input class="form-control rounded-3 py-2 px-3 bg-dark text-white border-secondary border-opacity-50" id="settingsUsername" placeholder="Aktueller Username" type="text"/>
+</div>
+<!-- Avatar Emojis -->
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase d-block mb-2" data-i18n="label_avatar">Profil Icon (Avatar)</label>
+<div class="d-flex flex-wrap gap-2 p-2 rounded bg-dark bg-opacity-50 border border-secondary border-opacity-25" id="settingsAvatarContainer">
+<!-- Emojis will be injected here -->
+</div>
+<input id="settingsSelectedAvatar" type="hidden" value=""/>
+</div>
+<!-- Lieblingsspiel -->
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_favorite_game">Lieblingsspiel</label>
+<select class="form-select rounded-3 py-2 px-3 bg-dark text-white border-secondary border-opacity-50" id="settingsFavoriteGame">
+<option data-i18n="option_none_selected" value="">Keines ausgewählt</option>
+</select>
+</div>
+<!-- Sprachauswahl -->
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_language">Sprache / Language</label>
+<select class="form-select rounded-3 py-2 px-3 bg-dark text-white border-secondary border-opacity-50" id="settingsLanguage" onchange="changeLanguage(this.value)">
+<option data-i18n="option_de" value="de">Deutsch 🇩🇪</option>
+<option data-i18n="option_en" value="en">English 🇬🇧</option>
+</select>
+</div>
+<!-- Theme / Design -->
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_theme">Design (Theme)</label>
+<select class="form-select rounded-3 py-2 px-3 bg-dark text-white border-secondary border-opacity-50" id="settingsTheme" onchange="applyTheme(this.value)">
+<option data-i18n="theme_dark" value="dark">Dark Mode 🌙</option>
+<option data-i18n="theme_light" value="light">Light Mode ☀️</option>
+</select>
+</div>
+<!-- Neues Passwort -->
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_new_password">Neues Passwort</label>
+<input class="form-control rounded-3 py-2 px-3 bg-dark text-white border-secondary border-opacity-50" data-i18n="placeholder_new_password" data-i18n-placeholder="placeholder_new_password" id="settingsNewPassword" placeholder="Leer lassen = nicht ändern" type="password"/>
+</div>
+<hr class="border-secondary border-opacity-25 my-3"/>
+<!-- Aktuelles Passwort (Pflichtfeld) -->
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_current_password">Aktuelles Passwort (Pflicht)</label>
+<input class="form-control rounded-3 py-2 px-3 bg-dark text-white border-secondary border-opacity-50" data-i18n="placeholder_current_password" data-i18n-placeholder="placeholder_current_password" id="settingsCurrentPassword" placeholder="Zur Bestätigung eingeben" type="password"/>
+<div class="form-text text-white-50 x-small" data-i18n="label_current_password_hint">Zur Sicherheit musst du immer dein aktuelles Passwort eingeben.</div>
+</div>
+<button class="btn btn-primary w-100 py-2 rounded-3 fw-bold mb-2" data-i18n="btn_save_changes" id="saveProfileSettingsBtn" onclick="saveProfileSettings()" type="button">💾 Änderungen speichern</button>
+<button class="btn btn-outline-info w-100 py-2 rounded-3 fw-bold mb-2" data-bs-dismiss="modal" data-i18n="btn_restart_tour" id="restartTourBtn" onclick="restartOnboardingTour()" type="button">🚀 Tour (Tutorial) neu starten</button>
+<hr class="border-secondary border-opacity-25 my-3"/>
+<button class="btn btn-outline-danger w-100 py-2 rounded-3 fw-bold small border-opacity-50" data-i18n="btn_delete_account" onclick="confirmAccountDeletion(); return false;" type="button">⚠️ Konto löschen</button>
+</div>
+</div>
+</div>
+</div>
 <!-- ACCOUNT DELETION MODAL -->
-<div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="background: var(--surface-card); border-radius: 1.2rem;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold text-danger">⚠️ Konto löschen</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Schließen"></button>
-            </div>
-            <div class="modal-body pt-2">
-                <div class="alert alert-danger rounded-3 small py-2 px-3 mb-3">
-                    <strong>ACHTUNG:</strong> Alle deine persönlichen Spielergebnisse, Statistiken und Gruppen-Mitgliedschaften werden dauerhaft gelöscht.<br><br>
-                    Falls du Admin einer Spielgruppe bist und noch andere Personen in der Gruppe sind, werden deine Admin-Rechte übertragen.<br>
-                    Falls du der einzige in der Gruppe bist, wird die Gruppe mitsamt allen zugeordneten Spielen, Partien und Fotos ebenfalls gelöscht.<br><br>
-                    Diese Aktion kann <strong>nicht</strong> rückgängig gemacht werden!
-                </div>
-                <div class="alert d-none rounded-3 small py-2 px-3 mb-3" id="deleteAccountAlert"></div>
-
-                <div class="mb-3">
-                    <p class="text-white-50 small mb-2">Bitte gib zur Bestätigung deinen Benutzernamen ein (<strong class="text-white" id="deleteConfirmUsernameHint"></strong>):</p>
-                    <input type="text" id="deleteConfirmUsername" class="form-control rounded-3 py-2 px-3 bg-dark text-white border-danger border-opacity-50" placeholder="Benutzername eingeben">
-                </div>
-
-                <button type="button" class="btn btn-danger w-100 py-2 rounded-3 fw-bold" id="deleteAccountBtn" onclick="deleteAccountSubmit()">🔥 Konto endgültig löschen</button>
-            </div>
-        </div>
-    </div>
+<div aria-hidden="true" class="modal fade" id="deleteAccountModal" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered">
+<div class="modal-content border-0 shadow-lg" style="background: var(--surface-card); border-radius: 1.2rem;">
+<div class="modal-header border-0 pb-0">
+<h5 class="modal-title fw-bold text-danger" data-i18n="btn_delete_account">⚠️ Konto löschen</h5>
+<button aria-label="Close" class="btn-close btn-close-white" data-i18n-aria-label="btn_close" data-bs-dismiss="modal" type="button"></button>
 </div>
-
+<div class="modal-body pt-2">
+<div class="alert alert-danger rounded-3 small py-2 px-3 mb-3" data-i18n="delete_warning_4">
+<strong data-i18n="label_warning">ACHTUNG:</strong> Alle deine persönlichen Spielergebnisse, Statistiken und Gruppen-Mitgliedschaften werden dauerhaft gelöscht.<br/><br/>
+                    Falls du Admin einer Spielgruppe bist und noch andere Personen in der Gruppe sind, werden deine Admin-Rechte übertragen.<br/>
+                    Falls du der einzige in der Gruppe bist, wird die Gruppe mitsamt allen zugeordneten Spielen, Partien und Fotos ebenfalls gelöscht.<br/><br/>
+                    Diese Aktion kann <strong data-i18n="delete_warning_5">nicht</strong> rückgängig gemacht werden!
+                </div>
+<div class="alert d-none rounded-3 small py-2 px-3 mb-3" id="deleteAccountAlert"></div>
+<div class="mb-3">
+<p class="text-white-50 small mb-2" data-i18n="label_delete_confirm">Bitte gib zur Bestätigung deinen Benutzernamen ein (<strong class="text-white" id="deleteConfirmUsernameHint"></strong>):</p>
+<input class="form-control rounded-3 py-2 px-3 bg-dark text-white border-danger border-opacity-50" id="deleteConfirmUsername" placeholder="Benutzername eingeben" type="text"/>
+</div>
+<button class="btn btn-danger w-100 py-2 rounded-3 fw-bold" data-i18n="btn_delete_account_final" id="deleteAccountBtn" onclick="deleteAccountSubmit()" type="button">🔥 Konto endgültig löschen</button>
+</div>
+</div>
+</div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/auth.js?v=22"></script>
-<script src="js/ui-groups.js?v=22"></script>
-<script src="js/state.js?v=22"></script>
-<script src="js/utils.js?v=22"></script>
-<script src="js/api.js?v=22"></script>
-<script src="js/timer.js?v=22"></script>
-<script src="js/ui-dashboard.js?v=22"></script>
-<script src="js/ui-collection.js?v=22"></script>
-<script src="js/ui-history.js?v=22"></script>
-<script src="js/ui-profile.js?v=22"></script>
-<script src="js/ui-stats.js?v=22"></script>
-<script src="js/main.js?v=22"></script>
-
+<script src="js/i18n.js?v=24"></script>
+<script src="js/auth.js?v=24"></script>
+<script src="js/ui-groups.js?v=24"></script>
+<script src="js/state.js?v=24"></script>
+<script src="js/utils.js?v=24"></script>
+<script src="js/api.js?v=24"></script>
+<script src="js/timer.js?v=24"></script>
+<script src="js/ui-dashboard.js?v=24"></script>
+<script src="js/ui-collection.js?v=24"></script>
+<script src="js/ui-history.js?v=24"></script>
+<script src="js/ui-profile.js?v=24"></script>
+<script src="js/ui-stats.js?v=24"></script>
+<script src="js/share.js?v=24"></script>
+<script src="js/tour.js?v=24"></script>
+<script src="js/main.js?v=24"></script>
 <!-- CONFIRM ACTION MODAL -->
-<div class="modal fade" id="confirmActionModal" tabindex="-1" aria-hidden="true" style="z-index: 2000;">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 380px;">
-        <div class="modal-content border-0 shadow-lg" style="background: var(--surface-card); border-radius: 1.2rem; border: 1px solid var(--surface-border) !important;">
-            <div class="modal-body text-center p-4">
-                <div class="mb-3 text-warning" style="font-size: 2.5rem;">⚠️</div>
-                <h5 class="fw-bold text-white mb-2" id="confirmActionTitle">Aktion bestätigen</h5>
-                <p class="text-white-50 small mb-4" id="confirmActionMessage">Bist du sicher?</p>
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-outline-light flex-grow-1 py-2 rounded-3 fw-bold small" data-bs-dismiss="modal">Abbrechen</button>
-                    <button type="button" class="btn btn-danger flex-grow-1 py-2 rounded-3 fw-bold small" id="confirmActionBtn">OK</button>
-                </div>
-            </div>
-        </div>
-    </div>
+<div aria-hidden="true" class="modal fade" id="confirmActionModal" style="z-index: 2000;" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered" style="max-width: 380px;">
+<div class="modal-content border-0 shadow-lg" style="background: var(--surface-card); border-radius: 1.2rem; border: 1px solid var(--surface-border) !important;">
+<div class="modal-body text-center p-4">
+<div class="mb-3 text-warning" style="font-size: 2.5rem;">⚠️</div>
+<h5 class="fw-bold text-white mb-2" data-i18n="title_confirm_action" id="confirmActionTitle">Aktion bestätigen</h5>
+<p class="text-white-50 small mb-4" data-i18n="msg_are_you_sure" id="confirmActionMessage">Bist du sicher?</p>
+<div class="d-flex gap-2">
+<button class="btn btn-outline-light flex-grow-1 py-2 rounded-3 fw-bold small" data-bs-dismiss="modal" data-i18n="btn_cancel" type="button">Abbrechen</button>
+<button class="btn btn-danger flex-grow-1 py-2 rounded-3 fw-bold small" id="confirmActionBtn" type="button">OK</button>
 </div>
-
+</div>
+</div>
+</div>
+</div>
 <!-- TEAM BUILDER MODAL -->
-<div class="modal fade" id="teamBuilderModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
-        <div class="modal-content border-0 shadow-lg" style="background: var(--surface-card); border-radius: 1.2rem; border: 1px solid var(--surface-border) !important;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="fw-bold text-white mb-0">👥 Teams bilden</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <p class="text-white-50 small mb-3">Ordne die Spieler Teams zu. Spieler im selben Team teilen sich Punkte und Siege.</p>
-                <div id="teamBuilderPlayersList" class="d-flex flex-column gap-3 mb-4">
-                    <!-- Injected via JS -->
-                </div>
-                <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-outline-light flex-grow-1 py-2 rounded-3 fw-bold small" data-bs-dismiss="modal">Abbrechen</button>
-                    <button type="button" class="btn btn-primary flex-grow-1 py-2 rounded-3 fw-bold small" onclick="saveTeams()">Teams speichern</button>
-                </div>
-            </div>
-        </div>
-    </div>
+<div aria-hidden="true" class="modal fade" id="teamBuilderModal" style="z-index: 1060;" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+<div class="modal-content border-0 shadow-lg" style="background: var(--surface-card); border-radius: 1.2rem; border: 1px solid var(--surface-border) !important;">
+<div class="modal-header border-0 pb-0">
+<h5 class="fw-bold text-white mb-0" data-i18n="title_team_builder">👥 Teams bilden</h5>
+<button aria-label="Close" class="btn-close btn-close-white" data-bs-dismiss="modal" type="button"></button>
 </div>
-
+<div class="modal-body p-4">
+<p class="text-white-50 small mb-3">Ordne die Spieler Teams zu. Spieler im selben Team teilen sich Punkte und Siege.</p>
+<div class="d-flex flex-column gap-3 mb-4" id="teamBuilderPlayersList">
+<!-- Injected via JS -->
+</div>
+<div class="d-flex gap-2">
+<button class="btn btn-outline-light flex-grow-1 py-2 rounded-3 fw-bold small" data-bs-dismiss="modal" data-i18n="btn_cancel" type="button">Abbrechen</button>
+<button class="btn btn-primary flex-grow-1 py-2 rounded-3 fw-bold small" data-i18n="btn_save_teams" onclick="saveTeams()" type="button">Teams speichern</button>
+</div>
+</div>
+</div>
+</div>
+</div>
 <!-- GUEST SELECTION MODAL -->
-<div class="modal fade" id="activeGuestModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
-        <div class="modal-content border-0 shadow-lg" style="background: rgba(30, 41, 59, 0.95) !important; border-radius: 1.2rem; border: 1px solid var(--surface-border) !important;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="fw-bold text-white mb-0">👤 Gast hinzufügen</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <!-- Add New Guest Section -->
-                <div class="mb-4">
-                    <label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold">Neuen Gast registrieren</label>
-                    <div class="input-group">
-                        <input type="text" id="timerNewGuestNameInput" class="form-control bg-dark text-white border-secondary border-opacity-50" placeholder="Name des Gasts...">
-                        <button class="btn btn-primary fw-bold" type="button" onclick="submitNewGuestFromTimer()">Hinzufügen</button>
-                    </div>
-                    <div id="newGuestError" class="text-danger small mt-1 d-none"></div>
-                </div>
-
-                <!-- Select Existing Guests Section -->
-                <div>
-                    <label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold mb-2">Vorhandene Gäste auswählen</label>
-                    <div id="timerExistingGuestsList" class="d-flex flex-column gap-2" style="max-height: 200px; overflow-y: auto;">
-                        <!-- Injected via JS -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div aria-hidden="true" class="modal fade" id="activeGuestModal" style="z-index: 1060;" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+<div class="modal-content border-0 shadow-lg" style="background: rgba(30, 41, 59, 0.95) !important; border-radius: 1.2rem; border: 1px solid var(--surface-border) !important;">
+<div class="modal-header border-0 pb-0">
+<h5 class="fw-bold text-white mb-0" data-i18n="title_add_guest">👤 Gast hinzufügen</h5>
+<button aria-label="Close" class="btn-close btn-close-white" data-bs-dismiss="modal" type="button"></button>
 </div>
-
+<div class="modal-body p-4">
+<!-- Add New Guest Section -->
+<div class="mb-4">
+<label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold" data-i18n="label_new_guest_reg">Neuen Gast registrieren</label>
+<div class="input-group">
+<input class="form-control bg-dark text-white border-secondary border-opacity-50" id="timerNewGuestNameInput" placeholder="Name des Gasts..." type="text"/>
+<button class="btn btn-primary fw-bold" data-i18n="btn_add" onclick="submitNewGuestFromTimer()" type="button">Hinzufügen</button>
+</div>
+<div class="text-danger small mt-1 d-none" id="newGuestError"></div>
+</div>
+<!-- Select Existing Guests Section -->
+<div>
+<label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold mb-2" data-i18n="label_select_existing_guest">Vorhandene Gäste auswählen</label>
+<div class="d-flex flex-column gap-2" id="timerExistingGuestsList" style="max-height: 200px; overflow-y: auto;">
+<!-- Injected via JS -->
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 <!-- PROFILE GUEST SELECTION MODAL -->
-<div class="modal fade" id="profileGuestModal" tabindex="-1" aria-hidden="true" style="z-index: 1060;">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
-        <div class="modal-content border-0 shadow-lg" style="background: rgba(30, 41, 59, 0.95) !important; border-radius: 1.2rem; border: 1px solid var(--surface-border) !important;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="fw-bold text-white mb-0">👤 Gast hinzufügen</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <!-- Add New Guest Section -->
-                <div class="mb-4">
-                    <label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold">Neuen Gast registrieren</label>
-                    <div class="input-group">
-                        <input type="text" id="profileNewGuestNameInput" class="form-control bg-dark text-white border-secondary border-opacity-50" placeholder="Name des Gasts...">
-                        <button class="btn btn-primary fw-bold" type="button" onclick="submitNewGuestFromProfile()">Hinzufügen</button>
-                    </div>
-                    <div id="profileNewGuestError" class="text-danger small mt-1 d-none"></div>
-                </div>
-
-                <!-- Select Existing Guests Section -->
-                <div>
-                    <label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold mb-2">Vorhandene Gäste auswählen</label>
-                    <div id="profileExistingGuestsList" class="d-flex flex-column gap-2" style="max-height: 200px; overflow-y: auto;">
-                        <!-- Injected via JS -->
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<div aria-hidden="true" class="modal fade" id="profileGuestModal" style="z-index: 1060;" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+<div class="modal-content border-0 shadow-lg" style="background: rgba(30, 41, 59, 0.95) !important; border-radius: 1.2rem; border: 1px solid var(--surface-border) !important;">
+<div class="modal-header border-0 pb-0">
+<h5 class="fw-bold text-white mb-0" data-i18n="title_add_guest">👤 Gast hinzufügen</h5>
+<button aria-label="Close" class="btn-close btn-close-white" data-bs-dismiss="modal" type="button"></button>
 </div>
-
+<div class="modal-body p-4">
+<!-- Add New Guest Section -->
+<div class="mb-4">
+<label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold" data-i18n="label_new_guest_reg">Neuen Gast registrieren</label>
+<div class="input-group">
+<input class="form-control bg-dark text-white border-secondary border-opacity-50" id="profileNewGuestNameInput" placeholder="Name des Gasts..." type="text"/>
+<button class="btn btn-primary fw-bold" data-i18n="btn_add" onclick="submitNewGuestFromProfile()" type="button">Hinzufügen</button>
+</div>
+<div class="text-danger small mt-1 d-none" id="profileNewGuestError"></div>
+</div>
+<!-- Select Existing Guests Section -->
+<div>
+<label class="form-label text-white-50 x-small text-uppercase tracking-wider fw-bold mb-2" data-i18n="label_select_existing_guest">Vorhandene Gäste auswählen</label>
+<div class="d-flex flex-column gap-2" id="profileExistingGuestsList" style="max-height: 200px; overflow-y: auto;">
+<!-- Injected via JS -->
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 </body>
 </html>

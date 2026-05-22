@@ -2,6 +2,9 @@
  * main.js — App-Einstieg für Game-Log Pro v1.1
  */
 window.onload = async () => {
+    // Theme laden
+    loadTheme();
+    
     // Service Worker registrieren
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js').catch(() => {});
@@ -24,7 +27,9 @@ window.initApp = function(group) {
         allPlayers = group.members.map(m => ({
             id: m.id || m.user_id,
             name: m.display_name,
-            avatar_color: m.avatar_color
+            avatar_color: m.avatar_color,
+            avatar_icon: m.avatar_icon || '👤',
+            favorite_game_id: m.favorite_game_id
         }));
         player1Name = allPlayers[0]?.name || 'Spieler 1';
         player2Name = allPlayers[1]?.name || 'Spieler 2';
@@ -34,7 +39,10 @@ window.initApp = function(group) {
     const user = Auth.getUser();
     if (user) {
         const headerUsername = document.getElementById('headerUsername');
-        if (headerUsername) headerUsername.textContent = user.username;
+        if (headerUsername) {
+            const icon = user.avatar_icon || '👤';
+            headerUsername.textContent = `${icon} ${user.username}`;
+        }
     }
 
     // Gruppen-Switcher rendern
@@ -59,6 +67,11 @@ window.initApp = function(group) {
 
     // Timer-State wiederherstellen
     if (typeof restoreTimerState === 'function') restoreTimerState();
+
+    // Tour starten (falls noch nicht gesehen)
+    setTimeout(() => {
+        if (typeof startOnboardingTour === 'function') startOnboardingTour();
+    }, 1000);
 };
 
 // Gruppe wechsel → App neu initialisieren
@@ -67,3 +80,19 @@ window.addEventListener('groupChanged', (e) => {
         initApp(e.detail);
     }
 });
+
+window.applyTheme = function(theme) {
+    if (theme === 'light') {
+        document.body.classList.add('light-mode');
+    } else {
+        document.body.classList.remove('light-mode');
+    }
+    localStorage.setItem('app_theme', theme);
+    const select = document.getElementById('settingsTheme');
+    if (select) select.value = theme;
+};
+
+window.loadTheme = function() {
+    const savedTheme = localStorage.getItem('app_theme') || 'dark';
+    window.applyTheme(savedTheme);
+};

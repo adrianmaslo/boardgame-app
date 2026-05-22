@@ -6,16 +6,17 @@ window.loadCollection = async function() {
     
     // Render Collection
     if (data.collection.length === 0) {
-        document.getElementById('collectionList').innerHTML = '<div class="text-center text-muted p-4">Keine Spiele in der Sammlung.</div>';
+        document.getElementById('collectionList').innerHTML = `<div class="text-center text-muted p-4">${t('msg_no_games_in_collection', 'Keine Spiele in der Sammlung.')}</div>`;
     } else {
         const grouped = {};
         data.collection.forEach(g => {
-            const cat = g.category && g.category !== 'Standard' ? g.category : 'Alle Spiele';
+            const cat = g.category && g.category !== 'Standard' ? g.category : t('label_all_games', 'Alle Spiele');
             if (!grouped[cat]) grouped[cat] = [];
             grouped[cat].push(g);
         });
         
-        const sortedCats = Object.keys(grouped).sort((a,b) => a==='Alle Spiele' ? -1 : (b==='Alle Spiele' ? 1 : a.localeCompare(b)));
+        const defaultCatName = t('label_all_games', 'Alle Spiele');
+        const sortedCats = Object.keys(grouped).sort((a,b) => (a==='Alle Spiele' || a===defaultCatName) ? -1 : ((b==='Alle Spiele' || b===defaultCatName) ? 1 : a.localeCompare(b)));
         let html = '';
         let index = 0;
         sortedCats.forEach(cat => {
@@ -33,10 +34,10 @@ window.loadCollection = async function() {
                         <div class="list-group list-group-flush">
                             ${grouped[cat].map(g => {
                                 const imgSrc = g.image_url ? g.image_url : 'https://via.placeholder.com/50?text=🎲';
-                                return `<div class="list-group-item d-flex align-items-center mb-1 rounded-3" onclick="showGameProfile(${g.id}, ${g.bgg_id || 'null'}, '${g.image_url || ''}', ${g.min_players || 'null'}, ${g.max_players || 'null'}, ${g.playing_time || 'null'}, ${g.weight || 'null'}, '${g.category || 'Alle Spiele'}')" style="cursor:pointer; background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border);">
+                                return `<div class="list-group-item d-flex align-items-center mb-1 rounded-3" onclick="showGameProfile(${g.id}, ${g.bgg_id || 'null'}, '${g.image_url || ''}', ${g.min_players || 'null'}, ${g.max_players || 'null'}, ${g.playing_time || 'null'}, ${g.weight || 'null'}, '${g.category || t('label_all_games', 'Alle Spiele')}')" style="cursor:pointer; background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border);">
                                     <img src="${imgSrc}" class="rounded-3 me-3" style="width: 48px; height: 48px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
-                                    <div class="flex-grow-1"><span class="fw-bold d-block text-white">${g.name}</span>${g.playing_time ? '<span class="text-muted x-small">⏱ ' + g.playing_time + ' Min.</span>' : ''}</div>
-                                    <span class="text-primary small fw-bold pe-2">PROFIL</span>
+                                    <div class="flex-grow-1"><span class="fw-bold d-block text-white">${g.name}</span>${g.playing_time ? '<span class="text-muted x-small">⏱ ' + g.playing_time + ' ' + t('label_minutes_short', 'Min.') + '</span>' : ''}</div>
+                                    <span class="text-primary small fw-bold pe-2">${t('label_profile', 'PROFIL')}</span>
                                 </div>`;
                             }).join('')}
                         </div>
@@ -49,7 +50,7 @@ window.loadCollection = async function() {
     
     // Render Wishlist
     if (!data.wishlist || data.wishlist.length === 0) {
-        document.getElementById('wishlistList').innerHTML = '<div class="text-center text-muted p-4">Deine Wunschliste ist leer.</div>';
+        document.getElementById('wishlistList').innerHTML = `<div class="text-center text-muted p-4">${t('msg_empty_wishlist', 'Deine Wunschliste ist leer.')}</div>`;
     } else {
         document.getElementById('wishlistList').innerHTML = data.wishlist.map(g => {
             const imgSrc = g.image_url ? g.image_url : 'https://via.placeholder.com/50?text=🎲';
@@ -58,7 +59,7 @@ window.loadCollection = async function() {
                     <img src="${imgSrc}" class="rounded-3 me-3" style="width: 48px; height: 48px; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">
                     <div class="fw-bold text-white">${g.name}</div>
                 </div>
-                <button class="btn btn-sm btn-outline-success rounded-pill fw-bold" onclick="moveToCollection(${g.id})">Kaufen ➡️</button>
+                <button class="btn btn-sm btn-outline-success rounded-pill fw-bold" onclick="moveToCollection(${g.id})">${t('btn_buy', 'Kaufen ➡️')}</button>
             </div>`;
         }).join('');
     }
@@ -71,7 +72,7 @@ window.moveToCollection = async function(gameId) {
         loadCollection();
         switchCollectionTab('games');
         document.getElementById('btn-col-games').checked = true;
-    } catch(e) { alert("Fehler beim Verschieben."); }
+    } catch(e) { alert(t('msg_error_moving', 'Fehler beim Verschieben.')); }
 };
 
 window.switchCollectionTab = function(tabName) {

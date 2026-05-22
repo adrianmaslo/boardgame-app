@@ -13,6 +13,7 @@ class RegisterRequest(BaseModel):
     password: str
     email: Optional[str] = None
     avatar_color: Optional[str] = "#6366f1"
+    avatar_icon: Optional[str] = None
 
 class LoginRequest(BaseModel):
     username: str
@@ -20,8 +21,10 @@ class LoginRequest(BaseModel):
 
 class UpdateProfileRequest(BaseModel):
     new_username: Optional[str] = None
-    current_password: str
+    current_password: Optional[str] = None
     new_password: Optional[str] = None
+    avatar_icon: Optional[str] = None
+    favorite_game_id: Optional[int] = None
 
 # ─── Endpunkte ────────────────────────────────────────────────────────────────
 
@@ -47,8 +50,8 @@ def register(data: RegisterRequest):
                 raise HTTPException(status_code=409, detail="Diese E-Mail-Adresse ist bereits registriert.")
 
         conn.execute(
-            "INSERT INTO users (username, email, password_hash, avatar_color) VALUES (?, ?, ?, ?)",
-            (username, data.email, pw_hash, data.avatar_color or "#6366f1")
+            "INSERT INTO users (username, email, password_hash, avatar_color, avatar_icon) VALUES (?, ?, ?, ?, ?)",
+            (username, data.email, pw_hash, data.avatar_color or "#6366f1", data.avatar_icon)
         )
         conn.commit()
         user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
@@ -61,7 +64,9 @@ def register(data: RegisterRequest):
             "id": user["id"],
             "username": user["username"],
             "email": user["email"],
-            "avatar_color": user["avatar_color"]
+            "avatar_color": user["avatar_color"],
+            "avatar_icon": user["avatar_icon"],
+            "favorite_game_id": user["favorite_game_id"]
         }
     }
 
@@ -87,7 +92,9 @@ def login(data: LoginRequest):
             "id": user["id"],
             "username": user["username"],
             "email": user["email"],
-            "avatar_color": user["avatar_color"]
+            "avatar_color": user["avatar_color"],
+            "avatar_icon": user["avatar_icon"],
+            "favorite_game_id": user["favorite_game_id"]
         }
     }
 
@@ -108,7 +115,7 @@ def get_me(current_user: dict = Depends(get_current_user)):
         groups_list = []
         for g in groups:
             members = conn.execute("""
-                SELECT u.id AS id, gm.display_name, gm.avatar_color,
+                SELECT u.id AS id, gm.display_name, gm.avatar_color, gm.avatar_icon, gm.favorite_game_id,
                        CASE WHEN g2.admin_id = u.id THEN 1 ELSE 0 END as is_admin
                 FROM group_members gm
                 JOIN users u ON u.id = gm.user_id
@@ -127,6 +134,8 @@ def get_me(current_user: dict = Depends(get_current_user)):
         "username": current_user["username"],
         "email": current_user["email"],
         "avatar_color": current_user["avatar_color"],
+        "avatar_icon": current_user["avatar_icon"],
+        "favorite_game_id": current_user["favorite_game_id"],
         "groups": groups_list
     }
 
@@ -154,12 +163,13 @@ def update_me(data: UpdateProfileRequest, current_user: dict = Depends(get_curre
     with get_db_connection() as conn:
         user = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
         
-        # 1. Aktuelles Passwort überprüfen
-        if not verify_password(data.current_password, user["password_hash"]):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Das aktuelle Passwort ist falsch."
-            )
+        # 1. Aktuelles Passwort überprüfen (nur wenn neues Passwort geändert werden soll)
+        if data.new_password:
+            if not data.current_password or not verify_password(data.current_password, user["password_hash"]):
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Das aktuelle Passwort ist falsch oder fehlt."
+                )
             
         new_username = data.new_username.strip() if data.new_username else None
         
@@ -182,6 +192,19 @@ def update_me(data: UpdateProfileRequest, current_user: dict = Depends(get_curre
             new_hash = hash_password(data.new_password)
             conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_hash, user_id))
             
+        # Avatar und Favorite Game
+        if data.avatar_icon is not None:
+            conn.execute("UPDATE users SET avatar_icon = ? WHERE id = ?", (data.avatar_icon, user_id))
+            conn.execute("UPDATE group_members SET avatar_icon = ? WHERE user_id = ?", (data.avatar_icon, user_id))
+        
+        if data.favorite_game_id is not None:
+            if data.favorite_game_id <= 0:
+                conn.execute("UPDATE users SET favorite_game_id = NULL WHERE id = ?", (user_id,))
+                conn.execute("UPDATE group_members SET favorite_game_id = NULL WHERE user_id = ?", (user_id,))
+            else:
+                conn.execute("UPDATE users SET favorite_game_id = ? WHERE id = ?", (data.favorite_game_id, user_id))
+                conn.execute("UPDATE group_members SET favorite_game_id = ? WHERE user_id = ?", (data.favorite_game_id, user_id))
+            
         conn.commit()
         
         # 4. Aktualisierte Daten laden und neuen Token generieren
@@ -196,7 +219,9 @@ def update_me(data: UpdateProfileRequest, current_user: dict = Depends(get_curre
             "id": updated_user["id"],
             "username": updated_user["username"],
             "email": updated_user["email"],
-            "avatar_color": updated_user["avatar_color"]
+            "avatar_color": updated_user["avatar_color"],
+            "avatar_icon": updated_user["avatar_icon"],
+            "favorite_game_id": updated_user["favorite_game_id"]
         }
     }
 

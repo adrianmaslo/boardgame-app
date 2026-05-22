@@ -7,7 +7,7 @@
 window.initGroupWizard = function(user) {
     document.getElementById('wizardStep1').classList.remove('d-none');
     document.getElementById('wizardStep2').classList.add('d-none');
-    document.getElementById('wizardTitle').textContent = `Willkommen, ${user.username}! 👋`;
+    document.getElementById('wizardTitle').textContent = `${t('wizard_welcome_user', 'Willkommen')}, ${user.username}! 👋`;
     window._wizardUser = user;
     window._wizardGroup = null;
 };
@@ -19,7 +19,14 @@ window.wizardCreateGroup = async function() {
     const errorEl = document.getElementById('wizardError');
 
     if (!groupName) {
-        errorEl.textContent = 'Bitte einen Gruppennamen eingeben.';
+        errorEl.textContent = t('msg_enter_group_name', 'Bitte einen Gruppennamen eingeben.');
+        errorEl.classList.remove('d-none');
+        return;
+    }
+
+    const dsgvoChecked = document.getElementById('wizardCreateDsgvo').checked;
+    if (!dsgvoChecked) {
+        errorEl.textContent = t('msg_agree_dsgvo', 'Bitte stimme den Datenschutzbestimmungen (DSGVO Disclaimer) zu.');
         errorEl.classList.remove('d-none');
         return;
     }
@@ -37,7 +44,7 @@ window.wizardCreateGroup = async function() {
         const data = await res.json();
 
         if (!res.ok) {
-            errorEl.textContent = data.detail || 'Fehler beim Erstellen der Gruppe.';
+            errorEl.textContent = data.detail || t('msg_error_create_group', 'Fehler beim Erstellen der Gruppe.');
             errorEl.classList.remove('d-none');
             return;
         }
@@ -54,11 +61,11 @@ window.wizardCreateGroup = async function() {
         // Mitglieder-Liste rendern
         renderWizardMembers(data.members);
     } catch(e) {
-        errorEl.textContent = 'Verbindungsfehler.';
+        errorEl.textContent = t('msg_connection_error', 'Verbindungsfehler.');
         errorEl.classList.remove('d-none');
     } finally {
         btn.disabled = false;
-        btn.innerHTML = 'Gruppe erstellen';
+        btn.innerHTML = t('wizard_btn_create', 'Gruppe erstellen');
     }
 };
 
@@ -69,7 +76,14 @@ window.wizardJoinGroup = async function() {
     const errorEl = document.getElementById('wizardJoinError');
 
     if (!code) {
-        errorEl.textContent = 'Bitte den Einladungs-Code eingeben.';
+        errorEl.textContent = t('msg_enter_invite_code', 'Bitte den Einladungs-Code eingeben.');
+        errorEl.classList.remove('d-none');
+        return;
+    }
+
+    const dsgvoChecked = document.getElementById('wizardJoinDsgvo').checked;
+    if (!dsgvoChecked) {
+        errorEl.textContent = t('msg_agree_dsgvo', 'Bitte stimme den Datenschutzbestimmungen (DSGVO Disclaimer) zu.');
         errorEl.classList.remove('d-none');
         return;
     }
@@ -86,7 +100,7 @@ window.wizardJoinGroup = async function() {
         const data = await res.json();
 
         if (!res.ok) {
-            errorEl.textContent = data.detail || 'Ungültiger Code.';
+            errorEl.textContent = data.detail || t('msg_invalid_code', 'Ungültiger Code.');
             errorEl.classList.remove('d-none');
             return;
         }
@@ -94,7 +108,7 @@ window.wizardJoinGroup = async function() {
         Auth.setActiveGroup(data);
         await loadUserAndStart();
     } catch(e) {
-        errorEl.textContent = 'Verbindungsfehler.';
+        errorEl.textContent = t('msg_connection_error', 'Verbindungsfehler.');
         errorEl.classList.remove('d-none');
     } finally {
         btn.disabled = false;
@@ -112,7 +126,7 @@ window.copyInviteCode = function(code) {
            || document.getElementById('groupInviteCode')?.textContent;
     if (!c) return;
     navigator.clipboard.writeText(c).then(() => {
-        showToast('Code kopiert! 📋');
+        showToast(t('msg_code_copied', 'Code kopiert! 📋'));
     });
 };
 
@@ -139,7 +153,7 @@ window.renderGroupSwitcher = function(groups, activeGroupId) {
             <a class="dropdown-item d-flex align-items-center gap-2 ${g.id === activeGroupId ? 'active' : ''}"
                href="#" onclick="switchGroup(${g.id}); return false;">
                 <span class="small fw-bold">${g.name}</span>
-                <span class="ms-auto badge bg-secondary">${g.members.length} Mitglieder</span>
+                <span class="ms-auto badge bg-secondary">${g.members.length} ${g.members.length === 1 ? t('label_member_singular', 'Mitglied') : t('label_members_plural', 'Mitglieder')}</span>
             </a>
         </li>
     `).join('') + `
@@ -147,13 +161,13 @@ window.renderGroupSwitcher = function(groups, activeGroupId) {
         <li>
             <a class="dropdown-item small text-primary" href="#" 
                data-bs-toggle="modal" data-bs-target="#groupManageModal" onclick="openGroupManageModal(); return false;">
-                ⚙️ Gruppe verwalten
+                ⚙️ ${t('title_manage_group', 'Gruppe verwalten')}
             </a>
         </li>
         <li>
             <a class="dropdown-item small text-info" href="#"
                onclick="showCreateGroupModal(); return false;">
-                ➕ Neue Gruppe
+                ➕ ${t('title_create_group', 'Neue Gruppe')}
             </a>
         </li>
     `;
@@ -168,7 +182,7 @@ window.switchGroup = async function(groupId) {
             Auth.setActiveGroup(group);
             // App neu laden
             if (typeof initApp === 'function') initApp(group);
-            showToast(`Gruppe gewechselt: ${group.name}`);
+            showToast(`${t('msg_group_switched', 'Gruppe gewechselt')}: ${group.name}`);
         }
     } catch(e) {
         console.error('Fehler beim Gruppenwechsel:', e);
@@ -219,7 +233,7 @@ function renderManageMembers(members, group) {
             ${m.is_admin ? '<span class="badge bg-primary" style="font-size:0.6rem">Admin</span>' : ''}
             ${(group.is_admin && !m.is_admin) ? `
                 <button class="btn btn-sm btn-outline-danger" style="font-size:0.7rem; padding:2px 8px"
-                    onclick="removeMember(${group.id}, ${m.id})">Entfernen</button>
+                    onclick="removeMember(${group.id}, ${m.id})">${t('btn_remove', 'Entfernen')}</button>
             ` : ''}
         </div>
     `).join('');
@@ -230,7 +244,7 @@ function renderManageGuests(guests, group) {
     if (!el) return;
 
     if (guests.length === 0) {
-        el.innerHTML = '<div class="text-muted small ps-1">Keine Gäste in dieser Gruppe.</div>';
+        el.innerHTML = `<div class="text-muted small ps-1">${t('msg_no_guests_group', 'Keine Gäste in dieser Gruppe.')}</div>`;
         return;
     }
 
@@ -239,41 +253,41 @@ function renderManageGuests(guests, group) {
             <div class="avatar-dot" style="background:#94a3b8"></div>
             <div class="flex-grow-1">
                 <div class="small fw-bold text-white">${g.name}</div>
-                <div class="text-muted" style="font-size:0.65rem">Gast</div>
+                <div class="text-muted" style="font-size:0.65rem">${t('label_guest_singular', 'Gast')}</div>
             </div>
             <button class="btn btn-sm btn-outline-danger" style="font-size:0.7rem; padding:2px 8px"
-                onclick="removeGuest(${g.id})">Entfernen</button>
+                onclick="removeGuest(${g.id})">${t('btn_remove', 'Entfernen')}</button>
         </div>
     `).join('');
 }
 
 window.removeMember = async function(groupId, userId) {
-    showConfirmModal("Mitglied entfernen", "Willst du dieses Mitglied wirklich aus der Gruppe entfernen?", async () => {
+    showConfirmModal(t('title_remove_member', "Mitglied entfernen"), t('confirm_remove_member', "Willst du dieses Mitglied wirklich aus der Gruppe entfernen?"), async () => {
         try {
             const res = await authFetch(`/groups/${groupId}/member/${userId}`, { method: 'DELETE' });
             if (res.ok) {
-                showToast('Mitglied entfernt.');
+                showToast(t('msg_member_removed', 'Mitglied entfernt.'));
                 openGroupManageModal();
             }
         } catch(e) {
-            showToast('Fehler beim Entfernen.');
+            showToast(t('msg_error_removing', 'Fehler beim Entfernen.'));
         }
     });
 };
 
 window.removeGuest = async function(guestId) {
-    showConfirmModal("Gast entfernen", "Willst du diesen Gast wirklich aus der Gruppe entfernen?", async () => {
+    showConfirmModal(t('title_remove_guest', "Gast entfernen"), t('confirm_remove_guest', "Willst du diesen Gast wirklich aus der Gruppe entfernen?"), async () => {
         try {
             const res = await authFetch(`/guests/${guestId}`, { method: 'DELETE' });
             if (res.ok) {
-                showToast('Gast entfernt.');
+                showToast(t('msg_guest_removed', 'Gast entfernt.'));
                 openGroupManageModal();
             } else {
                 const data = await res.json();
-                showToast(data.detail || 'Fehler beim Entfernen.');
+                showToast(data.detail || t('msg_error_removing', 'Fehler beim Entfernen.'));
             }
         } catch(e) {
-            showToast('Fehler beim Entfernen.');
+            showToast(t('msg_error_removing', 'Fehler beim Entfernen.'));
         }
     });
 };
@@ -282,7 +296,7 @@ window.addGuestFromManage = async function() {
     const input = document.getElementById('manageNewGuestNameInput');
     const name = input ? input.value.trim() : '';
     if (!name) {
-        showToast('Bitte einen Namen eingeben.');
+        showToast(t('msg_enter_name', 'Bitte einen Namen eingeben.'));
         return;
     }
     
@@ -293,15 +307,15 @@ window.addGuestFromManage = async function() {
             body: JSON.stringify({ name })
         });
         if (res.ok) {
-            showToast('Gast hinzugefügt.');
+            showToast(t('msg_guest_added', 'Gast hinzugefügt.'));
             if (input) input.value = '';
             openGroupManageModal();
         } else {
             const data = await res.json();
-            showToast(data.detail || 'Fehler beim Hinzufügen.');
+            showToast(data.detail || t('msg_error_adding', 'Fehler beim Hinzufügen.'));
         }
     } catch(e) {
-        showToast('Verbindungsfehler.');
+        showToast(t('msg_connection_error', 'Verbindungsfehler.'));
     }
 };
 
@@ -315,9 +329,9 @@ window.regenerateCode = async function() {
         // Aktive Gruppe aktualisieren
         group.invite_code = data.invite_code;
         Auth.setActiveGroup(group);
-        showToast('Neuer Code generiert! ✅');
+        showToast(t('msg_new_code_generated', 'Neuer Code generiert! ✅'));
     } catch(e) {
-        showToast('Fehler.');
+        showToast(t('msg_error', 'Fehler.'));
     }
 };
 
@@ -348,7 +362,7 @@ window.createNewGroupFromModal = async function() {
     const errorEl = document.getElementById('createGroupError');
 
     if (!name) {
-        errorEl.textContent = 'Bitte einen Gruppennamen eingeben.';
+        errorEl.textContent = t('msg_enter_group_name', 'Bitte einen Gruppennamen eingeben.');
         errorEl.classList.remove('d-none');
         return;
     }
@@ -362,7 +376,7 @@ window.createNewGroupFromModal = async function() {
         const data = await res.json();
 
         if (!res.ok) {
-            errorEl.textContent = data.detail || 'Fehler beim Erstellen.';
+            errorEl.textContent = data.detail || t('msg_error_creating', 'Fehler beim Erstellen.');
             errorEl.classList.remove('d-none');
             return;
         }
@@ -373,9 +387,9 @@ window.createNewGroupFromModal = async function() {
 
         Auth.setActiveGroup(data);
         await loadUserAndStart();
-        showToast(`Gruppe '${data.name}' erstellt! 🎉`);
+        showToast(t('msg_group_created', "Gruppe '{name}' erstellt! 🎉").replace('{name}', data.name));
     } catch(e) {
-        errorEl.textContent = 'Fehler beim Verbinden.';
+        errorEl.textContent = t('msg_connection_error', 'Fehler beim Verbinden.');
         errorEl.classList.remove('d-none');
     }
 };

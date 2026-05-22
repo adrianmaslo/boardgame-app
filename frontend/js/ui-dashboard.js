@@ -19,7 +19,9 @@ window.loadDashboard = async function() {
         allPlayers = data.players.map(p => ({
             id: p.id,
             name: p.name,
-            avatar_color: p.avatar_color
+            avatar_color: p.avatar_color,
+            avatar_icon: p.avatar_icon || '👤',
+            favorite_game_id: p.favorite_game_id
         }));
     }
     if (allPlayers.length >= 1) player1Name = allPlayers[0].name;
@@ -65,10 +67,21 @@ window.loadDashboard = async function() {
                 achsHtml = `<div class="d-flex flex-wrap justify-content-center gap-1 mt-1">${badgesList.join('')}</div>`;
             }
 
+            const avatarIcon = p.avatar_icon || '👤';
+            let favoriteGameHtml = '';
+            if (p.favorite_game_id && window.allCollectionGames) {
+                const favGame = window.allCollectionGames.find(g => g.id === p.favorite_game_id);
+                if (favGame) {
+                    favoriteGameHtml = `<small class="text-white-50 x-small d-block text-truncate w-100 text-center mt-1" style="font-size: 0.65rem;" title="${t('label_favorite_game', 'Lieblingsspiel')}: ${favGame.name}">💖 ${favGame.name}</small>`;
+                }
+            }
+
             html += `
             <div class="d-flex flex-column align-items-center py-2" style="flex: 1 1 0; min-width: 0; max-width: 25%;">
+                <span class="fs-4 mb-1" style="line-height: 1;">${avatarIcon}</span>
                 <span class="score-name ${colorClass} d-block w-100 text-truncate text-center" style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;" title="${p.name}">${p.name}</span>
                 <h1 class="display-3 fw-bold mb-0 text-shadow my-1" style="font-size: 2.2rem;">${pWins}</h1>
+                ${favoriteGameHtml}
                 <div class="mt-1 d-flex flex-wrap justify-content-center gap-1 w-100">
                     ${achsHtml}
                 </div>
@@ -86,12 +99,12 @@ window.loadDashboard = async function() {
     
     if (data.most_played) {
         highlightsHtml += `
-        <div class="dashboard-card shadow-sm">
+        <div class="dashboard-card shadow-sm" style="cursor: pointer;" onclick="openGameProfileById(${data.most_played.game_id})">
             <img src="${data.most_played.image_url || 'https://via.placeholder.com/60?text=🎲'}">
             <div>
-                <small class="text-white-50 text-uppercase x-small d-block tracking-wider fw-bold">Dauerbrenner</small>
+                <small class="text-white-50 text-uppercase x-small d-block tracking-wider fw-bold">${t('highlight_hotness', 'Dauerbrenner')}</small>
                 <span class="fw-bold d-block text-white">${data.most_played.name}</span>
-                <small class="text-primary fw-bold">${data.most_played.count} Partien</small>
+                <small class="text-primary fw-bold">${data.most_played.count} ${t('label_plays', 'Partien')}</small>
             </div>
         </div>`;
     }
@@ -101,21 +114,27 @@ window.loadDashboard = async function() {
         const best = data.best_per_player && data.best_per_player[p.name];
         if (best) {
             const colorClass = idx === 0 ? 'adrian-color' : (idx === 1 ? 'lea-color' : (idx === 2 ? 'text-success' : 'text-warning'));
-            const suffix = idx === 0 ? 's Festung' : (idx === 1 ? 's Imperium' : 's Domäne');
+            let prefixOrSuffix = '';
+            const lang = localStorage.getItem('app_lang') || 'de';
+            if (lang === 'en') {
+                prefixOrSuffix = idx === 0 ? `${p.name}'s Fortress` : (idx === 1 ? `${p.name}'s Empire` : `${p.name}'s Domain`);
+            } else {
+                prefixOrSuffix = idx === 0 ? `${p.name}s Festung` : (idx === 1 ? `${p.name}s Imperium` : `${p.name}s Domäne`);
+            }
             highlightsHtml += `
-            <div class="dashboard-card shadow-sm">
+            <div class="dashboard-card shadow-sm" style="cursor: pointer;" onclick="openGameProfileById(${best.game_id})">
                 <img src="${best.image_url || 'https://via.placeholder.com/60?text=🏆'}">
                 <div>
-                    <small class="${colorClass} text-uppercase x-small d-block tracking-wider fw-bold">${p.name}${suffix}</small>
+                    <small class="${colorClass} text-uppercase x-small d-block tracking-wider fw-bold">${prefixOrSuffix}</small>
                     <span class="fw-bold d-block text-white">${best.name}</span>
-                    <small class="text-white-50">${best.wins} Siege</small>
+                    <small class="text-white-50">${best.wins} ${t('label_wins', 'Siege')}</small>
                 </div>
             </div>`;
         }
     });
 
     if (highlightsHtml === '') {
-         document.getElementById('dashboardHighlights').innerHTML = '<div class="text-center text-white-50 small py-4">Noch keine Highlights. Spielt ein paar Partien!</div>';
+         document.getElementById('dashboardHighlights').innerHTML = `<div class="text-center text-white-50 small py-4">${t('msg_no_highlights', 'Noch keine Highlights. Spielt ein paar Partien!')}</div>`;
     } else {
          document.getElementById('dashboardHighlights').innerHTML = highlightsHtml;
     }

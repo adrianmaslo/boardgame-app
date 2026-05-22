@@ -183,8 +183,12 @@ window.loadUserAndStart = async function() {
 
         // User-Daten aktualisieren
         Auth._save(Auth.getToken(), {
-            id: me.id, username: me.username,
-            email: me.email, avatar_color: me.avatar_color
+            id: me.id,
+            username: me.username,
+            email: me.email,
+            avatar_color: me.avatar_color,
+            avatar_icon: me.avatar_icon,
+            favorite_game_id: me.favorite_game_id
         });
 
         if (me.groups.length === 0) {
@@ -221,7 +225,10 @@ function showMainApp(user, group) {
 
     // Header aktualisieren
     const headerUser = document.getElementById('headerUsername');
-    if (headerUser) headerUser.textContent = user.username;
+    if (headerUser) {
+        const icon = user.avatar_icon || '👤';
+        headerUser.textContent = `${icon} ${user.username}`;
+    }
 
     // App initialisieren
     if (typeof initApp === 'function') initApp(group);

@@ -4,10 +4,12 @@ window.loadHistory = async function() {
 };
 
 function renderHistory(sessions) {
+    const lang = localStorage.getItem('app_lang') || 'de';
+    const dateLocale = lang === 'en' ? 'en-US' : 'de-DE';
     document.getElementById('historyList').innerHTML = sessions.map(s => {
         const winners = s.scores.filter(sc => sc.is_winner === 1);
         
-        let winnerText = 'Remis';
+        let winnerText = t('option_draw', 'Remis');
         let winnerColor = 'text-white-50';
         if (winners.length > 0) {
             winnerText = winners.map(w => w.name).join(' & ') + ' 🏆';
@@ -24,7 +26,7 @@ function renderHistory(sessions) {
         return `<div class="list-group-item d-flex justify-content-between align-items-center ${bgClass}" onclick="showDetails(${s.id})" style="cursor: pointer;">
             <div>
                 <div class="fw-bold text-white mb-1">${s.game_name}</div>
-                <small class="text-white-50">${new Date(s.play_date).toLocaleDateString('de-DE')}</small>
+                <small class="text-white-50">${new Date(s.play_date).toLocaleDateString(dateLocale)}</small>
             </div>
             <span class="fw-bold ${winnerColor} bg-dark bg-opacity-50 px-3 py-1 rounded-pill border border-secondary border-opacity-50">${winnerText}</span>
         </div>`;
@@ -34,10 +36,12 @@ function renderHistory(sessions) {
 window.showDetails = function(sessionId) {
     const s = allSessions.find(x => x.id === sessionId);
     const modal = new bootstrap.Modal(document.getElementById('detailModal'));
+    const lang = localStorage.getItem('app_lang') || 'de';
+    const dateLocale = lang === 'en' ? 'en-US' : 'de-DE';
     document.getElementById('modalGameName').innerText = s.game_name;
-    document.getElementById('modalFullDate').innerText = new Date(s.play_date).toLocaleDateString('de-DE', {weekday: 'long', day: '2-digit', month: 'long'});
-    document.getElementById('modalDuration').innerText = `⏱️ ${Math.floor(s.duration_seconds/60)} Min.`;
-    if(s.start_time) { document.getElementById('modalStartTime').innerText = `🕒 ${new Date(s.start_time).toLocaleTimeString('de-DE', {hour:'2-digit', minute:'2-digit'})}`; document.getElementById('modalStartTime').classList.remove('d-none'); } else { document.getElementById('modalStartTime').classList.add('d-none'); }
+    document.getElementById('modalFullDate').innerText = new Date(s.play_date).toLocaleDateString(dateLocale, {weekday: 'long', day: '2-digit', month: 'long'});
+    document.getElementById('modalDuration').innerText = `⏱️ ${Math.floor(s.duration_seconds/60)} ${t('label_minutes_short', 'Min.')}`;
+    if(s.start_time) { document.getElementById('modalStartTime').innerText = `🕒 ${new Date(s.start_time).toLocaleTimeString(dateLocale, {hour:'2-digit', minute:'2-digit'})}`; document.getElementById('modalStartTime').classList.remove('d-none'); } else { document.getElementById('modalStartTime').classList.add('d-none'); }
     const commBox = document.getElementById('modalCommentBox');
     if(s.comment) { document.getElementById('modalComment').innerText = s.comment; commBox.classList.remove('d-none'); } else { commBox.classList.add('d-none'); }
     const imgCont = document.getElementById('modalImageContainer');
@@ -78,6 +82,11 @@ window.showDetails = function(sessionId) {
     }
     document.getElementById('modalScores').innerHTML = scoreHtml;
     document.getElementById('deleteSessionBtn').onclick = () => deleteSession(sessionId);
+    document.getElementById('shareSessionBtn').onclick = () => {
+        if (typeof openShareImageModal === 'function') {
+            openShareImageModal(s);
+        }
+    };
     
     // Edit Session Logic
     window.currentEditSessionData = {
@@ -128,7 +137,7 @@ window.showDetails = function(sessionId) {
         const editScoresContainer = document.getElementById('editScoresContainer');
         
         let checklistHtml = `
-            <label class="form-label text-white-50 x-small fw-bold text-uppercase d-block mb-2">Wer hat mitgespielt?</label>
+            <label class="form-label text-white-50 x-small fw-bold text-uppercase d-block mb-2">${t('label_who_played', 'Wer hat mitgespielt?')}</label>
             <div class="d-flex flex-wrap gap-2 mb-3">
         `;
         
@@ -177,7 +186,7 @@ window.showDetails = function(sessionId) {
                 const player = potentialPlayers.find(p => p.id === pId);
                 return `<option value="${pId}">🏆 ${player.name}</option>`;
             }).join('');
-            winnerOptionsHtml += `<option value="0">⚪ Unentschieden</option>`;
+            winnerOptionsHtml += `<option value="0">⚪ ${t('option_draw', 'Unentschieden')}</option>`;
             editWinner.innerHTML = winnerOptionsHtml;
             
             const hasWinner = checkedBoxes.some(cb => parseInt(cb.value) === parseInt(selectedWinnerId));
@@ -190,7 +199,7 @@ window.showDetails = function(sessionId) {
 
         let inputsHtml = `<div id="editScoresInputs">`;
         if (s.win_condition === 2) {
-            inputsHtml += `<div class="text-center text-muted mb-3">Dieses Spiel hat keine Punkte. Du kannst nur den Gewinner anpassen.</div>`;
+            inputsHtml += `<div class="text-center text-muted mb-3">${t('msg_no_scores_game', 'Dieses Spiel hat keine Punkte. Du kannst nur den Gewinner anpassen.')}</div>`;
         } else {
             potentialPlayers.forEach((p, idx) => {
                 const isParticipating = s.scores.some(sc => sc.player_id === p.id || sc.name === p.name);
@@ -223,7 +232,7 @@ window.showDetails = function(sessionId) {
             const checkedBoxes = Array.from(document.querySelectorAll('#editScoresContainer input[type="checkbox"]:checked'));
             
             if (checkedBoxes.length === 0) {
-                alert("Bitte wähle mindestens einen Spieler aus!");
+                alert(t('msg_select_at_least_one_player', 'Bitte wähle mindestens einen Spieler aus!'));
                 return;
             }
             
@@ -256,7 +265,7 @@ window.showDetails = function(sessionId) {
                 loadHistory();
                 if (typeof loadDashboard === 'function') loadDashboard();
             } catch (e) {
-                alert("Fehler beim Speichern der Änderungen.");
+                alert(t('msg_error_save', 'Fehler beim Speichern der Änderungen.'));
             }
         };
     };
@@ -265,14 +274,14 @@ window.showDetails = function(sessionId) {
 };
 
 window.deleteSession = async function(sessionId) {
-    showConfirmModal("Partie löschen", "Willst du diese Partie wirklich aus dem Verlauf löschen?", async () => {
+    showConfirmModal(t('title_delete_session', "Partie löschen"), t('confirm_delete_session', "Willst du diese Partie wirklich aus dem Verlauf löschen?"), async () => {
         try {
             const res = await authFetch(`/session/${sessionId}`, { method: 'DELETE' });
             if (!res || !res.ok) throw new Error();
             bootstrap.Modal.getInstance(document.getElementById('detailModal')).hide();
             loadHistory(); 
             if (typeof loadDashboard === 'function') loadDashboard(); 
-        } catch (e) { alert("Fehler beim Löschen."); }
+        } catch (e) { alert(t('msg_error_delete', "Fehler beim Löschen.")); }
     });
 };
 
@@ -287,10 +296,13 @@ window.filterHistory = function() {
     if (dateFrom) dateFrom.setHours(0,0,0,0);
     if (dateTo) dateTo.setHours(23,59,59,999);
 
+    const lang = localStorage.getItem('app_lang') || 'de';
+    const dateLocale = lang === 'en' ? 'en-US' : 'de-DE';
+
     renderHistory(allSessions.filter(s => {
         const gameMatch = s.game_name.toLowerCase().includes(term);
         const playerMatch = s.scores.some(sc => sc.name.toLowerCase().includes(term));
-        const dateMatch = new Date(s.play_date).toLocaleDateString('de-DE').includes(term);
+        const dateMatch = new Date(s.play_date).toLocaleDateString(dateLocale).includes(term);
         const textMatch = term === '' || gameMatch || playerMatch || dateMatch;
         
         let sessionDate = new Date(s.play_date);

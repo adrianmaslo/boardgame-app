@@ -255,3 +255,141 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; }
 .rounded-5 { border-radius: 28px !important; }
 .btn-xl { padding: 18px; font-size: 1.1rem; letter-spacing: 1px; }
 .x-small { font-size: 0.65rem; }
+
+/* ─── LIGHT MODE OVERRIDES ────────────────────────────────────────────────── */
+body.light-mode {
+    --bg-base: #f8fafc;
+    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+    --surface: rgba(255, 255, 255, 0.65);
+    --surface-border: rgba(0, 0, 0, 0.1);
+    --text-main: #0f172a;
+    --text-muted: #475569;
+}
+
+body.light-mode .text-white,
+body.light-mode .text-light,
+body.light-mode h1,
+body.light-mode h2,
+body.light-mode h3,
+body.light-mode h4,
+body.light-mode h5,
+body.light-mode h6,
+body.light-mode .modal-title,
+body.light-mode .accordion-button,
+body.light-mode .accordion-button::after {
+    color: #0f172a !important;
+}
+
+body.light-mode .text-white-50 {
+    color: #475569 !important;
+}
+
+body.light-mode .text-muted {
+    color: #64748b !important;
+}
+
+body.light-mode .app-header {
+    background: rgba(255, 255, 255, 0.8) !important;
+}
+
+body.light-mode .bottom-nav {
+    background: rgba(255, 255, 255, 0.9) !important;
+}
+
+body.light-mode .premium-scoreboard {
+    background: rgba(0, 0, 0, 0.02);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.8);
+}
+
+body.light-mode .modal-content {
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: #0f172a !important;
+}
+
+body.light-mode .form-control,
+body.light-mode .form-select {
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    border-color: rgba(0, 0, 0, 0.15) !important;
+    color: #0f172a !important;
+}
+
+body.light-mode .form-control::placeholder {
+    color: rgba(0, 0, 0, 0.4) !important;
+}
+
+body.light-mode .btn-outline-light {
+    border-color: rgba(0, 0, 0, 0.2);
+    color: #0f172a !important;
+}
+
+body.light-mode .btn-outline-light:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+body.light-mode .btn-close {
+    filter: none;
+}
+
+body.light-mode .dropdown-menu {
+    background: rgba(255, 255, 255, 0.95) !important;
+    color: #0f172a !important;
+    border: 1px solid rgba(0, 0, 0, 0.1) !important;
+}
+
+body.light-mode .dropdown-item {
+    color: #0f172a !important;
+}
+
+body.light-mode .dropdown-item:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+body.light-mode .mini-player {
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+body.light-mode .active-scoreboard {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+body.light-mode .score-input-large {
+    background: rgba(0, 0, 0, 0.04);
+    color: #0f172a;
+}
+
+body.light-mode .btn-outline-secondary {
+    border-color: rgba(0, 0, 0, 0.2) !important;
+    color: #0f172a !important;
+}
+body.light-mode .btn-outline-secondary.active {
+    background-color: var(--primary) !important;
+    color: white !important;
+}
+body.light-mode .accordion-item {
+    background: rgba(0, 0, 0, 0.03) !important;
+}
+body.light-mode .list-group-item {
+    background: rgba(0, 0, 0, 0.03) !important;
+    color: #0f172a !important;
+}
+
+/* TOUR HIGHLIGHT & BACKDROP */
+.tour-highlight {
+    position: relative !important;
+    z-index: 2001 !important;
+    outline: 3px solid var(--primary) !important;
+    outline-offset: 4px;
+    box-shadow: 0 0 20px var(--primary-glow) !important;
+    pointer-events: none;
+}
+#tour-backdrop {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    z-index: 1999;
+    pointer-events: none;
+    animation: fadeIn 0.3s ease-out;
+}

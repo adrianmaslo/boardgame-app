@@ -89,6 +89,16 @@ def init_db():
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )""")
 
+        new_user_columns = [
+            "avatar_icon TEXT",
+            "favorite_game_id INTEGER REFERENCES games(id)"
+        ]
+        for col in new_user_columns:
+            try:
+                c.execute(f"ALTER TABLE users ADD COLUMN {col}")
+            except sqlite3.OperationalError:
+                pass
+
         c.execute("""CREATE TABLE IF NOT EXISTS groups (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
@@ -109,6 +119,16 @@ def init_db():
             FOREIGN KEY (group_id) REFERENCES groups(id),
             FOREIGN KEY (user_id) REFERENCES users(id)
         )""")
+
+        new_gm_columns = [
+            "avatar_icon TEXT",
+            "favorite_game_id INTEGER REFERENCES games(id)"
+        ]
+        for col in new_gm_columns:
+            try:
+                c.execute(f"ALTER TABLE group_members ADD COLUMN {col}")
+            except sqlite3.OperationalError:
+                pass
 
         # Alte players Tabelle bleibt für Legacy-Kompatibilität
         c.execute("CREATE TABLE IF NOT EXISTS players (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT UNIQUE NOT NULL)")

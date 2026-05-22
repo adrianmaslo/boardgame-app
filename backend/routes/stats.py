@@ -24,21 +24,28 @@ def _get_active_group_id(conn, user_id: int, group_id: Optional[int] = None):
 
 
 def _get_group_players(conn, group_id: int):
-    """Gibt alle Mitglieder und Gäste der Gruppe als Dict {id: {"name": display_name, "color": color}} zurück."""
+    """Gibt alle Mitglieder und Gäste der Gruppe als Dict {id: {"name": display_name, "color": color, "avatar_icon": icon, "favorite_game_id": game_id}} zurück."""
     members = conn.execute("""
-        SELECT u.id, gm.display_name, gm.avatar_color
+        SELECT u.id, gm.display_name, gm.avatar_color, gm.avatar_icon, gm.favorite_game_id
         FROM group_members gm JOIN users u ON u.id = gm.user_id
         WHERE gm.group_id = ? ORDER BY gm.joined_at ASC
     """, (group_id,)).fetchall()
     
-    players_dict = {m["id"]: {"name": m["display_name"], "color": m["avatar_color"]} for m in members}
+    players_dict = {
+        m["id"]: {
+            "name": m["display_name"],
+            "color": m["avatar_color"],
+            "avatar_icon": m["avatar_icon"],
+            "favorite_game_id": m["favorite_game_id"]
+        } for m in members
+    }
     
     # Gäste laden (mit negativer ID)
     guests = conn.execute("""
         SELECT id, name FROM guests WHERE group_id = ?
     """, (group_id,)).fetchall()
     for g in guests:
-        players_dict[-g["id"]] = {"name": g["name"] + " (Gast)", "color": "#94a3b8"}
+        players_dict[-g["id"]] = {"name": g["name"] + " (Gast)", "color": "#94a3b8", "avatar_icon": "👤", "favorite_game_id": None}
         
     return players_dict
 
@@ -68,7 +75,7 @@ def get_dashboard_stats(group_id: Optional[int] = None, current_user: dict = Dep
 
         # 2. Meistgespieltes Spiel
         most_played = conn.execute("""
-            SELECT g.name, g.image_url, COUNT(s.id) as count FROM sessions s
+            SELECT g.id as game_id, g.name, g.image_url, COUNT(s.id) as count FROM sessions s
             JOIN games g ON s.game_id = g.id WHERE s.group_id = ?
             GROUP BY s.game_id ORDER BY count DESC LIMIT 1
         """, (active_group_id,)).fetchone()
@@ -77,7 +84,7 @@ def get_dashboard_stats(group_id: Optional[int] = None, current_user: dict = Dep
         best_per_player = {}
         for pid in player_ids:  # Alle Spieler für Dashboard-Karten
             best = conn.execute("""
-                SELECT g.name, g.image_url, COUNT(*) as wins FROM scores sc
+                SELECT g.id as game_id, g.name, g.image_url, COUNT(*) as wins FROM scores sc
                 JOIN sessions s ON sc.session_id = s.id
                 JOIN games g ON s.game_id = g.id
                 WHERE sc.player_id = ? AND sc.is_winner = 1 AND s.group_id = ?
