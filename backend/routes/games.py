@@ -76,10 +76,18 @@ def search_bgg(name: str):
             bgg_id = item.get('id')
             name_node = item.find("name[@type='primary']")
             if name_node is None: continue
-            results.append({"id": int(bgg_id), "name": name_node.get('value')})
+            
+            raw_name = name_node.get('value')
+            year_node = item.find("yearpublished")
+            year = year_node.get('value') if year_node is not None else None
+            
+            display_name = f"{raw_name} ({year})" if year else raw_name
+            results.append({"id": int(bgg_id), "name": display_name, "raw_name": raw_name, "year": year})
+            
         query_lower = name.strip().lower()
-        results.sort(key=lambda x: (x['name'].lower() != query_lower, len(x['name'])))
-        return {"results": results[:25]}
+        results.sort(key=lambda x: (x['raw_name'].lower() != query_lower, x['year'] is None, len(x['raw_name'])))
+        final_results = [{"id": r["id"], "name": r["name"]} for r in results[:25]]
+        return {"results": final_results}
     except Exception as e:
         print(f"🔴 Suche fehlgeschlagen: {e}")
         raise HTTPException(status_code=500, detail="BGG Suche fehlgeschlagen")
