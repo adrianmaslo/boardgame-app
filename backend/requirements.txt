@@ -5,5 +5,5 @@ xmltodict
 python-dotenv
 python-multipart
 python-jose[cryptography]
-passlib
-bcrypt==4.0.1
+passlib[bcrypt]
+bcrypt==3.2.2
