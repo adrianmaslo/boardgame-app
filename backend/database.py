@@ -23,7 +23,7 @@ def init_db():
         c.execute("""CREATE TABLE IF NOT EXISTS games (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
-            bgg_id INTEGER UNIQUE,
+            bgg_id INTEGER,
             is_coop INTEGER DEFAULT 0,
             win_condition INTEGER DEFAULT 0
         )""")

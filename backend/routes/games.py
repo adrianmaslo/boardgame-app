@@ -99,6 +99,11 @@ def add_game(name: str, bgg_id: int, is_wishlist: int = 0, group_id: Optional[in
 
     with get_db_connection() as conn:
         active_group_id = _get_active_group_id(conn, current_user["id"], group_id)
+        
+        existing = conn.execute("SELECT id FROM games WHERE bgg_id = ? AND group_id = ?", (bgg_id, active_group_id)).fetchone()
+        if existing:
+            return {"status": "Existiert bereits"}
+            
         try:
             conn.execute("""
                 INSERT INTO games (name, bgg_id, image_url, min_players, max_players, playing_time, weight, is_wishlist, group_id)
