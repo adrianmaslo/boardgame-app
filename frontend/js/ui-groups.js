@@ -170,6 +170,12 @@ window.renderGroupSwitcher = function(groups, activeGroupId) {
                 ➕ ${t('title_create_group', 'Neue Gruppe')}
             </a>
         </li>
+        <li>
+            <a class="dropdown-item small text-success" href="#"
+               onclick="showJoinGroupModal(); return false;">
+                🤝 ${t('title_join_group', 'Gruppe beitreten')}
+            </a>
+        </li>
     `;
 };
 
@@ -422,6 +428,55 @@ window.createNewGroupFromModal = async function() {
         Auth.setActiveGroup(data);
         await loadUserAndStart();
         showToast(t('msg_group_created', "Gruppe '{name}' erstellt! 🎉").replace('{name}', data.name));
+    } catch(e) {
+        errorEl.textContent = t('msg_connection_error', 'Fehler beim Verbinden.');
+        errorEl.classList.remove('d-none');
+    }
+};
+
+window.showJoinGroupModal = function() {
+    const modalEl = document.getElementById('joinGroupModal');
+    if (modalEl) {
+        document.getElementById('joinCodeInput').value = '';
+        document.getElementById('joinDisplayNameInput').value = Auth.getUser()?.username || '';
+        document.getElementById('joinGroupError').classList.add('d-none');
+        const modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
+};
+
+window.joinGroupFromModal = async function() {
+    const code = document.getElementById('joinCodeInput').value.trim().toUpperCase();
+    const displayName = document.getElementById('joinDisplayNameInput').value.trim();
+    const errorEl = document.getElementById('joinGroupError');
+
+    if (!code) {
+        errorEl.textContent = t('msg_enter_invite_code', 'Bitte den Einladungs-Code eingeben.');
+        errorEl.classList.remove('d-none');
+        return;
+    }
+
+    try {
+        const res = await authFetch('/groups/join', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ invite_code: code, display_name: displayName || null })
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+            errorEl.textContent = data.detail || t('msg_invalid_code', 'Ungültiger Code.');
+            errorEl.classList.remove('d-none');
+            return;
+        }
+
+        const modalEl = document.getElementById('joinGroupModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        if (modal) modal.hide();
+
+        Auth.setActiveGroup(data);
+        await loadUserAndStart();
+        showToast(t('msg_group_joined', "Gruppe '{name}' beigetreten! 🎉").replace('{name}', data.name));
     } catch(e) {
         errorEl.textContent = t('msg_connection_error', 'Fehler beim Verbinden.');
         errorEl.classList.remove('d-none');

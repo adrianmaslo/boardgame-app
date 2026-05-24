@@ -71,6 +71,15 @@ window.selectGame = async function(id, name, imageUrl, checkedPlayerIds) {
         console.error("Guests fetch failed:", e);
     }
 
+    // Merge active guests from profile to ensure they are added even if not in the fetch yet
+    const activeProfileGuests = window.profileActiveGuests || [];
+    activeProfileGuests.forEach(pg => {
+        const positiveId = Math.abs(pg.id);
+        if (!guests.some(g => Number(g.id) === positiveId)) {
+            guests.push({ id: positiveId, name: pg.name });
+        }
+    });
+
     const potentialPlayers = [
         ...allPlayers.map(p => ({ id: Number(p.id), name: p.name, is_guest: false })),
         ...guests.map(g => ({ id: -Math.abs(Number(g.id)), name: g.name, is_guest: true }))
@@ -581,6 +590,17 @@ window.showSaveView = function() {
     document.getElementById('activeGamePlayView').classList.add('d-none');
     document.getElementById('activeGameSaveView').classList.remove('d-none');
     
+    // Timer pausieren
+    if (!isPaused && timerInterval) {
+        window._wasRunningBeforeSave = true;
+        clearInterval(timerInterval);
+        timerInterval = null;
+        isPaused = true;
+        updatePauseUI();
+    } else {
+        window._wasRunningBeforeSave = false;
+    }
+    
     const activePlayers = window.sessionPlayers.filter(p => p.active);
     const winCond = window.activeGameWinCondition;
     const lowWins = winCond === 1;
@@ -715,6 +735,14 @@ window.toggleWinnerBadge = function(cb, key) {
 window.showPlayView = function() {
     document.getElementById('activeGamePlayView').classList.remove('d-none');
     document.getElementById('activeGameSaveView').classList.add('d-none');
+    
+    // Timer fortsetzen, falls er vorher lief
+    if (window._wasRunningBeforeSave) {
+        startInternalTimer();
+        isPaused = false;
+        updatePauseUI();
+        window._wasRunningBeforeSave = false;
+    }
 };
 
 document.addEventListener('DOMContentLoaded', () => {

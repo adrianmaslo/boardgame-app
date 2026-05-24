@@ -45,16 +45,21 @@ window.initApp = function(group) {
         }
     }
 
+    // Gruppen-Label sofort aktualisieren
+    const groupLabel = document.getElementById('activeGroupLabel');
+    if (groupLabel && group) {
+        groupLabel.removeAttribute('data-i18n');
+        groupLabel.textContent = group.name;
+    }
+
     // Gruppen-Switcher rendern
     const me = Auth.getUser();
     // Gruppen vom /auth/me holen (asynchron, non-blocking)
     authFetch('/auth/me').then(res => res && res.json()).then(data => {
         if (data && data.groups) {
             renderGroupSwitcher(data.groups, group.id);
-            const groupLabel = document.getElementById('activeGroupLabel');
-            if (groupLabel) groupLabel.textContent = group.name;
         }
-    });
+    }).catch(e => console.error("Fehler beim Laden der Gruppen:", e));
 
     // Dashboard laden
     if (typeof loadDashboard === 'function') loadDashboard();

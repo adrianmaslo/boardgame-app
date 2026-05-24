@@ -281,11 +281,11 @@ body.light-mode .accordion-button::after {
 }
 
 body.light-mode .text-white-50 {
-    color: #475569 !important;
+    color: #334155 !important;
 }
 
 body.light-mode .text-muted {
-    color: #64748b !important;
+    color: #475569 !important;
 }
 
 body.light-mode .app-header {

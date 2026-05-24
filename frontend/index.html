@@ -133,11 +133,11 @@ Ich stimme den <a class="text-primary text-decoration-none" href="datenschutz.ht
 <header class="app-header shadow-sm d-flex justify-content-between align-items-center px-3">
 <!-- Group Switcher -->
 <div class="dropdown">
-<button aria-expanded="false" class="btn btn-sm btn-outline-light dropdown-toggle rounded-pill px-3 py-1" data-bs-toggle="dropdown" data-i18n="header_loading_group" id="activeGroupLabel" type="button">
+<button aria-expanded="false" class="btn btn-sm btn-outline-light dropdown-toggle rounded-pill px-3 py-1" data-bs-toggle="dropdown" id="activeGroupLabel" type="button">
                 Lade Gruppe...
             </button>
 <ul class="dropdown-menu dropdown-menu-dark shadow-lg border-0 rounded-3 mt-2" id="groupSwitcherItems" style="background: rgba(30, 41, 59, 0.95); backdrop-filter: blur(10px);">
-<!-- Injected via JS -->
+    <li><a class="dropdown-item text-white-50 small" href="#">Lade Gruppen...</a></li>
 </ul>
 </div>
 <span class="fw-bold tracking-widest text-white small d-none d-sm-inline" style="letter-spacing: 3px; font-size: 0.8rem;">✨ GAMELOG PRO</span>
@@ -245,6 +245,12 @@ Ich stimme den <a class="text-primary text-decoration-none" href="datenschutz.ht
 <div class="mb-5 animate-fade-in" id="statsContent">
 <!-- Injected via JS -->
 </div>
+
+<!-- ACHIEVEMENTS -->
+<h3 class="fw-bold mb-4 animate-fade-in" data-i18n="title_achievements">Erfolge 🏆</h3>
+<div class="mb-5 animate-fade-in" id="achievementsContainer">
+<!-- Injected via JS -->
+</div>
 </section>
 </main>
 <!-- MINI PLAYER -->
@@ -333,6 +339,30 @@ Ich stimme den <a class="text-primary text-decoration-none" href="datenschutz.ht
 </div>
 </div>
 </div>
+</div>
+<!-- JOIN GROUP MODAL (from dropdown switcher) -->
+<div aria-hidden="true" class="modal fade" id="joinGroupModal" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered">
+<div class="modal-content">
+<div class="modal-header border-0 pb-1 mt-2">
+<h5 class="modal-title fw-bold fs-4 text-white" data-i18n="title_join_group">Gruppe beitreten</h5>
+<button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body pt-0 pb-4">
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="wizard_label_join_code">6-stelliger Einladungs-Code</label>
+<input class="form-control rounded-3 py-2 px-3 text-center tracking-widest fw-bold" data-i18n-placeholder="label_invite_code_placeholder" id="joinCodeInput" placeholder="z.B. AB12CD" type="text"/>
+</div>
+<div class="mb-4">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_display_name">Dein Anzeigename in der Gruppe</label>
+<input class="form-control rounded-3 py-2 px-3" data-i18n-placeholder="label_dein_name" id="joinDisplayNameInput" placeholder="Dein Name" type="text"/>
+</div>
+<div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="joinGroupError"></div>
+<button class="btn btn-primary w-100 py-3 rounded-3 fw-bold" data-i18n="wizard_btn_join" onclick="joinGroupFromModal()">Gruppe beitreten</button>
+</div>
+</div>
+</div>
+</div>
 <!-- BGG PREVIEW MODAL -->
 <div aria-hidden="true" class="modal fade" id="bggPreviewModal" tabindex="-1">
 <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -363,7 +393,7 @@ Ich stimme den <a class="text-primary text-decoration-none" href="datenschutz.ht
 </div>
 <div class="modal-body pt-0 pb-4">
 <div class="mb-3" id="profileBggInfo"></div>
-<div class="d-flex justify-content-center align-items-center mb-4 mx-0 py-3 rounded-4 shadow-sm flex-wrap gap-2" id="profileWinsContainer" style="background: rgba(0,0,0,0.4); border: 1px solid var(--surface-border);">
+<div class="d-flex justify-content-center align-items-center mb-4 mx-0 py-3 rounded-4 shadow-sm flex-wrap gap-2" id="profileWinsContainer" style="background: var(--bs-tertiary-bg, rgba(128,128,128,0.1)); border: 1px solid var(--surface-border);">
 <!-- Injected via JS -->
 </div>
 <!-- Spieler-Auswahl für die Spielrunde -->
@@ -519,6 +549,7 @@ Ich stimme den <a class="text-primary text-decoration-none" href="datenschutz.ht
 <span class="text-white-50 small" data-i18n="label_loading">Lade...</span>
 </div>
 <img class="img-fluid rounded-4 shadow-sm w-100 mb-4 border border-secondary border-opacity-25" id="shareModalGeneratedImg" style="display: none;"/>
+
 <div class="d-flex gap-2">
 <button class="btn btn-outline-light flex-grow-1 rounded-3 fw-bold py-2 small" data-bs-dismiss="modal" data-i18n="btn_cancel" type="button">Abbrechen</button>
 <a class="btn btn-primary flex-grow-1 rounded-3 fw-bold py-2 small d-flex align-items-center justify-content-center gap-1" data-i18n="btn_download_image" id="btnDownloadShareImg">
@@ -659,21 +690,21 @@ Ich stimme den <a class="text-primary text-decoration-none" href="datenschutz.ht
 </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/i18n.js?v=24"></script>
-<script src="js/auth.js?v=24"></script>
-<script src="js/ui-groups.js?v=24"></script>
-<script src="js/state.js?v=24"></script>
-<script src="js/utils.js?v=24"></script>
-<script src="js/api.js?v=24"></script>
-<script src="js/timer.js?v=24"></script>
-<script src="js/ui-dashboard.js?v=24"></script>
-<script src="js/ui-collection.js?v=24"></script>
-<script src="js/ui-history.js?v=24"></script>
-<script src="js/ui-profile.js?v=24"></script>
-<script src="js/ui-stats.js?v=24"></script>
-<script src="js/share.js?v=24"></script>
-<script src="js/tour.js?v=24"></script>
-<script src="js/main.js?v=24"></script>
+<script src="js/i18n.js?v=29"></script>
+<script src="js/auth.js?v=29"></script>
+<script src="js/ui-groups.js?v=29"></script>
+<script src="js/state.js?v=29"></script>
+<script src="js/utils.js?v=29"></script>
+<script src="js/api.js?v=29"></script>
+<script src="js/timer.js?v=29"></script>
+<script src="js/ui-dashboard.js?v=29"></script>
+<script src="js/ui-collection.js?v=29"></script>
+<script src="js/ui-history.js?v=29"></script>
+<script src="js/ui-profile.js?v=29"></script>
+<script src="js/ui-stats.js?v=29"></script>
+<script src="js/share.js?v=29"></script>
+<script src="js/tour.js?v=29"></script>
+<script src="js/main.js?v=29"></script>
 <!-- CONFIRM ACTION MODAL -->
 <div aria-hidden="true" class="modal fade" id="confirmActionModal" style="z-index: 2000;" tabindex="-1">
 <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 380px;">

@@ -72,7 +72,7 @@ window.loadDashboard = async function() {
             if (p.favorite_game_id && window.allCollectionGames) {
                 const favGame = window.allCollectionGames.find(g => g.id === p.favorite_game_id);
                 if (favGame) {
-                    favoriteGameHtml = `<small class="text-white-50 x-small d-block text-truncate w-100 text-center mt-1" style="font-size: 0.65rem;" title="${t('label_favorite_game', 'Lieblingsspiel')}: ${favGame.name}">💖 ${favGame.name}</small>`;
+                    favoriteGameHtml = `<small class="text-muted x-small d-block text-truncate w-100 text-center mt-1" style="font-size: 0.65rem;" title="${t('label_favorite_game', 'Lieblingsspiel')}: ${favGame.name}">💖 ${favGame.name}</small>`;
                 }
             }
 
@@ -88,7 +88,7 @@ window.loadDashboard = async function() {
             </div>`;
             
             if (idx < allPlayers.length - 1) {
-                html += `<div class="text-white-50 opacity-25 align-self-center px-1" style="font-size: 0.75rem; margin-top: -0.75rem;">⚡</div>`;
+                html += `<div class="text-muted opacity-50 align-self-center px-1" style="font-size: 0.75rem; margin-top: -0.75rem;">⚡</div>`;
             }
         });
         duellContainer.innerHTML = html;
@@ -102,8 +102,8 @@ window.loadDashboard = async function() {
         <div class="dashboard-card shadow-sm" style="cursor: pointer;" onclick="openGameProfileById(${data.most_played.game_id})">
             <img src="${data.most_played.image_url || 'https://via.placeholder.com/60?text=🎲'}">
             <div>
-                <small class="text-white-50 text-uppercase x-small d-block tracking-wider fw-bold">${t('highlight_hotness', 'Dauerbrenner')}</small>
-                <span class="fw-bold d-block text-white">${data.most_played.name}</span>
+                <small class="text-muted text-uppercase x-small d-block tracking-wider fw-bold">${t('highlight_hotness', 'Dauerbrenner')}</small>
+                <span class="fw-bold d-block text-body">${data.most_played.name}</span>
                 <small class="text-primary fw-bold">${data.most_played.count} ${t('label_plays', 'Partien')}</small>
             </div>
         </div>`;
@@ -126,8 +126,8 @@ window.loadDashboard = async function() {
                 <img src="${best.image_url || 'https://via.placeholder.com/60?text=🏆'}">
                 <div>
                     <small class="${colorClass} text-uppercase x-small d-block tracking-wider fw-bold">${prefixOrSuffix}</small>
-                    <span class="fw-bold d-block text-white">${best.name}</span>
-                    <small class="text-white-50">${best.wins} ${t('label_wins', 'Siege')}</small>
+                    <span class="fw-bold d-block text-body">${best.name}</span>
+                    <small class="text-muted">${best.wins} ${t('label_wins', 'Siege')}</small>
                 </div>
             </div>`;
         }
@@ -144,8 +144,9 @@ window.loadDashboard = async function() {
         const ctx = document.getElementById('ewigesDuellChart');
         if (ctx && window.Chart) {
             if (window.duellChart) window.duellChart.destroy();
-            Chart.defaults.color = 'rgba(255, 255, 255, 0.5)';
-            Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
+            const isLightMode = document.body.classList.contains('light-mode');
+            Chart.defaults.color = isLightMode ? 'rgba(0, 0, 0, 0.5)' : 'rgba(255, 255, 255, 0.5)';
+            Chart.defaults.borderColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
             
             window.duellChart = new Chart(ctx, {
                 type: 'line',
@@ -154,11 +155,19 @@ window.loadDashboard = async function() {
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15, font: { family: 'Inter', size: 10 } } },
+                        legend: { 
+                            position: 'bottom', 
+                            labels: { 
+                                boxWidth: 12, 
+                                padding: 15, 
+                                color: isLightMode ? '#64748b' : '#94a3b8',
+                                font: { family: 'system-ui, -apple-system, sans-serif', size: 11, weight: '500' } 
+                            } 
+                        },
                         tooltip: { mode: 'index', intersect: false }
                     },
                     scales: {
-                        y: { beginAtZero: true, border: { dash: [4, 4] }, grid: { color: 'rgba(255, 255, 255, 0.05)' }, ticks: { stepSize: 1 } },
+                        y: { beginAtZero: true, border: { dash: [4, 4] }, grid: { color: isLightMode ? 'rgba(0,0,0,0.05)' : 'rgba(255, 255, 255, 0.05)' }, ticks: { stepSize: 1 } },
                         x: { grid: { display: false } }
                     },
                     interaction: { mode: 'nearest', axis: 'x', intersect: false }

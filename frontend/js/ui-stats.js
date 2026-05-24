@@ -173,6 +173,7 @@ window.loadGlobalStats = async function() {
                 </div>
             </div>
         `;
+        renderAchievements();
     } catch (e) {
         container.innerHTML = `
             <div class="alert alert-danger rounded-3 fw-bold small text-center" role="alert">
@@ -180,4 +181,93 @@ window.loadGlobalStats = async function() {
             </div>
         `;
     }
+};
+
+window.renderAchievements = async function() {
+    const container = document.getElementById('achievementsContainer');
+    if (!container) return;
+
+    if (!window.allSessions) {
+        try {
+            const res = await authFetch('/history');
+            if (res && res.ok) {
+                const data = await res.json();
+                window.allSessions = data.history || [];
+            }
+        } catch(e) {
+            console.error("Failed to load history for achievements", e);
+        }
+    }
+
+    if (!window.allSessions) {
+        container.innerHTML = `<div class="text-center text-muted small py-3">Keine Daten verfügbar.</div>`;
+        return;
+    }
+
+    const userId = Auth.getUser()?.id;
+    let totalPlays = 0;
+    let totalWins = 0;
+    let teamWins = 0;
+    let longGames = 0;
+    let nightOwlGames = 0;
+    
+    // Analyze history
+    window.allSessions.forEach(session => {
+        const myScore = session.scores.find(sc => sc.player_id === userId);
+        if (myScore) {
+            totalPlays++;
+            if (myScore.is_winner) totalWins++;
+            
+            // Team Win Check (wenn es andere Gewinner gibt, war es ein Team)
+            if (myScore.is_winner && session.scores.filter(sc => sc.is_winner).length > 1) {
+                teamWins++;
+            }
+        }
+        
+        // Long Game Check
+        if (session.duration_seconds > 7200) { // 2 Hours
+            longGames++;
+        }
+        
+        // Night Owl Check
+        const playHour = new Date(session.play_date).getHours();
+        if (playHour >= 22 || playHour < 4) {
+            nightOwlGames++;
+        }
+    });
+
+    const achievements = [
+        { id: 'first_blood', name: 'Erstes Blut', desc: 'Gewinne dein erstes Spiel', current: totalWins, max: 1, icon: '🩸', color: '#ef4444' },
+        { id: 'veteran', name: 'Veteran', desc: 'Spiele 100 Spiele', current: totalPlays, max: 100, icon: '🎖️', color: '#eab308' },
+        { id: 'champion', name: 'Champion', desc: 'Gewinne 50 Spiele', current: totalWins, max: 50, icon: '🏆', color: '#f59e0b' },
+        { id: 'team_player', name: 'Team Player', desc: 'Gewinne im Team', current: teamWins, max: 1, icon: '🤝', color: '#3b82f6' },
+        { id: 'marathon', name: 'Marathon', desc: 'Spiele eine Partie > 2 Stunden', current: longGames, max: 1, icon: '🏃', color: '#10b981' },
+        { id: 'night_owl', name: 'Nachteule', desc: 'Spiele nach 22:00 Uhr', current: nightOwlGames, max: 1, icon: '🦉', color: '#8b5cf6' }
+    ];
+
+    let html = `<div class="row g-3">`;
+    
+    achievements.forEach(ach => {
+        const progress = Math.min(100, Math.round((ach.current / ach.max) * 100));
+        const unlocked = progress === 100;
+        const opacity = unlocked ? '1' : '0.4';
+        const filter = unlocked ? 'none' : 'grayscale(100%)';
+        
+        html += `
+            <div class="col-6 col-md-4">
+                <div class="card h-100 border-0 shadow-sm p-3 text-center position-relative overflow-hidden" style="background: var(--surface-card); border-radius: 1.2rem; border: 1px solid var(--surface-border) !important;">
+                    <div class="mb-2" style="font-size: 2.5rem; opacity: ${opacity}; filter: ${filter};">${ach.icon}</div>
+                    <h6 class="fw-bold text-white mb-1" style="font-size: 0.9rem;">${ach.name}</h6>
+                    <p class="text-white-50 x-small mb-3" style="min-height: 32px;">${ach.desc}</p>
+                    <div class="progress" style="height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px;">
+                        <div class="progress-bar" role="progressbar" style="width: ${progress}%; background: ${unlocked ? ach.color : 'rgba(255,255,255,0.2)'};"></div>
+                    </div>
+                    <div class="x-small text-white-50 mt-2 fw-bold">${ach.current} / ${ach.max}</div>
+                </div>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+    container.innerHTML = html;
 };

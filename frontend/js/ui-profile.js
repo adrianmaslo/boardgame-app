@@ -22,10 +22,10 @@ window.showGameProfile = async function(gameId, bggId, imageUrl, minP, maxP, tim
             winsHtml += `
             <div class="text-center px-2 flex-grow-1" style="min-width: 60px;">
                 <small class="${colorClass} d-block x-small fw-bold tracking-wider text-truncate" style="max-width: 90px; margin: 0 auto;">${p.name}</small>
-                <h3 class="fw-bold mb-0 text-white mt-1" style="font-size: 1.5rem;">${pWins}</h3>
+                <h3 class="fw-bold mb-0 text-body mt-1" style="font-size: 1.5rem;">${pWins}</h3>
             </div>`;
             if (idx < allPlayers.length - 1) {
-                winsHtml += `<div class="text-white-50 small align-self-center mt-3">VS</div>`;
+                winsHtml += `<div class="text-muted small align-self-center mt-3 fw-bold">VS</div>`;
             }
         });
         winsContainer.innerHTML = winsHtml;
@@ -419,19 +419,19 @@ window.renderProfilePlayers = function() {
         const cb = document.getElementById(`profile_p_${p.id}`);
         const isChecked = cb ? cb.checked : true;
         return `
-        <div class="form-check form-check-inline m-0">
-            <input class="form-check-input d-none" type="checkbox" id="profile_p_${p.id}" value="${p.id}" ${isChecked ? 'checked' : ''} onchange="toggleProfilePlayerBadge(this, '${p.id}')">
-            <label class="form-check-label badge rounded-pill px-3 py-2 border fs-6 d-flex align-items-center gap-1" for="profile_p_${p.id}" id="profile_lbl_p_${p.id}" style="cursor: pointer; transition: all 0.2s ease; ${isChecked ? 'background-color: var(--bs-primary); border-color: var(--bs-primary); opacity: 1;' : 'background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); opacity: 0.5;'}">
-                👥 ${p.name}
+        <div class="m-0">
+            <input class="d-none" type="checkbox" id="profile_p_${p.id}" value="${p.id}" ${isChecked ? 'checked' : ''} onchange="toggleProfilePlayerBadge(this, '${p.id}')">
+            <label class="badge rounded-pill px-3 py-2 border fs-6 d-flex align-items-center gap-2 m-0" for="profile_p_${p.id}" id="profile_lbl_p_${p.id}" style="cursor: pointer; transition: all 0.2s ease; ${isChecked ? 'background-color: var(--bs-primary); border-color: var(--bs-primary); opacity: 1;' : 'background-color: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); opacity: 0.5;'}">
+                <span style="font-size: 1.1rem; line-height: 1;">${p.avatar_icon || '👤'}</span> <span>${p.name}</span>
             </label>
         </div>`;
     }).join('');
 
     html += (window.profileActiveGuests || []).map(g => `
-        <div class="form-check form-check-inline m-0">
-            <input class="form-check-input d-none" type="checkbox" id="profile_p_${g.id}" value="${g.id}" checked onchange="toggleProfilePlayerBadge(this, '${g.id}')">
-            <label class="form-check-label badge rounded-pill px-3 py-2 border fs-6 d-flex align-items-center gap-1" for="profile_p_${g.id}" id="profile_lbl_p_${g.id}" style="cursor: pointer; transition: all 0.2s ease; background-color: var(--bs-primary); border-color: var(--bs-primary); opacity: 1;">
-                👤 ${g.name}
+        <div class="m-0">
+            <input class="d-none" type="checkbox" id="profile_p_${g.id}" value="${g.id}" checked onchange="toggleProfilePlayerBadge(this, '${g.id}')">
+            <label class="badge rounded-pill px-3 py-2 border fs-6 d-flex align-items-center gap-2 m-0" for="profile_p_${g.id}" id="profile_lbl_p_${g.id}" style="cursor: pointer; transition: all 0.2s ease; background-color: var(--bs-primary); border-color: var(--bs-primary); opacity: 1;">
+                <span style="font-size: 1.1rem; line-height: 1;">👤</span> <span>${g.name}</span>
             </label>
         </div>`).join('');
 
