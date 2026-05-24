@@ -100,4 +100,50 @@ window.applyTheme = function(theme) {
 window.loadTheme = function() {
     const savedTheme = localStorage.getItem('app_theme') || 'dark';
     window.applyTheme(savedTheme);
+}
+
+// ─── PWA Install Prompt ───────────────────────────────────────────────────────
+let deferredPrompt;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // Zeige die Install-Buttons
+    document.querySelectorAll('.install-app-btn').forEach(el => el.classList.remove('d-none'));
+    document.querySelectorAll('.install-app-btn-hr').forEach(el => el.classList.remove('d-none'));
+});
+
+window.installApp = async () => {
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            console.log('User accepted the install prompt');
+        }
+        deferredPrompt = null;
+        // Verstecke die Install-Buttons
+        document.querySelectorAll('.install-app-btn').forEach(el => el.classList.add('d-none'));
+        document.querySelectorAll('.install-app-btn-hr').forEach(el => el.classList.add('d-none'));
+    }
 };
+
+// iOS Install Check
+document.addEventListener('DOMContentLoaded', () => {
+    const isIos = () => {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      return /iphone|ipad|ipod/.test(userAgent);
+    };
+    const isInStandaloneMode = () => ('standalone' in window.navigator) && (window.navigator.standalone);
+
+    if (isIos() && !isInStandaloneMode()) {
+        document.querySelectorAll('.install-app-btn').forEach(el => {
+            el.classList.remove('d-none');
+            el.onclick = (e) => {
+                e.preventDefault();
+                const modalEl = document.getElementById('iosInstallModal');
+                if (modalEl) new bootstrap.Modal(modalEl).show();
+            };
+        });
+        document.querySelectorAll('.install-app-btn-hr').forEach(el => el.classList.remove('d-none'));
+    }
+});

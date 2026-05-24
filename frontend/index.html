@@ -44,7 +44,11 @@
 <input class="form-control rounded-3 py-2 px-3" id="loginPassword" placeholder="••••••" type="password"/>
 </div>
 <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="loginError"></div>
-<button class="btn btn-primary w-100 py-3 rounded-3 fw-bold" data-i18n="btn_login" id="loginBtn" onclick="doLogin()" type="button">Einloggen</button>
+<button class="btn btn-primary w-100 py-3 rounded-3 fw-bold mb-3" data-i18n="btn_login" id="loginBtn" onclick="doLogin()" type="button">Einloggen</button>
+<div class="text-center mb-3">
+    <a href="#" class="text-white-50 small text-decoration-none" onclick="showPasswordResetModal(); return false;">Passwort vergessen?</a>
+</div>
+<button class="btn btn-outline-light w-100 py-3 rounded-3 fw-bold d-none install-app-btn" onclick="installApp()" type="button">📱 App installieren</button>
 </div>
 <!-- Register Form -->
 <div class="d-none" id="registerTab">
@@ -59,6 +63,21 @@
 <div class="mb-3">
 <label class="form-label text-white-50 x-small fw-bold text-uppercase">Passwort (min. 6 Zeichen)</label>
 <input class="form-control rounded-3 py-2 px-3" id="regPassword" placeholder="••••••" type="password"/>
+</div>
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase">Sicherheitsfrage (für Passwort-Reset)</label>
+<select class="form-select rounded-3 py-2 px-3" id="regSecurityQuestion">
+    <option value="">-- Keine Sicherheitsfrage --</option>
+    <option value="Wie hieß dein erstes Haustier?">Wie hieß dein erstes Haustier?</option>
+    <option value="In welcher Stadt bist du geboren?">In welcher Stadt bist du geboren?</option>
+    <option value="Was ist der Mädchenname deiner Mutter?">Was ist der Mädchenname deiner Mutter?</option>
+    <option value="Was war das Modell deines ersten Autos?">Was war das Modell deines ersten Autos?</option>
+    <option value="Was war das erste Brettspiel, das du jemals besessen hast?">Was war das erste Brettspiel, das du jemals besessen hast?</option>
+</select>
+</div>
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase">Antwort auf Sicherheitsfrage</label>
+<input class="form-control rounded-3 py-2 px-3" id="regSecurityAnswer" placeholder="Deine Antwort" type="text"/>
 </div>
 <div class="mb-4">
 <label class="form-label text-white-50 x-small fw-bold text-uppercase">Passwort bestätigen</label>
@@ -150,6 +169,8 @@ Ich stimme den <a class="text-primary text-decoration-none" href="datenschutz.ht
 <li><a class="dropdown-item small fw-bold text-white" data-i18n="btn_profile_settings" href="#" onclick="openProfileSettings(); return false;">⚙️ Konto verwalten</a></li>
 <li><a class="dropdown-item small text-white-50" data-i18n="label_privacy" href="/datenschutz.html" target="_blank">📜 Datenschutz</a></li>
 <li><hr class="dropdown-divider border-secondary border-opacity-25"/></li>
+<li><a class="dropdown-item small fw-bold text-info d-none install-app-btn" href="#" onclick="installApp(); return false;">📱 App installieren</a></li>
+<li><hr class="dropdown-divider border-secondary border-opacity-25 d-none install-app-btn-hr"/></li>
 <li><a class="dropdown-item text-danger small fw-bold" data-i18n="btn_logout_dropdown" href="#" onclick="Auth.logout(); return false;">🚪 Ausloggen</a></li>
 <li><hr class="dropdown-divider border-secondary border-opacity-25"/></li>
 <li><a class="dropdown-item text-danger small fw-bold" data-i18n="btn_delete_account" href="#" onclick="confirmAccountDeletion(); return false;">⚠️ Konto löschen</a></li>
@@ -283,6 +304,72 @@ Ich stimme den <a class="text-primary text-decoration-none" href="datenschutz.ht
 </div>
 </div>
 <!-- ================= MODALS ================= -->
+<!-- PASSWORD RESET MODAL -->
+<div aria-hidden="true" class="modal fade" id="passwordResetModal" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered">
+<div class="modal-content">
+<div class="modal-header border-0 pb-1 mt-2">
+<h5 class="modal-title fw-bold fs-4 text-white">Passwort zurücksetzen</h5>
+<button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body pt-0 pb-4">
+    <!-- Step 1: Username -->
+    <div id="pwResetStep1">
+        <p class="text-white-50 small mb-3">Gib deinen Benutzernamen ein, um die Sicherheitsfrage abzurufen.</p>
+        <div class="mb-3">
+            <input class="form-control rounded-3 py-2 px-3" id="pwResetUsername" placeholder="Username" type="text"/>
+        </div>
+        <button class="btn btn-primary w-100 py-2 rounded-3 fw-bold mb-2" id="pwResetStep1Btn" onclick="requestPasswordReset()" type="button">Sicherheitsfrage abrufen</button>
+        <div class="alert alert-danger d-none small py-2 px-3 mb-0 rounded-3" id="pwResetError1"></div>
+    </div>
+    
+    <!-- Step 2: Answer & New Password -->
+    <div class="d-none" id="pwResetStep2">
+        <p class="text-white mb-2 fw-bold" id="pwResetQuestionDisplay"></p>
+        <div class="mb-3">
+            <input class="form-control rounded-3 py-2 px-3" id="pwResetAnswer" placeholder="Deine Antwort" type="text"/>
+        </div>
+        <div class="mb-3">
+            <label class="form-label text-white-50 x-small fw-bold text-uppercase">Neues Passwort</label>
+            <input class="form-control rounded-3 py-2 px-3" id="pwResetNewPassword" placeholder="••••••" type="password"/>
+        </div>
+        <button class="btn btn-success w-100 py-2 rounded-3 fw-bold mb-2" id="pwResetStep2Btn" onclick="submitPasswordReset()" type="button">Passwort neu setzen</button>
+        <div class="alert alert-danger d-none small py-2 px-3 mb-0 rounded-3" id="pwResetError2"></div>
+    </div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- IOS INSTALL MODAL -->
+<div aria-hidden="true" class="modal fade" id="iosInstallModal" tabindex="-1">
+<div class="modal-dialog modal-dialog-centered">
+<div class="modal-content border-0 shadow-lg" style="background: var(--surface-card); border-radius: 1.2rem;">
+<div class="modal-header border-0 pb-1 mt-2">
+<h5 class="modal-title fw-bold fs-4 text-white">App auf iOS installieren</h5>
+<button class="btn-close btn-close-white" data-bs-dismiss="modal" type="button"></button>
+</div>
+<div class="modal-body pt-0 pb-4 text-center">
+    <p class="text-white-50 mb-4">Um Game-Log Pro als App zu installieren, tippe unten in Safari auf Teilen und dann auf "Zum Home-Bildschirm".</p>
+    
+    <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
+        <div class="bg-dark p-3 rounded-4 border border-secondary border-opacity-50 text-white shadow">
+            <h3 class="m-0 mb-1">⍗</h3>
+            <small class="text-white-50 x-small fw-bold text-uppercase">1. Teilen</small>
+        </div>
+        <span class="text-white-50">➔</span>
+        <div class="bg-dark p-3 rounded-4 border border-secondary border-opacity-50 text-white shadow">
+            <h3 class="m-0 mb-1">➕</h3>
+            <small class="text-white-50 x-small fw-bold text-uppercase">2. Home-Bildschirm</small>
+        </div>
+    </div>
+    
+    <button class="btn btn-outline-light w-100 py-2 rounded-3 fw-bold" data-bs-dismiss="modal" type="button">Alles klar!</button>
+</div>
+</div>
+</div>
+</div>
+
 <!-- GROUP MANAGE MODAL -->
 <div aria-hidden="true" class="modal fade" id="groupManageModal" tabindex="-1">
 <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
@@ -628,6 +715,19 @@ Ich stimme den <a class="text-primary text-decoration-none" href="datenschutz.ht
 <option data-i18n="option_none_selected" value="">Keines ausgewählt</option>
 </select>
 </div>
+<!-- Sicherheitsfrage -->
+<div class="mb-3">
+<label class="form-label text-white-50 x-small fw-bold text-uppercase">Sicherheitsfrage (Passwort-Reset)</label>
+<select class="form-select rounded-3 py-2 px-3 bg-dark text-white border-secondary border-opacity-50" id="settingsSecurityQuestion">
+    <option value="">-- Keine Sicherheitsfrage --</option>
+    <option value="Wie hieß dein erstes Haustier?">Wie hieß dein erstes Haustier?</option>
+    <option value="In welcher Stadt bist du geboren?">In welcher Stadt bist du geboren?</option>
+    <option value="Was ist der Mädchenname deiner Mutter?">Was ist der Mädchenname deiner Mutter?</option>
+    <option value="Was war das Modell deines ersten Autos?">Was war das Modell deines ersten Autos?</option>
+    <option value="Was war das erste Brettspiel, das du jemals besessen hast?">Was war das erste Brettspiel, das du jemals besessen hast?</option>
+</select>
+<input class="form-control rounded-3 py-2 px-3 bg-dark text-white border-secondary border-opacity-50 mt-2" id="settingsSecurityAnswer" placeholder="Neue Antwort (optional)" type="text"/>
+</div>
 <!-- Sprachauswahl -->
 <div class="mb-3">
 <label class="form-label text-white-50 x-small fw-bold text-uppercase" data-i18n="label_language">Sprache / Language</label>
@@ -690,21 +790,21 @@ Ich stimme den <a class="text-primary text-decoration-none" href="datenschutz.ht
 </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="js/i18n.js?v=29"></script>
-<script src="js/auth.js?v=29"></script>
-<script src="js/ui-groups.js?v=29"></script>
-<script src="js/state.js?v=29"></script>
-<script src="js/utils.js?v=29"></script>
-<script src="js/api.js?v=29"></script>
-<script src="js/timer.js?v=29"></script>
-<script src="js/ui-dashboard.js?v=29"></script>
-<script src="js/ui-collection.js?v=29"></script>
-<script src="js/ui-history.js?v=29"></script>
-<script src="js/ui-profile.js?v=29"></script>
-<script src="js/ui-stats.js?v=29"></script>
-<script src="js/share.js?v=29"></script>
-<script src="js/tour.js?v=29"></script>
-<script src="js/main.js?v=29"></script>
+<script src="js/i18n.js?v=32"></script>
+<script src="js/auth.js?v=32"></script>
+<script src="js/ui-groups.js?v=32"></script>
+<script src="js/state.js?v=32"></script>
+<script src="js/utils.js?v=32"></script>
+<script src="js/api.js?v=32"></script>
+<script src="js/timer.js?v=32"></script>
+<script src="js/ui-dashboard.js?v=32"></script>
+<script src="js/ui-collection.js?v=32"></script>
+<script src="js/ui-history.js?v=32"></script>
+<script src="js/ui-profile.js?v=32"></script>
+<script src="js/ui-stats.js?v=32"></script>
+<script src="js/share.js?v=32"></script>
+<script src="js/tour.js?v=32"></script>
+<script src="js/main.js?v=32"></script>
 <!-- CONFIRM ACTION MODAL -->
 <div aria-hidden="true" class="modal fade" id="confirmActionModal" style="z-index: 2000;" tabindex="-1">
 <div class="modal-dialog modal-dialog-centered mx-auto" style="max-width: 380px;">

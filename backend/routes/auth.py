@@ -14,6 +14,8 @@ class RegisterRequest(BaseModel):
     email: Optional[str] = None
     avatar_color: Optional[str] = "#6366f1"
     avatar_icon: Optional[str] = None
+    security_question: Optional[str] = None
+    security_answer: Optional[str] = None
 
 class LoginRequest(BaseModel):
     username: str
@@ -25,6 +27,16 @@ class UpdateProfileRequest(BaseModel):
     new_password: Optional[str] = None
     avatar_icon: Optional[str] = None
     favorite_game_id: Optional[int] = None
+    security_question: Optional[str] = None
+    security_answer: Optional[str] = None
+
+class RequestPasswordResetRequest(BaseModel):
+    username: str
+
+class ResetPasswordRequest(BaseModel):
+    username: str
+    security_answer: str
+    new_password: str
 
 # ─── Endpunkte ────────────────────────────────────────────────────────────────
 
@@ -50,8 +62,8 @@ def register(data: RegisterRequest):
                 raise HTTPException(status_code=409, detail="Diese E-Mail-Adresse ist bereits registriert.")
 
         conn.execute(
-            "INSERT INTO users (username, email, password_hash, avatar_color, avatar_icon) VALUES (?, ?, ?, ?, ?)",
-            (username, data.email, pw_hash, data.avatar_color or "#6366f1", data.avatar_icon)
+            "INSERT INTO users (username, email, password_hash, avatar_color, avatar_icon, security_question, security_answer) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (username, data.email, pw_hash, data.avatar_color or "#6366f1", data.avatar_icon, data.security_question, data.security_answer.strip().lower() if data.security_answer else None)
         )
         conn.commit()
         user = conn.execute("SELECT * FROM users WHERE username = ?", (username,)).fetchone()
@@ -205,6 +217,10 @@ def update_me(data: UpdateProfileRequest, current_user: dict = Depends(get_curre
                 conn.execute("UPDATE users SET favorite_game_id = ? WHERE id = ?", (data.favorite_game_id, user_id))
                 conn.execute("UPDATE group_members SET favorite_game_id = ? WHERE user_id = ?", (data.favorite_game_id, user_id))
             
+        if data.security_question is not None and data.security_answer is not None:
+            conn.execute("UPDATE users SET security_question = ?, security_answer = ? WHERE id = ?", 
+                         (data.security_question, data.security_answer.strip().lower(), user_id))
+            
         conn.commit()
         
         # 4. Aktualisierte Daten laden und neuen Token generieren
@@ -305,3 +321,39 @@ def delete_account(current_user: dict = Depends(get_current_user)):
         
     return {"status": "Erfolg", "message": "Konto und alle zugehörigen Daten wurden gelöscht."}
 
+@router.post("/request-password-reset")
+def request_password_reset(data: RequestPasswordResetRequest):
+    username = data.username.strip().lower()
+    with get_db_connection() as conn:
+        user = conn.execute("SELECT security_question FROM users WHERE username = ?", (username,)).fetchone()
+        
+    if not user:
+        raise HTTPException(status_code=404, detail="Benutzername nicht gefunden.")
+        
+    if not user["security_question"]:
+        raise HTTPException(status_code=400, detail="Für diesen Account wurde keine Sicherheitsfrage hinterlegt.")
+        
+    return {"security_question": user["security_question"]}
+
+@router.post("/reset-password")
+def reset_password(data: ResetPasswordRequest):
+    username = data.username.strip().lower()
+    answer = data.security_answer.strip().lower()
+    
+    if len(data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Passwort muss mindestens 6 Zeichen haben.")
+        
+    with get_db_connection() as conn:
+        user = conn.execute("SELECT id, security_answer FROM users WHERE username = ?", (username,)).fetchone()
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="Benutzername nicht gefunden.")
+            
+        if not user["security_answer"] or user["security_answer"] != answer:
+            raise HTTPException(status_code=401, detail="Die Antwort auf die Sicherheitsfrage ist falsch.")
+            
+        new_hash = hash_password(data.new_password)
+        conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_hash, user["id"]))
+        conn.commit()
+        
+    return {"status": "Passwort erfolgreich zurückgesetzt."}

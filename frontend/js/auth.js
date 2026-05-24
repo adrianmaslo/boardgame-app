@@ -124,6 +124,8 @@ window.doRegister = async function() {
     const password = document.getElementById('regPassword').value;
     const password2 = document.getElementById('regPassword2').value;
     const email = document.getElementById('regEmail').value.trim();
+    const security_question = document.getElementById('regSecurityQuestion').value;
+    const security_answer = document.getElementById('regSecurityAnswer').value.trim();
     const btn = document.getElementById('registerBtn');
     const errorEl = document.getElementById('registerError');
 
@@ -152,7 +154,13 @@ window.doRegister = async function() {
         const res = await fetch('/auth/register', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, email: email || null })
+            body: JSON.stringify({ 
+                username, 
+                password, 
+                email: email || null,
+                security_question: security_question || null,
+                security_answer: security_answer || null
+            })
         });
         const data = await res.json();
 
@@ -366,3 +374,103 @@ window.deleteAccountSubmit = async function() {
     }
 };
 
+// ─── Passwort Zurücksetzen ────────────────────────────────────────────────────
+
+window.showPasswordResetModal = function() {
+    const modalEl = document.getElementById('passwordResetModal');
+    if (modalEl) {
+        document.getElementById('pwResetUsername').value = '';
+        document.getElementById('pwResetAnswer').value = '';
+        document.getElementById('pwResetNewPassword').value = '';
+        document.getElementById('pwResetStep1').classList.remove('d-none');
+        document.getElementById('pwResetStep2').classList.add('d-none');
+        document.getElementById('pwResetError1').classList.add('d-none');
+        document.getElementById('pwResetError2').classList.add('d-none');
+        new bootstrap.Modal(modalEl).show();
+    }
+};
+
+window.requestPasswordReset = async function() {
+    const username = document.getElementById('pwResetUsername').value.trim();
+    const btn = document.getElementById('pwResetStep1Btn');
+    const errorEl = document.getElementById('pwResetError1');
+    
+    errorEl.classList.add('d-none');
+    if (!username) {
+        errorEl.textContent = 'Bitte Username eingeben.';
+        errorEl.classList.remove('d-none');
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Lade...';
+    
+    try {
+        const res = await fetch('/auth/request-password-reset', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username })
+        });
+        const data = await res.json();
+        
+        if (!res.ok) {
+            errorEl.textContent = data.detail || 'Fehler beim Abrufen der Sicherheitsfrage.';
+            errorEl.classList.remove('d-none');
+        } else {
+            // Success -> Show Step 2
+            document.getElementById('pwResetQuestionDisplay').textContent = data.security_question;
+            document.getElementById('pwResetStep1').classList.add('d-none');
+            document.getElementById('pwResetStep2').classList.remove('d-none');
+        }
+    } catch(e) {
+        errorEl.textContent = 'Verbindungsfehler.';
+        errorEl.classList.remove('d-none');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Sicherheitsfrage abrufen';
+    }
+};
+
+window.submitPasswordReset = async function() {
+    const username = document.getElementById('pwResetUsername').value.trim();
+    const security_answer = document.getElementById('pwResetAnswer').value.trim();
+    const new_password = document.getElementById('pwResetNewPassword').value;
+    const btn = document.getElementById('pwResetStep2Btn');
+    const errorEl = document.getElementById('pwResetError2');
+    
+    errorEl.classList.add('d-none');
+    if (!security_answer || !new_password) {
+        errorEl.textContent = 'Bitte Antwort und neues Passwort eingeben.';
+        errorEl.classList.remove('d-none');
+        return;
+    }
+    
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Speichern...';
+    
+    try {
+        const res = await fetch('/auth/reset-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, security_answer, new_password })
+        });
+        const data = await res.json();
+        
+        if (!res.ok) {
+            errorEl.textContent = data.detail || 'Fehler beim Zurücksetzen des Passworts.';
+            errorEl.classList.remove('d-none');
+        } else {
+            // Success
+            bootstrap.Modal.getInstance(document.getElementById('passwordResetModal')).hide();
+            if (typeof showToast === 'function') {
+                showToast("Passwort erfolgreich neu gesetzt! Du kannst dich jetzt einloggen.");
+            }
+        }
+    } catch(e) {
+        errorEl.textContent = 'Verbindungsfehler.';
+        errorEl.classList.remove('d-none');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Passwort neu setzen';
+    }
+};

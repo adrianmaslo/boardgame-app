@@ -312,6 +312,8 @@ window.saveProfileSettings = async function() {
     const avatarIcon = document.getElementById('settingsSelectedAvatar').value;
     const favoriteGameIdVal = document.getElementById('settingsFavoriteGame').value;
     const favoriteGameId = favoriteGameIdVal ? parseInt(favoriteGameIdVal) : 0;
+    const securityQuestion = document.getElementById('settingsSecurityQuestion').value;
+    const securityAnswer = document.getElementById('settingsSecurityAnswer').value.trim();
     const alertEl = document.getElementById('profileSettingsAlert');
     const btn = document.getElementById('saveProfileSettingsBtn');
     
@@ -335,6 +337,10 @@ window.saveProfileSettings = async function() {
         if (currentPassword) body.current_password = currentPassword;
         if (newUsername) body.new_username = newUsername;
         if (newPassword) body.new_password = newPassword;
+        if (securityQuestion && securityAnswer) {
+            body.security_question = securityQuestion;
+            body.security_answer = securityAnswer;
+        }
         
         const res = await authFetch('/auth/me', {
             method: 'PUT',

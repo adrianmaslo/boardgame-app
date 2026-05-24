@@ -91,7 +91,9 @@ def init_db():
 
         new_user_columns = [
             "avatar_icon TEXT",
-            "favorite_game_id INTEGER REFERENCES games(id)"
+            "favorite_game_id INTEGER REFERENCES games(id)",
+            "security_question TEXT",
+            "security_answer TEXT"
         ]
         for col in new_user_columns:
             try:
