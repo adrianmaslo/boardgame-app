@@ -128,6 +128,42 @@ def google_auth(data: GoogleAuthRequest):
         }
     }
 
+@router.post("/link-google")
+def link_google(data: GoogleAuthRequest, current_user: dict = Depends(get_current_user)):
+    """Verknüpft das aktuell angemeldete Konto mit einem Google Account."""
+    token = data.credential
+    if not token:
+        raise HTTPException(status_code=400, detail="Kein Google-Token übergeben.")
+
+    try:
+        resp = httpx.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={token}", timeout=10.0)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=401, detail="Ungültiges Google-Token.")
+        payload = resp.json()
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Google-Token konnte nicht verifiziert werden: {str(e)}")
+
+    google_id = payload.get("sub")
+    email = payload.get("email")
+
+    if not google_id:
+        raise HTTPException(status_code=400, detail="Google Token enthält keine ID.")
+
+    env_client_id = os.getenv("GOOGLE_CLIENT_ID")
+    if env_client_id and payload.get("aud") != env_client_id:
+        raise HTTPException(status_code=401, detail="Google Client-ID stimmt nicht überein.")
+
+    with get_db_connection() as conn:
+        existing = conn.execute("SELECT id, username FROM users WHERE google_id = ?", (google_id,)).fetchone()
+        if existing and existing["id"] != current_user["id"]:
+            raise HTTPException(status_code=400, detail=f"Dieser Google-Account ist bereits mit dem Konto '{existing['username']}' verknüpft.")
+
+        conn.execute("UPDATE users SET google_id = ?, email = COALESCE(email, ?) WHERE id = ?", 
+                     (google_id, email, current_user["id"]))
+        conn.commit()
+
+    return {"message": "Konto erfolgreich mit Google verknüpft!"}
+
 @router.post("/register")
 def register(data: RegisterRequest):
     username = data.username.strip().lower()

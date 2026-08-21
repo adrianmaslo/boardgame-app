@@ -273,9 +273,13 @@ window.initGoogleAuth = async function() {
         if (!res.ok) return;
         const config = await res.json();
         if (!config.google_client_id) return;
+        window.googleClientId = config.google_client_id;
 
         const container = document.getElementById('googleBtnContainer');
         if (container) container.classList.remove('d-none');
+        
+        const settingsContainer = document.getElementById('settingsGoogleLinkContainer');
+        if (settingsContainer) settingsContainer.classList.remove('d-none');
 
         const checkGoogleScript = setInterval(() => {
             if (window.google && window.google.accounts) {
@@ -291,6 +295,13 @@ window.initGoogleAuth = async function() {
                         { theme: "outline", size: "large", width: 280, shape: "pill" }
                     );
                 }
+                const targetLink = document.getElementById('g_id_link_target');
+                if (targetLink) {
+                    google.accounts.id.renderButton(
+                        targetLink,
+                        { theme: "outline", size: "large", width: 280, shape: "pill" }
+                    );
+                }
             }
         }, 200);
     } catch (e) {
@@ -300,25 +311,60 @@ window.initGoogleAuth = async function() {
 
 window.handleGoogleCredentialResponse = async function(response) {
     const errorEl = document.getElementById('loginError');
+    const settingsAlertEl = document.getElementById('profileSettingsAlert');
     if (errorEl) errorEl.classList.add('d-none');
+    if (settingsAlertEl) settingsAlertEl.classList.add('d-none');
+
+    const isLoggedIn = Auth.isLoggedIn();
+    const endpoint = isLoggedIn ? '/auth/link-google' : '/auth/google';
+
     try {
-        const res = await fetch('/auth/google', {
+        const res = await (isLoggedIn ? authFetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ credential: response.credential })
-        });
+        }) : fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ credential: response.credential })
+        }));
+
+        if (!res) return;
         const data = await res.json();
+
         if (!res.ok) {
-            if (errorEl) {
-                errorEl.textContent = data.detail || 'Google Login fehlgeschlagen.';
+            const errorMsg = data.detail || 'Google Login / Verknüpfung fehlgeschlagen.';
+            if (isLoggedIn && settingsAlertEl) {
+                settingsAlertEl.textContent = errorMsg;
+                settingsAlertEl.className = 'alert alert-danger rounded-3 small py-2 px-3';
+                settingsAlertEl.classList.remove('d-none');
+            } else if (errorEl) {
+                errorEl.textContent = errorMsg;
                 errorEl.classList.remove('d-none');
             }
             return;
         }
-        Auth._save(data.access_token, data.user);
-        await loadUserAndStart();
+
+        if (isLoggedIn) {
+            if (settingsAlertEl) {
+                settingsAlertEl.textContent = '✅ Konto erfolgreich mit Google verknüpft!';
+                settingsAlertEl.className = 'alert alert-success rounded-3 small py-2 px-3';
+                settingsAlertEl.classList.remove('d-none');
+            }
+            if (typeof showToast === 'function') {
+                showToast('✅ Konto erfolgreich mit Google verknüpft!');
+            }
+            await loadUserAndStart();
+        } else {
+            Auth._save(data.access_token, data.user);
+            await loadUserAndStart();
+        }
     } catch (e) {
-        if (errorEl) {
+        if (isLoggedIn && settingsAlertEl) {
+            settingsAlertEl.textContent = 'Verbindungsfehler bei der Google Verknüpfung.';
+            settingsAlertEl.className = 'alert alert-danger rounded-3 small py-2 px-3';
+            settingsAlertEl.classList.remove('d-none');
+        } else if (errorEl) {
             errorEl.textContent = 'Verbindungsfehler beim Google Login.';
             errorEl.classList.remove('d-none');
         }

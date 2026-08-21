@@ -293,6 +293,18 @@ window.openProfileSettings = function() {
         favGameSelect.innerHTML = optionsHtml;
     }
     
+    const settingsGoogleLinkContainer = document.getElementById('settingsGoogleLinkContainer');
+    if (settingsGoogleLinkContainer && window.googleClientId) {
+        settingsGoogleLinkContainer.classList.remove('d-none');
+        const targetLink = document.getElementById('g_id_link_target');
+        if (targetLink && window.google && window.google.accounts) {
+            google.accounts.id.renderButton(
+                targetLink,
+                { theme: "outline", size: "large", width: 280, shape: "pill" }
+            );
+        }
+    }
+
     const modal = new bootstrap.Modal(document.getElementById('profileSettingsModal'));
     modal.show();
 };
