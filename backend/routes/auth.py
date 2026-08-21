@@ -1,6 +1,8 @@
 import os
 import httpx
+from datetime import datetime
 from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
 from database import get_db_connection, generate_invite_code
@@ -444,6 +446,49 @@ def delete_account(current_user: dict = Depends(get_current_user)):
         conn.commit()
         
     return {"status": "Erfolg", "message": "Konto und alle zugehörigen Daten wurden gelöscht."}
+
+@router.get("/me/export")
+def export_user_data(current_user: dict = Depends(get_current_user)):
+    """Exportiert alle personenbezogenen Daten des Nutzers als JSON (DSGVO Art. 20 Datenübertragbarkeit)."""
+    user_id = current_user["id"]
+    with get_db_connection() as conn:
+        conn.row_factory = lambda cursor, row: {col[0]: row[idx] for idx, col in enumerate(cursor.description)}
+        
+        user_info = conn.execute(
+            "SELECT id, username, email, avatar_color, avatar_icon, created_at, google_id FROM users WHERE id = ?",
+            (user_id,)
+        ).fetchone()
+
+        groups = conn.execute("""
+            SELECT g.id, g.name, gm.joined_at, gm.display_name
+            FROM groups g
+            JOIN group_members gm ON g.id = gm.group_id
+            WHERE gm.user_id = ?
+        """, (user_id,)).fetchall()
+
+        sessions_played = conn.execute("""
+            SELECT s.id as session_id, g.name as game_name, s.play_date, s.duration_seconds, s.comment,
+                   sc.score_value, sc.is_winner
+            FROM scores sc
+            JOIN sessions s ON sc.session_id = s.id
+            JOIN games g ON s.game_id = g.id
+            WHERE sc.player_id = ?
+            ORDER BY s.play_date DESC
+        """, (user_id,)).fetchall()
+
+        export_data = {
+            "export_date": datetime.now().isoformat(),
+            "app": "Game-Log Pro",
+            "dsgvo_article": "Artikel 20 DSGVO — Recht auf Datenübertragbarkeit",
+            "profile": user_info or {},
+            "groups": groups or [],
+            "sessions_played": sessions_played or []
+        }
+
+    return JSONResponse(
+        content=export_data,
+        headers={"Content-Disposition": f"attachment; filename=gamelog_data_export_{user_id}.json"}
+    )
 
 @router.post("/request-password-reset")
 def request_password_reset(data: RequestPasswordResetRequest):

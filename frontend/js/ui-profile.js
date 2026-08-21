@@ -597,3 +597,25 @@ window.openGameProfileById = async function(gameId) {
         showToast(t('msg_game_not_found_collection', 'Spiel nicht in der Sammlung gefunden!'));
     }
 };
+
+window.exportUserData = async function() {
+    try {
+        const res = await authFetch('/auth/me/export');
+        if (!res || !res.ok) {
+            alert(t('msg_export_error', 'Fehler beim Daten-Export.'));
+            return;
+        }
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `gamelog_data_export_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+    } catch (e) {
+        console.error("Export Error:", e);
+        alert(t('msg_export_error', 'Fehler beim Daten-Export.'));
+    }
+};
