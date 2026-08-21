@@ -12,6 +12,7 @@
 <link href="icons/icon.png?v=1" rel="icon" type="image/png"/>
 <link href="icons/icon.png?v=1" rel="apple-touch-icon"/>
 <meta content="#0f172a" name="theme-color"/>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
         .avatar-dot {
             width: 10px;
@@ -45,6 +46,14 @@
 </div>
 <div class="alert alert-danger d-none small py-2 px-3 mb-3 rounded-3" id="loginError"></div>
 <button class="btn btn-primary w-100 py-3 rounded-3 fw-bold mb-3" data-i18n="btn_login" id="loginBtn" onclick="doLogin()" type="button">Einloggen</button>
+<div id="googleBtnContainer" class="mb-3 d-none">
+    <div class="d-flex align-items-center my-3">
+        <hr class="flex-grow-1 border-secondary opacity-25 m-0">
+        <span class="px-2 text-white-50 x-small text-uppercase fw-bold">ODER</span>
+        <hr class="flex-grow-1 border-secondary opacity-25 m-0">
+    </div>
+    <div id="g_id_signin" class="d-flex justify-content-center"></div>
+</div>
 <div class="text-center mb-3">
     <a href="#" class="text-white-50 small text-decoration-none" onclick="showPasswordResetModal(); return false;">Passwort vergessen?</a>
 </div>

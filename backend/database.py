@@ -93,7 +93,8 @@ def init_db():
             "avatar_icon TEXT",
             "favorite_game_id INTEGER REFERENCES games(id)",
             "security_question TEXT",
-            "security_answer TEXT"
+            "security_answer TEXT",
+            "google_id TEXT UNIQUE"
         ]
         for col in new_user_columns:
             try:

@@ -44,18 +44,24 @@ The easiest way to run Game-Log Pro is via Docker.
    ```env
    JWT_SECRET=your_super_secret_string
    JWT_EXPIRE_DAYS=30
+   GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
    ```
 
-3. **Start the application:**
+3. **Google OAuth Setup (Optional):**
+   To enable "Sign in with Google":
+   - Create an OAuth 2.0 Client ID in the [Google Cloud Console](https://console.cloud.google.com/).
+   - Set Authorized JavaScript Origins:
+     - `http://localhost:8000`
+     - `https://gamelog.maslowski-server.de`
+   - Set `GOOGLE_CLIENT_ID` in `backend/.env`.
+
+4. **Start the application:**
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
-4. **Access the App:**
-   Open your browser and navigate to:
-   ```
-   http://localhost:8000
-   ```
+5. **Access the App:**
+   Open your browser and navigate to `http://localhost:8000` or `https://gamelog.maslowski-server.de`.
 
 ## 📂 Project Structure
 

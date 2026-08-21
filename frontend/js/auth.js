@@ -265,8 +265,69 @@ window.showRegisterTab = function() {
     document.getElementById('authTabRegister').classList.add('active');
 };
 
-// Enter-Taste im Login-Formular
+// ─── Google OAuth Sign-In ───────────────────────────────────────────────────
+
+window.initGoogleAuth = async function() {
+    try {
+        const res = await fetch('/auth/config');
+        if (!res.ok) return;
+        const config = await res.json();
+        if (!config.google_client_id) return;
+
+        const container = document.getElementById('googleBtnContainer');
+        if (container) container.classList.remove('d-none');
+
+        const checkGoogleScript = setInterval(() => {
+            if (window.google && window.google.accounts) {
+                clearInterval(checkGoogleScript);
+                google.accounts.id.initialize({
+                    client_id: config.google_client_id,
+                    callback: handleGoogleCredentialResponse
+                });
+                const target = document.getElementById('g_id_signin');
+                if (target) {
+                    google.accounts.id.renderButton(
+                        target,
+                        { theme: "outline", size: "large", width: 280, shape: "pill" }
+                    );
+                }
+            }
+        }, 200);
+    } catch (e) {
+        console.error("Google Auth Init Error:", e);
+    }
+};
+
+window.handleGoogleCredentialResponse = async function(response) {
+    const errorEl = document.getElementById('loginError');
+    if (errorEl) errorEl.classList.add('d-none');
+    try {
+        const res = await fetch('/auth/google', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ credential: response.credential })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+            if (errorEl) {
+                errorEl.textContent = data.detail || 'Google Login fehlgeschlagen.';
+                errorEl.classList.remove('d-none');
+            }
+            return;
+        }
+        Auth._save(data.access_token, data.user);
+        await loadUserAndStart();
+    } catch (e) {
+        if (errorEl) {
+            errorEl.textContent = 'Verbindungsfehler beim Google Login.';
+            errorEl.classList.remove('d-none');
+        }
+    }
+};
+
+// Enter-Taste im Login-Formular & Google Auth Init
 document.addEventListener('DOMContentLoaded', () => {
+    initGoogleAuth();
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
             const authView = document.getElementById('authView');

@@ -1,3 +1,5 @@
+import os
+import httpx
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel
 from typing import Optional
@@ -21,6 +23,9 @@ class LoginRequest(BaseModel):
     username: str
     password: str
 
+class GoogleAuthRequest(BaseModel):
+    credential: str
+
 class UpdateProfileRequest(BaseModel):
     new_username: Optional[str] = None
     current_password: Optional[str] = None
@@ -39,6 +44,89 @@ class ResetPasswordRequest(BaseModel):
     new_password: str
 
 # ─── Endpunkte ────────────────────────────────────────────────────────────────
+
+@router.get("/config")
+def get_auth_config():
+    """Gibt öffentliche Auth-Konfiguration zurück (z.B. GOOGLE_CLIENT_ID)."""
+    return {
+        "google_client_id": os.getenv("GOOGLE_CLIENT_ID", "")
+    }
+
+@router.post("/google")
+def google_auth(data: GoogleAuthRequest):
+    """
+    Verifiziert das Google ID Token.
+    Sucht den User anhand der google_id oder email.
+    Erstellt bei Bedarf einen neuen User und gibt ein Game-Log Pro JWT aus.
+    """
+    token = data.credential
+    if not token:
+        raise HTTPException(status_code=400, detail="Kein Google-Token übergeben.")
+
+    try:
+        resp = httpx.get(f"https://oauth2.googleapis.com/tokeninfo?id_token={token}", timeout=10.0)
+        if resp.status_code != 200:
+            raise HTTPException(status_code=401, detail="Ungültiges Google-Token.")
+        payload = resp.json()
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Google-Token konnte nicht verifiziert werden: {str(e)}")
+
+    google_id = payload.get("sub")
+    email = payload.get("email")
+    name = payload.get("name") or payload.get("given_name") or "GoogleUser"
+
+    if not google_id:
+        raise HTTPException(status_code=400, detail="Google Token enthält keine ID.")
+
+    env_client_id = os.getenv("GOOGLE_CLIENT_ID")
+    if env_client_id and payload.get("aud") != env_client_id:
+        raise HTTPException(status_code=401, detail="Google Client-ID stimmt nicht überein.")
+
+    with get_db_connection() as conn:
+        # 1. Prüfen ob User mit google_id existiert
+        user = conn.execute("SELECT * FROM users WHERE google_id = ?", (google_id,)).fetchone()
+
+        if not user and email:
+            # 2. Prüfen ob User mit E-Mail existiert
+            user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+            if user:
+                conn.execute("UPDATE users SET google_id = ? WHERE id = ?", (google_id, user["id"]))
+                conn.commit()
+
+        if not user:
+            # 3. Neuen User anlegen
+            base_username = "".join(c for c in name.lower() if c.isalnum()) or "user"
+            if len(base_username) < 2:
+                base_username = "user"
+            base_username = base_username[:20]
+
+            username = base_username
+            counter = 1
+            while conn.execute("SELECT id FROM users WHERE username = ?", (username,)).fetchone():
+                username = f"{base_username}{counter}"
+                counter += 1
+
+            dummy_pw_hash = hash_password(f"google_oauth_{google_id}")
+            conn.execute(
+                "INSERT INTO users (username, email, password_hash, google_id, avatar_icon) VALUES (?, ?, ?, ?, ?)",
+                (username, email, dummy_pw_hash, google_id, "👤")
+            )
+            conn.commit()
+            user = conn.execute("SELECT * FROM users WHERE google_id = ?", (google_id,)).fetchone()
+
+    access_token = create_access_token(user["id"], user["username"])
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user["id"],
+            "username": user["username"],
+            "email": user["email"],
+            "avatar_color": user["avatar_color"],
+            "avatar_icon": user["avatar_icon"],
+            "favorite_game_id": user["favorite_game_id"]
+        }
+    }
 
 @router.post("/register")
 def register(data: RegisterRequest):
