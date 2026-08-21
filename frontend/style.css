@@ -7,13 +7,14 @@
     --danger: #ec4899;      /* Vibrant Pink */
     --bg-base: #0f172a;     /* Deep Slate */
     --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
-    --surface: rgba(30, 41, 59, 0.6); /* Glass surface */
-    --surface-border: rgba(255, 255, 255, 0.1);
+    --surface: rgba(30, 41, 59, 0.65); /* Glass surface */
+    --surface-card: rgba(30, 41, 59, 0.85); /* Card surface fallback */
+    --surface-border: rgba(255, 255, 255, 0.12);
     --text-main: #f8fafc;
-    --text-muted: #94a3b8;
+    --text-muted: #cbd5e1;
     
-    --adrian-color: #0ea5e9; /* Light Blue */
-    --lea-color: #f43f5e;    /* Rose/Red */
+    --adrian-color: #38bdf8; /* Light Blue */
+    --lea-color: #fb7185;    /* Rose/Red */
 }
 
 body {
@@ -35,7 +36,8 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* Global Text Contrast Overrides */
-.text-muted { color: #cbd5e1 !important; } /* Lighter Slate 300 for much better readability */
+.text-body, .text-main { color: var(--text-main) !important; }
+.text-muted { color: var(--text-muted) !important; } /* Lighter Slate 300 for much better readability */
 .text-white-50 { color: #e2e8f0 !important; } /* Slate 200 instead of 50% opacity */
 .text-light { color: #f1f5f9 !important; }
 
@@ -254,20 +256,25 @@ h1, h2, h3, h4, h5, h6 { font-weight: 700; }
 .rounded-4 { border-radius: 20px !important; }
 .rounded-5 { border-radius: 28px !important; }
 .btn-xl { padding: 18px; font-size: 1.1rem; letter-spacing: 1px; }
-.x-small { font-size: 0.65rem; }
+.x-small { font-size: 0.72rem; font-weight: 500; }
 
 /* ─── LIGHT MODE OVERRIDES ────────────────────────────────────────────────── */
 body.light-mode {
     --bg-base: #f8fafc;
     --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
-    --surface: rgba(255, 255, 255, 0.65);
-    --surface-border: rgba(0, 0, 0, 0.1);
+    --surface: rgba(255, 255, 255, 0.75);
+    --surface-card: rgba(255, 255, 255, 0.9);
+    --surface-border: rgba(0, 0, 0, 0.12);
     --text-main: #0f172a;
     --text-muted: #475569;
+    --adrian-color: #0284c7;
+    --lea-color: #e11d48;
 }
 
 body.light-mode .text-white,
 body.light-mode .text-light,
+body.light-mode .text-body,
+body.light-mode .text-main,
 body.light-mode h1,
 body.light-mode h2,
 body.light-mode h3,
@@ -286,6 +293,14 @@ body.light-mode .text-white-50 {
 
 body.light-mode .text-muted {
     color: #475569 !important;
+}
+
+body.light-mode .text-warning {
+    color: #d97706 !important;
+}
+
+body.light-mode .text-success {
+    color: #059669 !important;
 }
 
 body.light-mode .app-header {

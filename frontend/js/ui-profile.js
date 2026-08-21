@@ -22,7 +22,7 @@ window.showGameProfile = async function(gameId, bggId, imageUrl, minP, maxP, tim
             winsHtml += `
             <div class="text-center px-2 flex-grow-1" style="min-width: 60px;">
                 <small class="${colorClass} d-block x-small fw-bold tracking-wider text-truncate" style="max-width: 90px; margin: 0 auto;">${p.name}</small>
-                <h3 class="fw-bold mb-0 text-body mt-1" style="font-size: 1.5rem;">${pWins}</h3>
+                <h3 class="fw-bold mb-0 text-main mt-1" style="font-size: 1.5rem;">${pWins}</h3>
             </div>`;
             if (idx < allPlayers.length - 1) {
                 winsHtml += `<div class="text-muted small align-self-center mt-3 fw-bold">VS</div>`;

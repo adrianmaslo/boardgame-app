@@ -103,7 +103,7 @@ window.loadDashboard = async function() {
             <img src="${data.most_played.image_url || 'https://via.placeholder.com/60?text=🎲'}">
             <div>
                 <small class="text-muted text-uppercase x-small d-block tracking-wider fw-bold">${t('highlight_hotness', 'Dauerbrenner')}</small>
-                <span class="fw-bold d-block text-body">${data.most_played.name}</span>
+                <span class="fw-bold d-block text-main fs-6">${data.most_played.name}</span>
                 <small class="text-primary fw-bold">${data.most_played.count} ${t('label_plays', 'Partien')}</small>
             </div>
         </div>`;
@@ -126,8 +126,8 @@ window.loadDashboard = async function() {
                 <img src="${best.image_url || 'https://via.placeholder.com/60?text=🏆'}">
                 <div>
                     <small class="${colorClass} text-uppercase x-small d-block tracking-wider fw-bold">${prefixOrSuffix}</small>
-                    <span class="fw-bold d-block text-body">${best.name}</span>
-                    <small class="text-muted">${best.wins} ${t('label_wins', 'Siege')}</small>
+                    <span class="fw-bold d-block text-main fs-6">${best.name}</span>
+                    <small class="text-muted fw-semibold">${best.wins} ${t('label_wins', 'Siege')}</small>
                 </div>
             </div>`;
         }
