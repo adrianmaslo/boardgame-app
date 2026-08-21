@@ -94,13 +94,18 @@ def init_db():
             "favorite_game_id INTEGER REFERENCES games(id)",
             "security_question TEXT",
             "security_answer TEXT",
-            "google_id TEXT UNIQUE"
+            "google_id TEXT"
         ]
         for col in new_user_columns:
             try:
                 c.execute(f"ALTER TABLE users ADD COLUMN {col}")
             except sqlite3.OperationalError:
                 pass
+
+        try:
+            c.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id)")
+        except sqlite3.OperationalError:
+            pass
 
         c.execute("""CREATE TABLE IF NOT EXISTS groups (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
